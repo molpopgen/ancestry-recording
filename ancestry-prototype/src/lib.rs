@@ -1,3 +1,9 @@
+pub type IntegerID = i32;
+
+#[repr(transparent)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct Node(pub(crate) IntegerID);
+
 #[cfg(test)]
 mod tests {
     #[test]
