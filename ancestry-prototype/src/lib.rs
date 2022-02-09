@@ -1,4 +1,4 @@
-pub use ancestry_common::{NodeId, NodeFlags, Position, SignedInteger};
+pub use ancestry_common::{NodeFlags, NodeId, Position, SignedInteger};
 
 mod ancestry;
 
