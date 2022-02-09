@@ -7,11 +7,13 @@ pub struct Descendant {
     pub right: Position,
 }
 
+#[derive(Default)]
 pub struct AncestryRecord {
     pub ancestors: Vec<Node>,
     pub descendants: Vec<Descendant>,
 }
 
+#[derive(Default)]
 pub struct Ancestry {
     pub ancestry: HashMap<Node, AncestryRecord>,
 }
@@ -76,19 +78,19 @@ impl Ancestry {
 
 // Implement traits here
 
-impl Default for AncestryRecord {
-    fn default() -> Self {
-        Self {
-            ancestors: vec![],
-            descendants: vec![],
-        }
-    }
-}
+// impl Default for AncestryRecord {
+//     fn default() -> Self {
+//         Self {
+//             ancestors: vec![],
+//             descendants: vec![],
+//         }
+//     }
+// }
 
-impl Default for Ancestry {
-    fn default() -> Self {
-        Self {
-            ancestry: HashMap::new(),
-        }
-    }
-}
+//impl Default for Ancestry {
+//    fn default() -> Self {
+//        Self {
+//            ancestry: HashMap::new(),
+//        }
+//    }
+//}
