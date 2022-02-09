@@ -43,6 +43,35 @@ impl Ancestry {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn record_descendant(
+        &mut self,
+        ancestor: Node,   // "parent" in tskit
+        descendant: Node, // "child" in tskit
+        left: Position,
+        right: Position,
+    ) {
+        if let Some(record) = self.ancestry.get_mut(&ancestor) {
+            record.descendants.push(Descendant {
+                descendant,
+                left,
+                right,
+            });
+        } else {
+            let x = self.ancestry.insert(
+                ancestor,
+                AncestryRecord::new_from(
+                    vec![ancestor],
+                    vec![Descendant {
+                        descendant,
+                        left,
+                        right,
+                    }],
+                ),
+            );
+            assert!(x.is_none());
+        }
+    }
 }
 
 // Implement traits here
