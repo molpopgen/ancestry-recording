@@ -3,11 +3,11 @@ use bitflags::bitflags;
 pub type SignedInteger = i32;
 
 #[repr(transparent)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct Node(pub(crate) SignedInteger);
 
 #[repr(transparent)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct Position(pub(crate) SignedInteger);
 
 bitflags! {
