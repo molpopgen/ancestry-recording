@@ -13,7 +13,7 @@ pub struct AncestryRecord {
 }
 
 pub struct Ancestry {
-    ancestry: HashMap<Node, AncestryRecord>,
+    pub ancestry: HashMap<Node, AncestryRecord>,
 }
 
 impl Descendant {
