@@ -4,6 +4,8 @@ pub type IntegerID = i32;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Node(pub(crate) IntegerID);
 
+mod ancestry;
+
 #[cfg(test)]
 mod tests {
     #[test]
