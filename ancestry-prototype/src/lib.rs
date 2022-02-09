@@ -1,3 +1,5 @@
+use bitflags::bitflags;
+
 pub type SignedInteger = i32;
 
 #[repr(transparent)]
@@ -8,13 +10,23 @@ pub struct Node(pub(crate) SignedInteger);
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Position(pub(crate) SignedInteger);
 
+bitflags! {
+    #[derive(Default)]
+    struct NodeFlags: u32 {
+        const ISALIVE = 1 << 1;
+        const ISREMEMBERED = 1 << 2;
+    }
+}
+
 mod ancestry;
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn test_empty_node_flags() {
+        let f = NodeFlags::default();
+        assert_eq!(f.bits(), 0);
     }
 }
