@@ -42,7 +42,7 @@ impl Iterator for NodeTable {
     fn next(&mut self) -> Option<Self::Item> {
         assert_eq!(self.flags.len(), self.time.len());
         if self.index < self.flags.len() {
-            let rv = (self.flags[self.index], self.time[self.index]);
+            let rv = self.row(self.index);
             self.index += 1;
             Some(rv)
         } else {
