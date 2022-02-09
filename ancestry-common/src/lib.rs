@@ -4,7 +4,7 @@ pub type SignedInteger = i32;
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct Node(pub(crate) SignedInteger);
+pub struct NodeId(pub(crate) SignedInteger);
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]

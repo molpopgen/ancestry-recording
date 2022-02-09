@@ -1,25 +1,25 @@
-use crate::{Node, Position};
+use crate::{NodeId, Position};
 use std::collections::HashMap;
 
 pub struct Descendant {
-    pub descendant: Node,
+    pub descendant: NodeId,
     pub left: Position,
     pub right: Position,
 }
 
 #[derive(Default)]
 pub struct AncestryRecord {
-    pub ancestors: Vec<Node>,
+    pub ancestors: Vec<NodeId>,
     pub descendants: Vec<Descendant>,
 }
 
 #[derive(Default)]
 pub struct Ancestry {
-    pub ancestry: HashMap<Node, AncestryRecord>,
+    pub ancestry: HashMap<NodeId, AncestryRecord>,
 }
 
 impl Descendant {
-    pub fn new(descendant: Node, left: Position, right: Position) -> Self {
+    pub fn new(descendant: NodeId, left: Position, right: Position) -> Self {
         Self {
             descendant,
             left,
@@ -33,7 +33,7 @@ impl AncestryRecord {
         Self::default()
     }
 
-    pub fn new_from(ancestors: Vec<Node>, descendants: Vec<Descendant>) -> Self {
+    pub fn new_from(ancestors: Vec<NodeId>, descendants: Vec<Descendant>) -> Self {
         Self {
             ancestors,
             descendants,
@@ -48,8 +48,8 @@ impl Ancestry {
 
     pub fn record_descendant(
         &mut self,
-        ancestor: Node,   // "parent" in tskit
-        descendant: Node, // "child" in tskit
+        ancestor: NodeId,   // "parent" in tskit
+        descendant: NodeId, // "child" in tskit
         left: Position,
         right: Position,
     ) {
