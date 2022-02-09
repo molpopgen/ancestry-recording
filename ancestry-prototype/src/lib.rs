@@ -1,8 +1,12 @@
-pub type IntegerID = i32;
+pub type SignedInteger = i32;
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub struct Node(pub(crate) IntegerID);
+pub struct Node(pub(crate) SignedInteger);
+
+#[repr(transparent)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub struct Position(pub(crate) SignedInteger);
 
 mod ancestry;
 
