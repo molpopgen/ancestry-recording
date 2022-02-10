@@ -18,6 +18,7 @@ pub fn simplify(
 
     // now, go through the sample nodes from present to past
     for node in extant_samples.iter().rev() {
+        assert!(nodes.flags(*node).is_sample());
         // check that ancestry[i] exists
         if let Some(record) = ancestry.ancestry.get_mut(&node) {
             // check the validity of the fields
