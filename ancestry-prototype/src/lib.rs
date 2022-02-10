@@ -3,8 +3,10 @@ pub use ancestry_common::{
 };
 
 mod ancestry;
+mod simplify;
 
 pub use ancestry::{Ancestry, AncestryRecord, Descendant};
+pub use simplify::simplify;
 
 #[cfg(test)]
 mod test {
