@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 
 pub type SignedInteger = i32;
+pub type LargeSignedInteger = i64;
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
@@ -11,13 +12,13 @@ pub struct NodeId {
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct Position {
-    pub value: SignedInteger,
+    pub value: LargeSignedInteger,
 }
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct Time {
-    pub value: SignedInteger,
+    pub value: LargeSignedInteger,
 }
 
 pub struct Node {
