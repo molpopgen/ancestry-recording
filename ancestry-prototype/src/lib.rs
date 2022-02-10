@@ -10,7 +10,7 @@ mod test {
 
     #[test]
     fn test_make_node() {
-        let n = NodeId { 0: 0 };
-        assert_eq!(n.0, 0);
+        let n = NodeId { value: 0 };
+        assert_eq!(n.value, 0);
     }
 }

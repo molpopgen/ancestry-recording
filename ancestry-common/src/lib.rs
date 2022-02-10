@@ -4,15 +4,21 @@ pub type SignedInteger = i32;
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct NodeId(pub SignedInteger);
+pub struct NodeId {
+    pub value: SignedInteger,
+}
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct Position(pub SignedInteger);
+pub struct Position {
+    pub value: SignedInteger,
+}
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct Time(pub SignedInteger);
+pub struct Time {
+    pub value: SignedInteger,
+}
 
 pub struct Node {
     flags: NodeFlags,
