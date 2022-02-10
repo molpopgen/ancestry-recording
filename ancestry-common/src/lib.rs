@@ -14,6 +14,11 @@ pub struct Position(pub(crate) SignedInteger);
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct Time(pub(crate) SignedInteger);
 
+pub struct Node {
+    flags: NodeFlags,
+    time: Time,
+}
+
 #[derive(Default)]
 pub struct NodeTable {
     flags: Vec<NodeFlags>,
@@ -21,13 +26,25 @@ pub struct NodeTable {
     index: usize,
 }
 
+impl Node {
+    pub fn flags(&self) -> NodeFlags {
+        self.flags
+    }
+    pub fn time(&self) -> Time {
+        self.time
+    }
+}
+
 impl NodeTable {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn row(&self, index: usize) -> (NodeFlags, Time) {
-        (self.flags[index], self.time[index])
+    pub fn row(&self, index: usize) -> Node {
+        Node {
+            flags: self.flags[index],
+            time: self.time[index],
+        }
     }
 
     pub fn add_row(&mut self, flags: NodeFlags, time: Time) {
@@ -37,7 +54,7 @@ impl NodeTable {
 }
 
 impl Iterator for NodeTable {
-    type Item = (NodeFlags, Time);
+    type Item = Node;
 
     fn next(&mut self) -> Option<Self::Item> {
         assert_eq!(self.flags.len(), self.time.len());
