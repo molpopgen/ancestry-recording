@@ -107,6 +107,12 @@ bitflags! {
     }
 }
 
+impl NodeFlags {
+    pub fn is_sample(&self) -> bool {
+        self.contains(NodeFlags::ISALIVE) || self.contains(NodeFlags::ISREMEMBERED)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -115,6 +121,22 @@ mod tests {
     fn test_empty_node_flags() {
         let f = NodeFlags::default();
         assert_eq!(f.bits(), 0);
+    }
+
+    #[test]
+    fn test_node_flags() {
+        let mut f = NodeFlags::ISALIVE;
+        assert!(f.is_sample());
+        f = NodeFlags::ISREMEMBERED;
+        assert!(f.is_sample());
+        f = NodeFlags::ISREMEMBERED | NodeFlags::ISALIVE;
+        assert!(f.is_sample());
+        assert!(f.contains(NodeFlags::ISREMEMBERED));
+        assert!(f.contains(NodeFlags::ISALIVE));
+        assert_eq!(
+            f.bits(),
+            (NodeFlags::ISALIVE | NodeFlags::ISREMEMBERED).bits()
+        );
     }
 
     #[test]
