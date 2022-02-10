@@ -16,9 +16,9 @@ pub fn simplify(
     let mut new_node_table = NodeTable::default();
 
     // now, go through the sample nodes from present to past
-    for i in extant_samples.iter().rev() {
+    for node in extant_samples.iter().rev() {
         // check that ancestry[i] exists
-        assert!(ancestry.ancestry.contains_key(i));
+        assert!(ancestry.ancestry.contains_key(node));
 
         // check the validity of the fields
         // of ancestry[i]
