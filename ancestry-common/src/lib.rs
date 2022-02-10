@@ -69,6 +69,14 @@ impl NodeTable {
         self.time.push(time);
     }
 
+    pub fn flags(&self, row: NodeId) -> NodeFlags {
+        self.flags[row.value as usize]
+    }
+
+    pub fn time(&self, row: NodeId) -> Time {
+        self.time[row.value as usize]
+    }
+
     pub fn len(&self) -> usize {
         assert_eq!(self.flags.len(), self.time.len());
         self.flags.len()
