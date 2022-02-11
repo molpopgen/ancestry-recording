@@ -103,12 +103,17 @@ bitflags! {
     #[derive(Default)]
     pub struct NodeFlags: u32 {
         const IS_SAMPLE = 1 << 1;
+        const IS_ALIVE = 1 << 2;
     }
 }
 
 impl NodeFlags {
     pub fn is_sample(&self) -> bool {
         self.contains(NodeFlags::IS_SAMPLE)
+    }
+
+    pub fn is_alive(&self) -> bool {
+        self.contains(NodeFlags::IS_ALIVE)
     }
 }
 
