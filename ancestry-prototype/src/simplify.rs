@@ -2,13 +2,13 @@ use crate::{Ancestry, NodeId, NodeTable};
 
 /// No error handling, all panics right now.
 pub fn simplify(
-    extant_samples: &[NodeId],
+    new_births: &[NodeId],
     ancestry: &mut Ancestry,
     nodes: &mut NodeTable,
 ) -> Vec<NodeId> {
-    assert!(extant_samples.len() > 1);
+    assert!(new_births.len() > 1);
     // samples must be ordered by birth time, past to present
-    let sorted = extant_samples
+    let sorted = new_births
         .windows(2)
         .all(|w| nodes.time(w[0]) <= nodes.time(w[1]));
     assert!(sorted);
@@ -17,7 +17,7 @@ pub fn simplify(
     let mut new_node_table = NodeTable::default();
 
     // now, go through the sample nodes from present to past
-    for node in extant_samples.iter().rev() {
+    for node in new_births.iter().rev() {
         assert!(nodes.flags(*node).is_sample());
         // check that ancestry[i] exists
         if let Some(record) = ancestry.ancestry.get_mut(&node) {
