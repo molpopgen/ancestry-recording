@@ -102,14 +102,13 @@ impl Iterator for NodeTable {
 bitflags! {
     #[derive(Default)]
     pub struct NodeFlags: u32 {
-        const ISALIVE = 1 << 1;
-        const ISREMEMBERED = 1 << 2;
+        const IS_SAMPLE = 1 << 1;
     }
 }
 
 impl NodeFlags {
     pub fn is_sample(&self) -> bool {
-        self.contains(NodeFlags::ISALIVE) || self.contains(NodeFlags::ISREMEMBERED)
+        self.contains(NodeFlags::IS_SAMPLE)
     }
 }
 
@@ -125,18 +124,8 @@ mod tests {
 
     #[test]
     fn test_node_flags() {
-        let mut f = NodeFlags::ISALIVE;
+        let f = NodeFlags::IS_SAMPLE;
         assert!(f.is_sample());
-        f = NodeFlags::ISREMEMBERED;
-        assert!(f.is_sample());
-        f = NodeFlags::ISREMEMBERED | NodeFlags::ISALIVE;
-        assert!(f.is_sample());
-        assert!(f.contains(NodeFlags::ISREMEMBERED));
-        assert!(f.contains(NodeFlags::ISALIVE));
-        assert_eq!(
-            f.bits(),
-            (NodeFlags::ISALIVE | NodeFlags::ISREMEMBERED).bits()
-        );
     }
 
     #[test]
