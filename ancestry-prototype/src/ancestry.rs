@@ -7,7 +7,7 @@ pub struct Descendant {
 }
 
 pub struct AncestryRecord {
-    node: NodeId,
+    pub node: NodeId,
     pub ancestors: Vec<NodeId>,
     pub descendants: Vec<Descendant>,
 }
