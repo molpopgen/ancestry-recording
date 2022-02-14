@@ -75,22 +75,3 @@ impl Ancestry {
         }
     }
 }
-
-// Implement traits here
-
-// impl Default for AncestryRecord {
-//     fn default() -> Self {
-//         Self {
-//             ancestors: vec![],
-//             descendants: vec![],
-//         }
-//     }
-// }
-
-//impl Default for Ancestry {
-//    fn default() -> Self {
-//        Self {
-//            ancestry: HashMap::new(),
-//        }
-//    }
-//}
