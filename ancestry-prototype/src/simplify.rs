@@ -20,7 +20,7 @@ pub fn simplify(
     for node in new_births.iter().rev() {
         assert!(nodes.flags(*node).is_sample());
         // check that ancestry[i] exists
-        if let Some(record) = ancestry.ancestry.get_mut(&node) {
+        if let Some(record) = ancestry.get_mut(*node) {
             // check the validity of the fields
             // of ancestry[i]
             assert!(record.ancestors.len() > 0);

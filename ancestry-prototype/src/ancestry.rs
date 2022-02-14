@@ -53,6 +53,10 @@ impl Ancestry {
         }
     }
 
+    pub(crate) fn get_mut(&mut self, node: NodeId) -> Option<&mut AncestryRecord> {
+        self.ancestry.get_mut(node.value as usize)
+    }
+
     pub fn record_descendant(
         &mut self,
         ancestor: NodeId,   // "parent" in tskit
@@ -60,25 +64,14 @@ impl Ancestry {
         left: Position,
         right: Position,
     ) {
-        if let Some(record) = self.ancestry.get_mut(&ancestor) {
+        if let Some(record) = self.get_mut(ancestor) {
             record.descendants.push(Descendant {
                 descendant,
                 left,
                 right,
             });
         } else {
-            let x = self.ancestry.insert(
-                ancestor,
-                AncestryRecord::new_from(
-                    vec![ancestor],
-                    vec![Descendant {
-                        descendant,
-                        left,
-                        right,
-                    }],
-                ),
-            );
-            assert!(x.is_none());
+            panic!("{:?} has not been recorded as a node", ancestor);
         }
     }
 }
