@@ -2,7 +2,7 @@ use crate::{LargeSignedInteger, SignedInteger};
 
 #[derive(Clone, Copy)]
 pub struct Segment {
-    pub descendant: SignedInteger,
+    pub node: SignedInteger,
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
 }
@@ -23,16 +23,10 @@ pub struct Ancestry {
 }
 
 impl Segment {
-    pub fn new(
-        descendant: SignedInteger,
-        left: LargeSignedInteger,
-        right: LargeSignedInteger,
-    ) -> Self {
-        Self {
-            descendant,
-            left,
-            right,
-        }
+    pub fn new(node: SignedInteger, left: LargeSignedInteger, right: LargeSignedInteger) -> Self {
+        assert!(left < right);
+        assert!(node >= 0);
+        Self { node, left, right }
     }
 }
 
@@ -83,7 +77,7 @@ impl Ancestry {
     ) {
         if let Some(record) = self.get_mut(ancestor) {
             record.descendants.push(Segment {
-                descendant,
+                node: descendant,
                 left,
                 right,
             });

@@ -14,6 +14,8 @@ struct SegmentQueue {
 impl SimplificationInternalState {
     fn new(ancestry: &mut Ancestry, samples: &[SignedInteger]) -> Self {
         let mut is_sample = vec![false; ancestry.ancestry.len()];
+        let mut idmap = vec![-1; ancestry.ancestry.len()];
+        let mut next_output_node_id = 0;
         for s in samples {
             assert!(*s >= 0);
             let u = *s as usize;
@@ -22,11 +24,21 @@ impl SimplificationInternalState {
                 panic!("duplicate samples");
             }
             is_sample[u] = true;
+
+            // add an output id
+            idmap[u] = next_output_node_id;
+            next_output_node_id += 1;
+
+            // Add initial ancestry for this node
+            ancestry.ancestry[u].ancestry.clear();
+            ancestry.ancestry[u]
+                .ancestry
+                .push(Segment::new(idmap[u], 0, ancestry.genome_length));
         }
         Self {
-            idmap: vec![-1; ancestry.ancestry.len()],
+            idmap,
             is_sample,
-            next_output_node_id: 0,
+            next_output_node_id,
         }
     }
 }
@@ -122,18 +134,18 @@ mod tests {
     fn make_segments() -> Vec<Segment> {
         let mut rv = vec![];
         rv.push(Segment {
-            descendant: 0,
+            node: 0,
             left: 3,
             right: 4,
         });
         rv.push(Segment {
-            descendant: 0,
+            node: 0,
             left: 1,
             right: 5,
         });
 
         rv.push(Segment {
-            descendant: 0,
+            node: 0,
             left: 1,
             right: 8,
         });
@@ -160,12 +172,12 @@ mod tests {
         let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
         assert!(sorted);
         q.enqueue(Segment {
-            descendant: 0,
+            node: 0,
             left: 2,
             right: 5,
         });
         q.enqueue(Segment {
-            descendant: 0,
+            node: 0,
             left: 0,
             right: 5,
         });
