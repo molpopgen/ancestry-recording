@@ -33,7 +33,12 @@ impl SimplificationInternalState {
 impl SegmentQueue {
     fn new_from_input_edges(input: &[Segment]) -> Self {
         let mut segments = input.to_vec();
-        segments.sort_by(|a, b| a.left.partial_cmp(&b.left).unwrap());
+        segments.sort_by(|a, b| match a.left.partial_cmp(&b.left) {
+            Some(std::cmp::Ordering::Less) => std::cmp::Ordering::Greater,
+            Some(std::cmp::Ordering::Greater) => std::cmp::Ordering::Less,
+            Some(x) => x,
+            None => panic!("unexpected None"),
+        });
 
         Self { segments }
     }
@@ -65,4 +70,36 @@ pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+
+    fn make_segments() -> Vec<Segment> {
+        let mut rv = vec![];
+        rv.push(Segment {
+            descendant: ancestry_common::NodeId { value: 0 },
+            left: ancestry_common::Position { value: 2 },
+            right: ancestry_common::Position { value: 3 },
+        });
+        rv.push(Segment {
+            descendant: ancestry_common::NodeId { value: 0 },
+            left: ancestry_common::Position { value: 0 },
+            right: ancestry_common::Position { value: 5 },
+        });
+
+        rv.push(Segment {
+            descendant: ancestry_common::NodeId { value: 0 },
+            left: ancestry_common::Position { value: 1 },
+            right: ancestry_common::Position { value: 8 },
+        });
+
+        rv
+    }
+
+    #[test]
+    fn test_segment_queue_creation() {
+        let segments = make_segments();
+        let q = SegmentQueue::new_from_input_edges(&segments);
+        let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
+        assert!(sorted);
+    }
+}
