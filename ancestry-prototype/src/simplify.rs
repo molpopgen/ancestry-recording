@@ -202,7 +202,6 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
             assert!(!overlaps.is_empty());
 
             if overlaps.len() == 1 {
-                println!("input node {} has 1 overlap", record.node);
                 let mut x = overlaps[0];
                 let mut alpha = x;
                 match &state.queue.segments.last() {
@@ -217,7 +216,6 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
             } else {
                 if output_node == -1 {
                     output_node = state.next_output_node_id;
-                    println!("output node assignment: {} {}", record.node, output_node);
                     state.next_output_node_id += 1;
                     state.idmap[record.node as usize] = output_node;
                 }
@@ -236,15 +234,9 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
 
     // Remap node ids.
 
-    println!(
-        "next output node id would be: {}",
-        state.next_output_node_id
-    );
-    for (index, i) in state.idmap.iter_mut().enumerate() {
+    for i in state.idmap.iter_mut() {
         if *i >= 0 {
-            let x = *i;
             *i = (*i - state.next_output_node_id).abs() - 1;
-            println!("node remapping: {} {} {}", index, x, *i);
             assert!(*i >= 0);
         }
     }
@@ -365,13 +357,9 @@ mod tests {
             let mut a = feb_11_example();
             let samples = vec![4, 5];
             let idmap = simplify(&samples, &mut a);
-            for (input, output) in idmap.iter().enumerate() {
-                println!("idmap {} {}", input, output);
-            }
 
             for (i, e) in a.edges.iter().enumerate() {
                 assert_eq!(i, e.node as usize);
-                println!("parent {} {}", e.node, e.birth_time);
             }
         }
     }
