@@ -8,19 +8,19 @@ pub type LargeSignedInteger = i64;
 // pub struct NodeId {
 //     pub value: SignedInteger,
 // }
-// 
+//
 // #[repr(transparent)]
 // #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 // pub struct Position {
 //     pub value: LargeSignedInteger,
 // }
-// 
+//
 // #[repr(transparent)]
 // #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 // pub struct Time {
 //     pub value: LargeSignedInteger,
 // }
-// 
+//
 // pub struct Node {
 //     flags: NodeFlags,
 //     time: Time,
@@ -38,7 +38,7 @@ pub type LargeSignedInteger = i64;
 //         Self { value: -1 }
 //     }
 // }
-// 
+//
 // impl Node {
 //     pub fn flags(&self) -> NodeFlags {
 //         self.flags
