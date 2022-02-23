@@ -31,6 +31,16 @@ impl SimplificationInternalState {
 }
 
 impl SegmentQueue {
+    fn new_from_vec(input: Vec<Segment>) -> Self {
+        let mut segments = input;
+        segments.sort_by(|a, b| {
+            std::cmp::Reverse(a.left)
+                .partial_cmp(&std::cmp::Reverse(b.left))
+                .unwrap()
+        });
+        Self { segments }
+    }
+
     // NOTE: not clear this should be in the API...
     fn new_from_input_edges(input: &[Segment]) -> Self {
         let mut segments = input.to_vec();
@@ -97,7 +107,7 @@ mod tests {
     #[test]
     fn test_segment_queue_creation() {
         let segments = make_segments();
-        let q = SegmentQueue::new_from_input_edges(&segments);
+        let q = SegmentQueue::new_from_vec(segments);
         let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
         assert!(sorted);
     }
