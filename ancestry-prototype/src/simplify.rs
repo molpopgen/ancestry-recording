@@ -92,6 +92,10 @@ impl SegmentQueue {
     }
 
     fn enqueue(&mut self, segment: Segment) {
+        if self.segments.is_empty() {
+            self.segments.push(segment);
+            return;
+        }
         let mut insertion = usize::MAX;
 
         for (i, v) in self.segments.iter().rev().enumerate() {
@@ -170,6 +174,7 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
             assert!(!overlaps.is_empty());
 
             if overlaps.len() == 1 {
+                println!("input node {} has 1 overlap", record.node);
                 let mut x = overlaps[0];
                 let mut alpha = x;
                 match &state.queue.segments.last() {
@@ -184,6 +189,7 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
             } else {
                 if output_node == -1 {
                     output_node = state.next_output_node_id;
+                    println!("output node assignment: {} {}", record.node, output_node);
                     state.next_output_node_id += 1;
                     state.idmap[record.node as usize] = output_node;
                 }
@@ -202,9 +208,15 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
 
     // Remap node ids.
 
-    for i in state.idmap.iter_mut() {
+    println!(
+        "next output node id would be: {}",
+        state.next_output_node_id
+    );
+    for (index, i) in state.idmap.iter_mut().enumerate() {
         if *i >= 0 {
+            let x = *i;
             *i = (*i - state.next_output_node_id).abs() - 1;
+            println!("node remapping: {} {} {}", index, x, *i);
             assert!(*i >= 0);
         }
     }
@@ -292,16 +304,16 @@ mod tests {
         assert_eq!(node, 1);
         a.record_transmission(node, 2, 0, x);
         a.record_transmission(node, 3, 0, l);
-        let node = a.record_node(0);
+        let node = a.record_node(1);
         assert_eq!(node, 2);
         a.record_transmission(node, 5, 0, y);
-        let node = a.record_node(0);
+        let node = a.record_node(1);
         assert_eq!(node, 3);
         a.record_transmission(node, 4, 0, l);
         a.record_transmission(node, 5, y, l);
-        let node = a.record_node(0);
+        let node = a.record_node(2);
         assert_eq!(node, 4);
-        let node = a.record_node(0);
+        let node = a.record_node(2);
         assert_eq!(node, 5);
 
         a
@@ -310,7 +322,14 @@ mod tests {
     #[test]
     fn test_simplification() {
         let mut a = feb_11_example();
-        let samples = vec![4, 5];
+        let samples = vec![4,5];
         let idmap = simplify(&samples, &mut a);
+        for (input, output) in idmap.iter().enumerate() {
+            println!("idmap {} {}", input, output);
+        }
+
+        for e in a.edges.iter() {
+            println!("parent {} {}", e.node, e.birth_time);
+        }
     }
 }
