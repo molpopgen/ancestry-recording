@@ -2,6 +2,7 @@ use crate::{Ancestry, AncestryRecord, LargeSignedInteger, Segment, SignedInteger
 
 struct SimplificationInternalState {
     idmap: Vec<SignedInteger>,
+    queue: SegmentQueue,
     is_sample: Vec<bool>,
     next_output_node_id: SignedInteger,
 }
@@ -37,6 +38,7 @@ impl SimplificationInternalState {
         }
         Self {
             idmap,
+            queue: SegmentQueue::default(),
             is_sample,
             next_output_node_id,
         }
@@ -100,7 +102,12 @@ impl SegmentQueue {
     }
 }
 
-fn process_input_record(record: &mut AncestryRecord, state: &mut SimplificationInternalState) {}
+fn process_input_record(
+    ancestry: &Ancestry,
+    record: AncestryRecord,
+    state: &mut SimplificationInternalState,
+) {
+}
 
 /// No error handling, all panics right now.
 pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<SignedInteger> {
@@ -118,9 +125,12 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
 
     let mut state = SimplificationInternalState::new(ancestry, samples);
 
-    for record in ancestry.ancestry.iter_mut().rev() {
-        process_input_record(record, &mut state);
-    }
+    // for record in ancestry.ancestry.iter_mut().rev() {
+    //     state.queue.clear();
+    //     for e in record.descendants.iter() {
+    //         for x in ancestry.ancestry[e.node as usize].ancestry.iter() {}
+    //     }
+    // }
 
     state.idmap
 }
