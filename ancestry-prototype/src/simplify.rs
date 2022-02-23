@@ -36,6 +36,8 @@ fn process_input_record(record: &mut AncestryRecord, state: &mut SimplificationI
 pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
     assert!(samples.len() > 1);
     // input data must be ordered by birth time, past to present
+    // NOTE: this check would be more efficient if done in the
+    // main iter_mut loop below.
     let sorted = ancestry
         .ancestry
         .windows(2)
