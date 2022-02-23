@@ -276,4 +276,41 @@ mod tests {
             right: 5,
         });
     }
+
+    fn feb_11_example() -> Ancestry {
+        // 11 Feb example from my notebook
+        let x = 50;
+        let y = 60;
+        let l = 100;
+
+        let mut a = Ancestry::new(l);
+
+        let node = a.record_node(0);
+        assert_eq!(node, 0);
+        a.record_transmission(node, 2, 0, x);
+        let node = a.record_node(0);
+        assert_eq!(node, 1);
+        a.record_transmission(node, 2, 0, x);
+        a.record_transmission(node, 3, 0, l);
+        let node = a.record_node(0);
+        assert_eq!(node, 2);
+        a.record_transmission(node, 5, 0, y);
+        let node = a.record_node(0);
+        assert_eq!(node, 3);
+        a.record_transmission(node, 4, 0, l);
+        a.record_transmission(node, 5, y, l);
+        let node = a.record_node(0);
+        assert_eq!(node, 4);
+        let node = a.record_node(0);
+        assert_eq!(node, 5);
+
+        a
+    }
+
+    #[test]
+    fn test_simplification() {
+        let mut a = feb_11_example();
+        let samples = vec![4, 5];
+        let idmap = simplify(&samples, &mut a);
+    }
 }

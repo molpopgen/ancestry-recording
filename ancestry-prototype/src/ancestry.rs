@@ -95,7 +95,7 @@ impl Ancestry {
     /// Adding a "node" during a sim
     pub fn record_node(&mut self, birth_time: LargeSignedInteger) -> SignedInteger {
         assert!(self.ancestry.len() < SignedInteger::MAX as usize);
-        let value = (self.ancestry.len() + 1) as SignedInteger;
+        let value = self.ancestry.len() as SignedInteger;
         let x = AncestryRecord::new(value);
         self.ancestry.push(x);
         self.edges.push(Parent::new(value, birth_time));
