@@ -68,7 +68,8 @@ impl Ancestry {
         self.ancestry.get_mut(node.value as usize)
     }
 
-    pub fn record_descendant(
+    /// Adding an "edge" during a sim
+    pub fn record_transmission(
         &mut self,
         ancestor: NodeId,   // "parent" in tskit
         descendant: NodeId, // "child" in tskit
@@ -86,6 +87,7 @@ impl Ancestry {
         }
     }
 
+    /// Adding a "node" during a sim
     pub fn record_node(&mut self, birth_time: Time) -> NodeId {
         assert!(self.ancestry.len() < SignedInteger::MAX as usize);
         let value = (self.ancestry.len() + 1) as SignedInteger;
