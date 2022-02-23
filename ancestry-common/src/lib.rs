@@ -132,10 +132,4 @@ mod tests {
         let f = NodeFlags::IS_SAMPLE;
         assert!(f.is_sample());
     }
-
-    #[test]
-    fn test_default_index_node_table() {
-        let nt = NodeTable::new();
-        assert_eq!(nt.index, 0);
-    }
 }
