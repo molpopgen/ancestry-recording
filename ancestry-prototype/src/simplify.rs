@@ -17,6 +17,11 @@ impl SimplificationInternalState {
         let mut is_sample = vec![false; ancestry.ancestry.len()];
         let mut idmap = vec![-1; ancestry.ancestry.len()];
         let mut next_output_node_id = 0;
+
+        // Unlike tskit, we do 2
+        // passes here so that the output ids
+        // do not depend on the order specified in
+        // the samples list.
         for s in samples {
             assert!(*s >= 0);
             let u = *s as usize;
@@ -25,15 +30,32 @@ impl SimplificationInternalState {
                 panic!("duplicate samples");
             }
             is_sample[u] = true;
+        }
 
-            // add an output id
-            idmap[u] = next_output_node_id;
-            next_output_node_id += 1;
+        let mut last_birth_time = LargeSignedInteger::MAX;
+        for a in ancestry.edges.iter_mut().rev() {
+            // Validate input order "on demand"
+            if a.birth_time > last_birth_time {
+                panic!("input data must be sorted by birth time from past to present");
+            }
+            last_birth_time = a.birth_time;
+            let u = a.node as usize;
 
-            // Add initial ancestry for this node
-            ancestry.ancestry[u]
-                .ancestry
-                .push(Segment::new(idmap[u], 0, ancestry.genome_length));
+            // Clear out pre-existing ancestry
+            ancestry.ancestry[u].ancestry.clear();
+
+            if is_sample[u] {
+                // add an output id
+                idmap[u] = next_output_node_id;
+                next_output_node_id += 1;
+
+                // Add initial ancestry for this node
+                ancestry.ancestry[u].ancestry.push(Segment::new(
+                    idmap[u],
+                    0,
+                    ancestry.genome_length,
+                ));
+            }
         }
         Self {
             idmap,
@@ -111,24 +133,30 @@ impl SegmentQueue {
 }
 
 /// No error handling, all panics right now.
+/// This is the logic from the SI material of the
+/// PLoS Comp Bio paper.
 pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<SignedInteger> {
     assert!(samples.len() > 1);
     assert_eq!(ancestry.edges.len(), ancestry.ancestry.len());
+
+    // NOTE: this check is now done above, during state setup.
+    // This arguably improves perf, but at the potential cost
+    // of obscuring logic by mixing it with input verification.
     // input data must be ordered by birth time, past to present
     // NOTE: this check would be more efficient if done in the
     // main iter_mut loop below.
-    let sorted = ancestry
-        .edges
-        .windows(2)
-        .all(|w| w[0].birth_time <= w[1].birth_time);
-    if !sorted {
-        panic!("input Ancestry must be sorted by birth time from past to present");
-    }
+    //let sorted = ancestry
+    //    .edges
+    //    .windows(2)
+    //    .all(|w| w[0].birth_time <= w[1].birth_time);
+    //if !sorted {
+    //    panic!("input Ancestry must be sorted by birth time from past to present");
+    //}
 
     // clear existing ancestry
-    for i in ancestry.ancestry.iter_mut() {
-        i.ancestry.clear();
-    }
+    // for i in ancestry.ancestry.iter_mut() {
+    //     i.ancestry.clear();
+    // }
 
     let mut state = SimplificationInternalState::new(ancestry, samples);
 
@@ -291,8 +319,14 @@ mod tests {
 
     fn feb_11_example() -> Ancestry {
         // 11 Feb example from my notebook
+
+        // leftmost xover pos'n
         let x = 50;
+
+        // rightmost xover pos'n
         let y = 60;
+
+        // "Genome length"
         let l = 100;
 
         let mut a = Ancestry::new(l);
@@ -321,15 +355,18 @@ mod tests {
 
     #[test]
     fn test_simplification() {
-        let mut a = feb_11_example();
-        let samples = vec![4,5];
-        let idmap = simplify(&samples, &mut a);
-        for (input, output) in idmap.iter().enumerate() {
-            println!("idmap {} {}", input, output);
-        }
+        {
+            let mut a = feb_11_example();
+            let samples = vec![4, 5];
+            let idmap = simplify(&samples, &mut a);
+            for (input, output) in idmap.iter().enumerate() {
+                println!("idmap {} {}", input, output);
+            }
 
-        for e in a.edges.iter() {
-            println!("parent {} {}", e.node, e.birth_time);
+            for (i, e) in a.edges.iter().enumerate() {
+                assert_eq!(i, e.node as usize);
+                println!("parent {} {}", e.node, e.birth_time);
+            }
         }
     }
 }
