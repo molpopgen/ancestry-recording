@@ -1,5 +1,6 @@
 use crate::{NodeId, Position, SignedInteger, Time};
 
+#[derive(Clone, Copy)]
 pub struct Segment {
     pub descendant: NodeId,
     pub left: Position,

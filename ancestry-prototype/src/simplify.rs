@@ -30,6 +30,15 @@ impl SimplificationInternalState {
     }
 }
 
+impl SegmentQueue {
+    fn new_from_input_edges(input: &[Segment]) -> Self {
+        let mut segments = input.to_vec();
+        segments.sort_by(|a, b| a.left.partial_cmp(&b.left).unwrap());
+
+        Self { segments }
+    }
+}
+
 fn process_input_record(record: &mut AncestryRecord, state: &mut SimplificationInternalState) {}
 
 /// No error handling, all panics right now.
@@ -54,3 +63,6 @@ pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
 
     state.idmap
 }
+
+#[cfg(test)]
+mod tests {}
