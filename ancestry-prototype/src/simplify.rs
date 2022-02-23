@@ -83,6 +83,8 @@ impl SegmentQueue {
             }
         }
         self.segments.insert(insertion, segment);
+        let sorted = self.segments.windows(2).all(|w| w[0].left >= w[1].left);
+        assert!(sorted);
     }
 }
 
@@ -162,19 +164,10 @@ mod tests {
             left: ancestry_common::Position { value: 2 },
             right: ancestry_common::Position { value: 5 },
         });
-        let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
-        if !sorted {
-            for i in q.segments.iter() {
-                println!("{}", i.left.value);
-            }
-        }
-        assert!(sorted);
         q.enqueue(Segment {
             descendant: ancestry_common::NodeId { value: 0 },
             left: ancestry_common::Position { value: 0 },
             right: ancestry_common::Position { value: 5 },
         });
-        let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
-        assert!(sorted);
     }
 }
