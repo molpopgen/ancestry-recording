@@ -1,4 +1,4 @@
-use crate::{Ancestry, NodeId};
+use crate::{Ancestry, LargeSignedInteger, NodeId, Time};
 
 /// No error handling, all panics right now.
 pub fn simplify(new_births: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
@@ -13,7 +13,13 @@ pub fn simplify(new_births: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
     let mut idmap = vec![NodeId::new_null(); ancestry.ancestry.len()];
 
     // now, go through the sample nodes from present to past
-    for node in ancestry.ancestry.iter().rev() {}
+    let mut last_time = Time {
+        value: LargeSignedInteger::MAX,
+    };
+    for node in ancestry.ancestry.iter().rev() {
+        assert!(node.birth_time <= last_time);
+        last_time = node.birth_time;
+    }
 
     idmap
 }
