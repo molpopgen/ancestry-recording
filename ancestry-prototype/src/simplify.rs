@@ -40,7 +40,7 @@ pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
 
     let mut state = SimplificationInternalState::new(ancestry, samples);
 
-    for node in ancestry.ancestry.iter().rev() {}
+    for node in ancestry.ancestry.iter_mut().rev() {}
 
     state.idmap
 }
