@@ -1,18 +1,7 @@
-pub use ancestry_common::{LargeSignedInteger, NodeFlags, NodeId, Position, SignedInteger, Time};
+pub use ancestry_common::{LargeSignedInteger, NodeFlags, SignedInteger};
 
 mod ancestry;
 mod simplify;
 
 pub use ancestry::{Ancestry, AncestryRecord, Segment};
 pub use simplify::simplify;
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_make_node() {
-        let n = NodeId { value: 0 };
-        assert_eq!(n.value, 0);
-    }
-}

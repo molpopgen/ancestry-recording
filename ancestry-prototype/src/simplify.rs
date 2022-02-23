@@ -1,7 +1,7 @@
-use crate::{Ancestry, AncestryRecord, NodeId, Segment, SignedInteger};
+use crate::{Ancestry, AncestryRecord, LargeSignedInteger, Segment, SignedInteger};
 
 struct SimplificationInternalState {
-    idmap: Vec<NodeId>,
+    idmap: Vec<SignedInteger>,
     is_sample: Vec<bool>,
     next_output_node_id: SignedInteger,
 }
@@ -12,11 +12,11 @@ struct SegmentQueue {
 }
 
 impl SimplificationInternalState {
-    fn new(ancestry: &mut Ancestry, samples: &[NodeId]) -> Self {
+    fn new(ancestry: &mut Ancestry, samples: &[SignedInteger]) -> Self {
         let mut is_sample = vec![false; ancestry.ancestry.len()];
         for s in samples {
-            assert!(s.value >= 0);
-            let u = s.value as usize;
+            assert!(*s >= 0);
+            let u = *s as usize;
             assert!(u < ancestry.ancestry.len());
             if is_sample[u] {
                 panic!("duplicate samples");
@@ -24,7 +24,7 @@ impl SimplificationInternalState {
             is_sample[u] = true;
         }
         Self {
-            idmap: vec![NodeId::new_null(); ancestry.ancestry.len()],
+            idmap: vec![-1; ancestry.ancestry.len()],
             is_sample,
             next_output_node_id: 0,
         }
@@ -91,7 +91,7 @@ impl SegmentQueue {
 fn process_input_record(record: &mut AncestryRecord, state: &mut SimplificationInternalState) {}
 
 /// No error handling, all panics right now.
-pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
+pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<SignedInteger> {
     assert!(samples.len() > 1);
     // input data must be ordered by birth time, past to present
     // NOTE: this check would be more efficient if done in the
@@ -122,20 +122,20 @@ mod tests {
     fn make_segments() -> Vec<Segment> {
         let mut rv = vec![];
         rv.push(Segment {
-            descendant: ancestry_common::NodeId { value: 0 },
-            left: ancestry_common::Position { value: 3 },
-            right: ancestry_common::Position { value: 4 },
+            descendant: 0,
+            left: 3,
+            right: 4,
         });
         rv.push(Segment {
-            descendant: ancestry_common::NodeId { value: 0 },
-            left: ancestry_common::Position { value: 1 },
-            right: ancestry_common::Position { value: 5 },
+            descendant: 0,
+            left: 1,
+            right: 5,
         });
 
         rv.push(Segment {
-            descendant: ancestry_common::NodeId { value: 0 },
-            left: ancestry_common::Position { value: 1 },
-            right: ancestry_common::Position { value: 8 },
+            descendant: 0,
+            left: 1,
+            right: 8,
         });
 
         rv
@@ -160,14 +160,14 @@ mod tests {
         let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
         assert!(sorted);
         q.enqueue(Segment {
-            descendant: ancestry_common::NodeId { value: 0 },
-            left: ancestry_common::Position { value: 2 },
-            right: ancestry_common::Position { value: 5 },
+            descendant: 0,
+            left: 2,
+            right: 5,
         });
         q.enqueue(Segment {
-            descendant: ancestry_common::NodeId { value: 0 },
-            left: ancestry_common::Position { value: 0 },
-            right: ancestry_common::Position { value: 5 },
+            descendant: 0,
+            left: 0,
+            right: 5,
         });
     }
 }

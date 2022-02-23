@@ -1,15 +1,15 @@
-use crate::{NodeId, Position, SignedInteger, Time};
+use crate::{LargeSignedInteger, SignedInteger};
 
 #[derive(Clone, Copy)]
 pub struct Segment {
-    pub descendant: NodeId,
-    pub left: Position,
-    pub right: Position,
+    pub descendant: SignedInteger,
+    pub left: LargeSignedInteger,
+    pub right: LargeSignedInteger,
 }
 
 pub struct AncestryRecord {
-    pub node: NodeId,
-    pub birth_time: Time,
+    pub node: SignedInteger,
+    pub birth_time: LargeSignedInteger,
     pub ancestry: Vec<Segment>,
     pub descendants: Vec<Segment>,
 }
@@ -18,12 +18,16 @@ pub struct AncestryRecord {
 /// edge table, and ancestry
 /// all rolled up into one.
 pub struct Ancestry {
-    pub genome_length: Position,
+    pub genome_length: LargeSignedInteger,
     pub ancestry: Vec<AncestryRecord>,
 }
 
 impl Segment {
-    pub fn new(descendant: NodeId, left: Position, right: Position) -> Self {
+    pub fn new(
+        descendant: SignedInteger,
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
+    ) -> Self {
         Self {
             descendant,
             left,
@@ -33,7 +37,7 @@ impl Segment {
 }
 
 impl AncestryRecord {
-    pub fn new(node: NodeId, birth_time: Time) -> Self {
+    pub fn new(node: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self {
             node,
             birth_time,
@@ -43,8 +47,8 @@ impl AncestryRecord {
     }
 
     pub fn new_from(
-        node: NodeId,
-        birth_time: Time,
+        node: SignedInteger,
+        birth_time: LargeSignedInteger,
         ancestry: Vec<Segment>,
         descendants: Vec<Segment>,
     ) -> Self {
@@ -58,24 +62,24 @@ impl AncestryRecord {
 }
 
 impl Ancestry {
-    pub fn new(genome_length: Position) -> Self {
+    pub fn new(genome_length: LargeSignedInteger) -> Self {
         Self {
             genome_length,
             ancestry: vec![],
         }
     }
 
-    pub(crate) fn get_mut(&mut self, node: NodeId) -> Option<&mut AncestryRecord> {
-        self.ancestry.get_mut(node.value as usize)
+    pub(crate) fn get_mut(&mut self, node: SignedInteger) -> Option<&mut AncestryRecord> {
+        self.ancestry.get_mut(node as usize)
     }
 
     /// Adding an "edge" during a sim
     pub fn record_transmission(
         &mut self,
-        ancestor: NodeId,   // "parent" in tskit
-        descendant: NodeId, // "child" in tskit
-        left: Position,
-        right: Position,
+        ancestor: SignedInteger,   // "parent" in tskit
+        descendant: SignedInteger, // "child" in tskit
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
     ) {
         if let Some(record) = self.get_mut(ancestor) {
             record.descendants.push(Segment {
@@ -89,12 +93,11 @@ impl Ancestry {
     }
 
     /// Adding a "node" during a sim
-    pub fn record_node(&mut self, birth_time: Time) -> NodeId {
+    pub fn record_node(&mut self, birth_time: LargeSignedInteger) -> SignedInteger {
         assert!(self.ancestry.len() < SignedInteger::MAX as usize);
         let value = (self.ancestry.len() + 1) as SignedInteger;
-        let rv = NodeId { value };
-        let x = AncestryRecord::new(rv, birth_time);
+        let x = AncestryRecord::new(value, birth_time);
         self.ancestry.push(x);
-        rv
+        value
     }
 }

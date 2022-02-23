@@ -3,28 +3,28 @@ use bitflags::bitflags;
 pub type SignedInteger = i32;
 pub type LargeSignedInteger = i64;
 
-#[repr(transparent)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct NodeId {
-    pub value: SignedInteger,
-}
-
-#[repr(transparent)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct Position {
-    pub value: LargeSignedInteger,
-}
-
-#[repr(transparent)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
-pub struct Time {
-    pub value: LargeSignedInteger,
-}
-
-pub struct Node {
-    flags: NodeFlags,
-    time: Time,
-}
+// #[repr(transparent)]
+// #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
+// pub struct NodeId {
+//     pub value: SignedInteger,
+// }
+// 
+// #[repr(transparent)]
+// #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
+// pub struct Position {
+//     pub value: LargeSignedInteger,
+// }
+// 
+// #[repr(transparent)]
+// #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
+// pub struct Time {
+//     pub value: LargeSignedInteger,
+// }
+// 
+// pub struct Node {
+//     flags: NodeFlags,
+//     time: Time,
+// }
 
 // #[derive(Default)]
 // pub struct NodeTable {
@@ -33,20 +33,20 @@ pub struct Node {
 //     index: usize,
 // }
 
-impl NodeId {
-    pub fn new_null() -> Self {
-        Self { value: -1 }
-    }
-}
-
-impl Node {
-    pub fn flags(&self) -> NodeFlags {
-        self.flags
-    }
-    pub fn time(&self) -> Time {
-        self.time
-    }
-}
+// impl NodeId {
+//     pub fn new_null() -> Self {
+//         Self { value: -1 }
+//     }
+// }
+// 
+// impl Node {
+//     pub fn flags(&self) -> NodeFlags {
+//         self.flags
+//     }
+//     pub fn time(&self) -> Time {
+//         self.time
+//     }
+// }
 
 // impl NodeTable {
 //     pub fn new() -> Self {
