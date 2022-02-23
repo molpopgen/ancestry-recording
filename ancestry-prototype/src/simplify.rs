@@ -253,6 +253,12 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
         assert!(i.node == j.node);
         i.node = state.idmap[i.node as usize];
         j.node = state.idmap[j.node as usize];
+
+        // Do some validation on the way out
+        let sorted = i.descendants.windows(2).all(|w| w[0].left <= w[1].left);
+        assert!(sorted);
+        let sorted = j.ancestry.windows(2).all(|w| w[0].left <= w[1].left);
+        assert!(sorted);
     }
 
     edges.retain(|r| r.node != -1);
