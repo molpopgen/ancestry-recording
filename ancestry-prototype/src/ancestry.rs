@@ -101,4 +101,19 @@ impl Ancestry {
         self.edges.push(Parent::new(value, birth_time));
         value
     }
+
+    pub fn validate_post_simplification(&self) -> () {
+        assert_eq!(self.edges.len(), self.ancestry.len());
+        for (i, j) in self.edges.iter().zip(self.ancestry.iter()) {
+            assert_eq!(i.node, j.node);
+            let sorted = i.descendants.windows(2).all(|w| w[0].left <= w[1].left);
+            assert!(sorted);
+            let sorted = j.ancestry.windows(2).all(|w| w[0].left <= w[1].left);
+            assert!(sorted);
+        }
+        assert!(self
+            .edges
+            .windows(2)
+            .all(|w| w[0].birth_time <= w[1].birth_time));
+    }
 }

@@ -245,16 +245,12 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
         assert!(i.node == j.node);
         i.node = state.idmap[i.node as usize];
         j.node = state.idmap[j.node as usize];
-
-        // Do some validation on the way out
-        let sorted = i.descendants.windows(2).all(|w| w[0].left <= w[1].left);
-        assert!(sorted);
-        let sorted = j.ancestry.windows(2).all(|w| w[0].left <= w[1].left);
-        assert!(sorted);
     }
 
     edges.retain(|r| r.node != -1);
     ancestry_data.retain(|r| r.node != -1);
+
+    ancestry.validate_post_simplification();
 
     state.idmap
 }
@@ -360,6 +356,24 @@ mod tests {
 
             for (i, e) in a.edges.iter().enumerate() {
                 assert_eq!(i, e.node as usize);
+            }
+        }
+    }
+
+    fn simplify_feb_11_with_samples(samples: &[SignedInteger]) -> Vec<SignedInteger> {
+        let mut a = feb_11_example();
+        let samples = vec![4, 5];
+        simplify(&samples, &mut a)
+    }
+
+    #[test]
+    fn test_simplification_independence_from_sample_order() {
+        {
+            let idmap_1 = simplify_feb_11_with_samples(&vec![4, 5]);
+            let idmap_2 = simplify_feb_11_with_samples(&vec![5, 4]);
+
+            for (i, j) in idmap_1.iter().zip(idmap_2.iter()) {
+                assert_eq!(*i, *j);
             }
         }
     }
