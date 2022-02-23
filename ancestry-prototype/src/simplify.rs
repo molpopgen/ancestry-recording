@@ -6,6 +6,7 @@ struct SimplificationInternalState {
     next_output_node_id: SignedInteger,
 }
 
+#[derive(Default)]
 struct SegmentQueue {
     segments: Vec<Segment>,
 }
@@ -51,6 +52,38 @@ impl SegmentQueue {
         });
         Self { segments }
     }
+
+    fn clear(&mut self) {
+        self.segments.clear();
+    }
+
+    fn add_segment(&mut self, segment: Segment) {
+        self.segments.push(segment);
+    }
+
+    fn finalize(&mut self) {
+        self.segments.sort_by(|a, b| {
+            std::cmp::Reverse(a.left)
+                .partial_cmp(&std::cmp::Reverse(b.left))
+                .unwrap()
+        });
+    }
+
+    fn pop(&mut self) -> Option<Segment> {
+        self.segments.pop()
+    }
+
+    fn enqueue(&mut self, segment: Segment) {
+        let mut insertion = usize::MAX;
+
+        for (i, v) in self.segments.iter().rev().enumerate() {
+            if segment.left < v.left {
+                insertion = self.segments.len() - i;
+                break;
+            }
+        }
+        self.segments.insert(insertion, segment);
+    }
 }
 
 fn process_input_record(record: &mut AncestryRecord, state: &mut SimplificationInternalState) {}
@@ -80,18 +113,20 @@ pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
 
 #[cfg(test)]
 mod tests {
+    use std::arch::x86_64::_MM_SET_FLUSH_ZERO_MODE;
+
     use super::*;
 
     fn make_segments() -> Vec<Segment> {
         let mut rv = vec![];
         rv.push(Segment {
             descendant: ancestry_common::NodeId { value: 0 },
-            left: ancestry_common::Position { value: 2 },
-            right: ancestry_common::Position { value: 3 },
+            left: ancestry_common::Position { value: 3 },
+            right: ancestry_common::Position { value: 4 },
         });
         rv.push(Segment {
             descendant: ancestry_common::NodeId { value: 0 },
-            left: ancestry_common::Position { value: 0 },
+            left: ancestry_common::Position { value: 1 },
             right: ancestry_common::Position { value: 5 },
         });
 
@@ -108,6 +143,37 @@ mod tests {
     fn test_segment_queue_creation() {
         let segments = make_segments();
         let q = SegmentQueue::new_from_vec(segments);
+        let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
+        assert!(sorted);
+    }
+
+    #[test]
+    fn test_segment_queue_enqueue() {
+        let segments = make_segments();
+        let mut q = SegmentQueue::default();
+        for s in segments.into_iter() {
+            q.segments.push(s);
+        }
+        q.finalize();
+        let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
+        assert!(sorted);
+        q.enqueue(Segment {
+            descendant: ancestry_common::NodeId { value: 0 },
+            left: ancestry_common::Position { value: 2 },
+            right: ancestry_common::Position { value: 5 },
+        });
+        let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
+        if !sorted {
+            for i in q.segments.iter() {
+                println!("{}", i.left.value);
+            }
+        }
+        assert!(sorted);
+        q.enqueue(Segment {
+            descendant: ancestry_common::NodeId { value: 0 },
+            left: ancestry_common::Position { value: 0 },
+            right: ancestry_common::Position { value: 5 },
+        });
         let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
         assert!(sorted);
     }
