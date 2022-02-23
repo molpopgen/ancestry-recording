@@ -31,7 +31,6 @@ impl SimplificationInternalState {
             next_output_node_id += 1;
 
             // Add initial ancestry for this node
-            ancestry.ancestry[u].ancestry.clear();
             ancestry.ancestry[u]
                 .ancestry
                 .push(Segment::new(idmap[u], 0, ancestry.genome_length));
@@ -71,8 +70,13 @@ impl SegmentQueue {
         self.segments.clear();
     }
 
-    fn add_segment(&mut self, segment: Segment) {
-        self.segments.push(segment);
+    fn add_segment(
+        &mut self,
+        node: SignedInteger,
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
+    ) {
+        self.segments.push(Segment { node, left, right });
     }
 
     fn finalize(&mut self) {
@@ -117,25 +121,108 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
         panic!("input Ancestry must be sorted by birth time from past to present");
     }
 
+    // clear existing ancestry
+    for i in ancestry.ancestry.iter_mut() {
+        i.ancestry.clear();
+    }
+
     let mut state = SimplificationInternalState::new(ancestry, samples);
 
     let edges = &mut ancestry.edges;
-    let ancestry = &mut ancestry.ancestry;
+    let ancestry_data = &mut ancestry.ancestry;
 
     for record in edges.iter_mut().rev() {
         state.queue.clear();
         for e in record.descendants.iter() {
-            for x in ancestry[e.node as usize].ancestry.iter() {}
+            for x in ancestry_data[e.node as usize].ancestry.iter() {
+                if x.right > e.left && e.right > x.left {
+                    state.queue.add_segment(
+                        x.node,
+                        std::cmp::max(x.left, e.left),
+                        std::cmp::min(x.right, e.right),
+                    )
+                }
+            }
+        }
+
+        record.descendants.clear();
+
+        let mut output_node: SignedInteger = -1;
+
+        while !state.queue.segments.is_empty() {
+            let mut l = state.queue.segments[0].left;
+            let mut r = ancestry.genome_length;
+            let mut overlaps = vec![];
+
+            while !state.queue.segments.is_empty() && state.queue.segments[0].left == l {
+                if let Some(x) = state.queue.pop() {
+                    overlaps.push(x);
+                    r = std::cmp::min(r, x.right);
+                } else {
+                    panic!("expected Some(segment)");
+                }
+            }
+            match &state.queue.segments.last() {
+                Some(x) => r = std::cmp::min(r, x.left),
+                None => (),
+            }
+
+            assert!(!overlaps.is_empty());
+
+            if overlaps.len() == 1 {
+                let mut x = overlaps[0];
+                let mut alpha = x;
+                match &state.queue.segments.last() {
+                    Some(seg) => {
+                        alpha = Segment::new(x.node, seg.left, x.right);
+                        x.left = seg.left;
+                        state.queue.enqueue(x);
+                    }
+                    None => (),
+                }
+                ancestry_data[record.node as usize].ancestry.push(alpha);
+            } else {
+                if output_node == -1 {
+                    output_node = state.next_output_node_id;
+                    state.next_output_node_id += 1;
+                    state.idmap[record.node as usize] = output_node;
+                }
+                let alpha = Segment::new(output_node, l, r);
+                for o in &mut overlaps {
+                    record.descendants.push(Segment::new(o.node, l, r));
+                    if o.right > r {
+                        o.left = r;
+                        state.queue.enqueue(*o);
+                    }
+                }
+                ancestry_data[record.node as usize].ancestry.push(alpha);
+            }
         }
     }
+
+    // Remap node ids.
+
+    for i in state.idmap.iter_mut() {
+        if *i >= 0 {
+            *i = (*i - state.next_output_node_id).abs() - 1;
+            assert!(*i >= 0);
+        }
+    }
+
+    for (i, j) in edges.iter_mut().zip(ancestry_data.iter_mut()) {
+        assert!(i.node == j.node);
+        i.node = state.idmap[i.node as usize];
+        j.node = state.idmap[j.node as usize];
+    }
+
+    edges.retain(|r| r.node != -1);
+    ancestry_data.retain(|r| r.node != -1);
 
     state.idmap
 }
 
 #[cfg(test)]
 mod tests {
-    use std::arch::x86_64::_MM_SET_FLUSH_ZERO_MODE;
-
     use super::*;
 
     fn make_segments() -> Vec<Segment> {
