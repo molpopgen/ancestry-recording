@@ -102,21 +102,15 @@ impl SegmentQueue {
     }
 }
 
-fn process_input_record(
-    ancestry: &Ancestry,
-    record: AncestryRecord,
-    state: &mut SimplificationInternalState,
-) {
-}
-
 /// No error handling, all panics right now.
 pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<SignedInteger> {
     assert!(samples.len() > 1);
+    assert_eq!(ancestry.edges.len(), ancestry.ancestry.len());
     // input data must be ordered by birth time, past to present
     // NOTE: this check would be more efficient if done in the
     // main iter_mut loop below.
     let sorted = ancestry
-        .ancestry
+        .edges
         .windows(2)
         .all(|w| w[0].birth_time <= w[1].birth_time);
     if !sorted {
@@ -125,12 +119,15 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
 
     let mut state = SimplificationInternalState::new(ancestry, samples);
 
-    // for record in ancestry.ancestry.iter_mut().rev() {
-    //     state.queue.clear();
-    //     for e in record.descendants.iter() {
-    //         for x in ancestry.ancestry[e.node as usize].ancestry.iter() {}
-    //     }
-    // }
+    let edges = &mut ancestry.edges;
+    let ancestry = &mut ancestry.ancestry;
+
+    for record in edges.iter_mut().rev() {
+        state.queue.clear();
+        for e in record.descendants.iter() {
+            for x in ancestry[e.node as usize].ancestry.iter() {}
+        }
+    }
 
     state.idmap
 }
