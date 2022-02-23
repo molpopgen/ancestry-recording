@@ -1,9 +1,13 @@
-use crate::{Ancestry, NodeId, SignedInteger};
+use crate::{Ancestry, AncestryRecord, NodeId, Segment, SignedInteger};
 
 struct SimplificationInternalState {
     idmap: Vec<NodeId>,
     is_sample: Vec<bool>,
     next_output_node_id: SignedInteger,
+}
+
+struct SegmentQueue {
+    segments: Vec<Segment>,
 }
 
 impl SimplificationInternalState {
@@ -26,6 +30,8 @@ impl SimplificationInternalState {
     }
 }
 
+fn process_input_record(record: &mut AncestryRecord, state: &mut SimplificationInternalState) {}
+
 /// No error handling, all panics right now.
 pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
     assert!(samples.len() > 1);
@@ -40,7 +46,9 @@ pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
 
     let mut state = SimplificationInternalState::new(ancestry, samples);
 
-    for node in ancestry.ancestry.iter_mut().rev() {}
+    for record in ancestry.ancestry.iter_mut().rev() {
+        process_input_record(record, &mut state);
+    }
 
     state.idmap
 }
