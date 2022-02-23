@@ -1,25 +1,20 @@
-use crate::{Ancestry, LargeSignedInteger, NodeId, Time};
+use crate::{Ancestry, NodeId};
 
 /// No error handling, all panics right now.
-pub fn simplify(new_births: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
-    assert!(new_births.len() > 1);
-    // samples must be ordered by birth time, past to present
-    let sorted = new_births.windows(2).all(|w| {
-        ancestry.ancestry[w[0].value as usize].birth_time
-            <= ancestry.ancestry[w[1].value as usize].birth_time
-    });
-    assert!(sorted);
+pub fn simplify(samples: &[NodeId], ancestry: &mut Ancestry) -> Vec<NodeId> {
+    assert!(samples.len() > 1);
+    // input data must be ordered by birth time, past to present
+    let sorted = ancestry
+        .ancestry
+        .windows(2)
+        .all(|w| w[0].birth_time <= w[1].birth_time);
+    if !sorted {
+        panic!("input Ancestry must be sorted by birth time from past to present");
+    }
 
     let mut idmap = vec![NodeId::new_null(); ancestry.ancestry.len()];
 
-    // now, go through the sample nodes from present to past
-    let mut last_time = Time {
-        value: LargeSignedInteger::MAX,
-    };
-    for node in ancestry.ancestry.iter().rev() {
-        assert!(node.birth_time <= last_time);
-        last_time = node.birth_time;
-    }
+    for node in ancestry.ancestry.iter().rev() {}
 
     idmap
 }
