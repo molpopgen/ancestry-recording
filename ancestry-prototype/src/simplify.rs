@@ -31,15 +31,14 @@ impl SimplificationInternalState {
 }
 
 impl SegmentQueue {
+    // NOTE: not clear this should be in the API...
     fn new_from_input_edges(input: &[Segment]) -> Self {
         let mut segments = input.to_vec();
-        segments.sort_by(|a, b| match a.left.partial_cmp(&b.left) {
-            Some(std::cmp::Ordering::Less) => std::cmp::Ordering::Greater,
-            Some(std::cmp::Ordering::Greater) => std::cmp::Ordering::Less,
-            Some(x) => x,
-            None => panic!("unexpected None"),
+        segments.sort_by(|a, b| {
+            std::cmp::Reverse(a.left)
+                .partial_cmp(&std::cmp::Reverse(b.left))
+                .unwrap()
         });
-
         Self { segments }
     }
 }
