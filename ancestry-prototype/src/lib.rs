@@ -1,11 +1,11 @@
 pub use ancestry_common::{
-    LargeSignedInteger, NodeFlags, NodeId, NodeTable, Position, SignedInteger,
+    LargeSignedInteger, NodeFlags, NodeId, NodeTable, Position, SignedInteger, Time,
 };
 
 mod ancestry;
 mod simplify;
 
-pub use ancestry::{Ancestry, AncestryRecord, Descendant};
+pub use ancestry::{Ancestry, AncestryRecord, Segment};
 pub use simplify::simplify;
 
 #[cfg(test)]

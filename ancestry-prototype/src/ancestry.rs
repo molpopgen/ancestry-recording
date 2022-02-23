@@ -1,6 +1,6 @@
-use crate::{NodeId, Position};
+use crate::{NodeId, Position, SignedInteger, Time};
 
-pub struct Descendant {
+pub struct Segment {
     pub descendant: NodeId,
     pub left: Position,
     pub right: Position,
@@ -8,16 +8,20 @@ pub struct Descendant {
 
 pub struct AncestryRecord {
     pub node: NodeId,
-    pub ancestors: Vec<NodeId>,
-    pub descendants: Vec<Descendant>,
+    pub birth_time: Time,
+    pub ancestry: Vec<Segment>,
+    pub descendants: Vec<Segment>,
 }
 
+/// This is node table,
+/// edge table, and ancestry
+/// all rolled up into one.
 pub struct Ancestry {
     pub genome_length: Position,
     pub ancestry: Vec<AncestryRecord>,
 }
 
-impl Descendant {
+impl Segment {
     pub fn new(descendant: NodeId, left: Position, right: Position) -> Self {
         Self {
             descendant,
@@ -28,18 +32,25 @@ impl Descendant {
 }
 
 impl AncestryRecord {
-    pub fn new(node: NodeId) -> Self {
+    pub fn new(node: NodeId, birth_time: Time) -> Self {
         Self {
             node,
-            ancestors: vec![],
+            birth_time,
+            ancestry: vec![],
             descendants: vec![],
         }
     }
 
-    pub fn new_from(node: NodeId, ancestors: Vec<NodeId>, descendants: Vec<Descendant>) -> Self {
+    pub fn new_from(
+        node: NodeId,
+        birth_time: Time,
+        ancestry: Vec<Segment>,
+        descendants: Vec<Segment>,
+    ) -> Self {
         Self {
             node,
-            ancestors,
+            birth_time,
+            ancestry,
             descendants,
         }
     }
@@ -65,7 +76,7 @@ impl Ancestry {
         right: Position,
     ) {
         if let Some(record) = self.get_mut(ancestor) {
-            record.descendants.push(Descendant {
+            record.descendants.push(Segment {
                 descendant,
                 left,
                 right,
@@ -73,5 +84,14 @@ impl Ancestry {
         } else {
             panic!("{:?} has not been recorded as a node", ancestor);
         }
+    }
+
+    pub fn record_node(&mut self, birth_time: Time) -> NodeId {
+        assert!(self.ancestry.len() < SignedInteger::MAX as usize);
+        let value = (self.ancestry.len() + 1) as SignedInteger;
+        let rv = NodeId { value };
+        let x = AncestryRecord::new(rv, birth_time);
+        self.ancestry.push(x);
+        rv
     }
 }

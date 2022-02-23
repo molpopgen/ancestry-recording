@@ -23,7 +23,6 @@ pub fn simplify(
         if let Some(record) = ancestry.get_mut(*node) {
             // check the validity of the fields
             // of ancestry[i]
-            assert!(record.ancestors.len() > 0);
 
             // Find overlaps with the ancestor,
             // doing the magic to prune extinct segments
