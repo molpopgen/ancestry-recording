@@ -50,6 +50,10 @@ impl SimplificationInternalState {
                 next_output_node_id += 1;
 
                 // Add initial ancestry for this node
+                // FIXME: this is a problem!!
+                // Sample nodes must have their "ancestry
+                // mapping to self" somehow "fixed"
+                // to map to the "right place".
                 ancestry.ancestry[u].ancestry.push(Segment::new(
                     idmap[u],
                     0,
