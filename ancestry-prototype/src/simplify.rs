@@ -445,7 +445,7 @@ mod tests {
 
         println!("samples: ");
         for i in samples.iter() {
-            println!("{}", *i);
+            println!("sample = {}", *i);
         }
         println!("done");
 
