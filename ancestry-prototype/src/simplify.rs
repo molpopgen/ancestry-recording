@@ -380,9 +380,19 @@ mod tests {
     #[test]
     fn test_simplify_record_simplify() {
         let (_, mut a) = simplify_feb_11_with_samples(&vec![4, 5]);
+        let node4 = a.record_node(3);
+        assert_eq!(node4, 4);
+        let node5 = a.record_node(3);
+        assert_eq!(node5, 5);
+
         let mut samples = vec![];
-        let node = a.record_node(3);
-        assert_eq!(node, 4);
-        samples.push(node);
+        // Make 4 offspring nodes for the final generation
+        for i in 0..4 {
+            let n = a.record_node(4);
+            assert_eq!(n, node5 + i + 1);
+            samples.push(n);
+        }
+
+        // We want to create coalescences in both node 4 and node 5
     }
 }
