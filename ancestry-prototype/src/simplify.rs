@@ -360,21 +360,29 @@ mod tests {
         }
     }
 
-    fn simplify_feb_11_with_samples(samples: &[SignedInteger]) -> Vec<SignedInteger> {
+    fn simplify_feb_11_with_samples(samples: &[SignedInteger]) -> (Vec<SignedInteger>, Ancestry) {
         let mut a = feb_11_example();
-        let samples = vec![4, 5];
-        simplify(&samples, &mut a)
+        (simplify(&samples, &mut a), a)
     }
 
     #[test]
     fn test_simplification_independence_from_sample_order() {
         {
-            let idmap_1 = simplify_feb_11_with_samples(&vec![4, 5]);
-            let idmap_2 = simplify_feb_11_with_samples(&vec![5, 4]);
+            let (idmap_1, _) = simplify_feb_11_with_samples(&vec![4, 5]);
+            let (idmap_2, _) = simplify_feb_11_with_samples(&vec![5, 4]);
 
             for (i, j) in idmap_1.iter().zip(idmap_2.iter()) {
                 assert_eq!(*i, *j);
             }
         }
+    }
+
+    #[test]
+    fn test_simplify_record_simplify() {
+        let (_, mut a) = simplify_feb_11_with_samples(&vec![4, 5]);
+        let mut samples = vec![];
+        let node = a.record_node(3);
+        assert_eq!(node, 4);
+        samples.push(node);
     }
 }
