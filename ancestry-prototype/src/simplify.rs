@@ -258,6 +258,11 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
         i.node = state.idmap[i.node as usize];
         j.node = state.idmap[j.node as usize];
 
+        // FIXME: this is wrong.
+        // We are mapping an initial output ID to
+        // another output ID assuming it the ID
+        // is actually an input ID.
+        // This error causes 2ndary simplifications to barf.
         for s in i.descendants.iter_mut() {
             s.node = (s.node - state.next_output_node_id).abs() - 1;
         }
