@@ -257,6 +257,8 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
 
 #[cfg(test)]
 mod tests {
+    use std::{usize, vec};
+
     use super::*;
 
     fn make_segments() -> Vec<Segment> {
@@ -362,7 +364,8 @@ mod tests {
 
     fn simplify_feb_11_with_samples(samples: &[SignedInteger]) -> (Vec<SignedInteger>, Ancestry) {
         let mut a = feb_11_example();
-        (simplify(&samples, &mut a), a)
+        let idmap = simplify(&samples, &mut a);
+        (idmap, a)
     }
 
     #[test]
@@ -379,20 +382,80 @@ mod tests {
 
     #[test]
     fn test_simplify_record_simplify() {
-        let (_, mut a) = simplify_feb_11_with_samples(&vec![4, 5]);
-        let node4 = a.record_node(3);
-        assert_eq!(node4, 4);
-        let node5 = a.record_node(3);
-        assert_eq!(node5, 5);
+        let samples = vec![4, 5];
+        let (idmap, mut anc) = simplify_feb_11_with_samples(&samples);
 
+        let mut parents = vec![];
+        for i in samples.iter() {
+            assert!(*i >= 0);
+            parents.push(idmap[*i as usize]);
+        }
+
+        println!("ancestry after first simplification");
+        for a in anc.ancestry.iter() {
+            println!("node {}", a.node);
+            for d in a.ancestry.iter() {
+                println!("segs = L{}, R{}, N{}", d.left, d.right, d.node);
+            }
+        }
+        println!("done");
+
+        //xover pos'ns
+        let a = 25;
+        let b = 75;
+        let c = 10;
+        let d = 90;
+
+        let maxnode = *parents.iter().max().unwrap();
+        assert_eq!(maxnode, 3);
         let mut samples = vec![];
         // Make 4 offspring nodes for the final generation
         for i in 0..4 {
-            let n = a.record_node(4);
-            assert_eq!(n, node5 + i + 1);
+            let n = anc.record_node(3);
+            assert_eq!(n, maxnode + i + 1);
             samples.push(n);
         }
 
+        println!("samples: ");
+        for i in samples.iter() {
+            println!("{}", *i);
+        }
+        println!("done");
+
         // We want to create coalescences in both node 4 and node 5
+        anc.record_transmission(parents[0], 4, a, anc.genome_length);
+        anc.record_transmission(parents[0], 6, b, anc.genome_length);
+        anc.record_transmission(parents[1], 5, 0, d);
+        anc.record_transmission(parents[1], 7, c, d);
+
+        let idmap = simplify(&samples, &mut anc);
+        println!("idmap after 2nd:");
+        for (i, j) in idmap.iter().enumerate() {
+            println!("{} -> {}", i, *j);
+        }
+        for i in samples.iter() {
+            assert!(idmap[*i as usize] >= 0);
+        }
+        for (i, e) in anc.edges.iter().enumerate() {
+            assert_eq!(i, e.node as usize);
+        }
+        println!("ancestry after second simplification");
+        for a in anc.ancestry.iter() {
+            println!("node = {}", a.node);
+            for d in a.ancestry.iter() {
+                println!("segs = L{}, R{}, N{}", d.left, d.right, d.node);
+            }
+        }
+        println!("done");
+        // the remapped parents
+        for i in parents.iter_mut() {
+            let u = *i;
+            assert!(idmap[*i as usize] >= 0);
+            *i = idmap[*i as usize];
+            println!("parent {} remapped to {}:", u, *i);
+            for d in anc.ancestry[*i as usize].ancestry.iter() {
+                println!("segs = L{}, R{}, N{}", d.left, d.right, d.node);
+            }
+        }
     }
 }
