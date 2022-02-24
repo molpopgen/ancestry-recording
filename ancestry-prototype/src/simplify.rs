@@ -332,7 +332,7 @@ mod tests {
         a.record_transmission(node, 2, 0, x);
         let node = a.record_node(0);
         assert_eq!(node, 1);
-        a.record_transmission(node, 2, 0, x);
+        a.record_transmission(node, 2, x, l);
         a.record_transmission(node, 3, 0, l);
         let node = a.record_node(1);
         assert_eq!(node, 2);
@@ -395,6 +395,14 @@ mod tests {
         for a in anc.ancestry.iter() {
             println!("node {}", a.node);
             for d in a.ancestry.iter() {
+                println!("segs = L{}, R{}, N{}", d.left, d.right, d.node);
+            }
+        }
+        println!("done");
+        println!("edges after first simplification");
+        for a in anc.edges.iter() {
+            println!("node {}", a.node);
+            for d in a.descendants.iter() {
                 println!("segs = L{}, R{}, N{}", d.left, d.right, d.node);
             }
         }
