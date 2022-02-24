@@ -231,6 +231,7 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
                         state.queue.enqueue(*o);
                     }
                 }
+                println!("adding ancestry for {} -> {}", record.node, alpha.node);
                 ancestry_data[record.node as usize].ancestry.push(alpha);
             }
         }
@@ -238,8 +239,15 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
 
     // Remap node ids.
 
+    // for i in samples.iter() {
+    //     assert!( state.idmap[*i as usize] >= 0);
+    //     let u = *i as usize;
+    //     state.idmap[u] = (state.idmap[u] - state.next_output_node_id).abs()-1;
+    //     assert!(state.idmap[u] >=0);
+    // }
     for i in state.idmap.iter_mut() {
         if *i >= 0 {
+            let u = *i;
             *i = (*i - state.next_output_node_id).abs() - 1;
             assert!(*i >= 0);
         }
@@ -249,6 +257,13 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
         assert!(i.node == j.node);
         i.node = state.idmap[i.node as usize];
         j.node = state.idmap[j.node as usize];
+
+        for s in i.descendants.iter_mut() {
+            s.node = (s.node - state.next_output_node_id).abs() - 1;
+        }
+        for s in j.ancestry.iter_mut() {
+            s.node = (s.node - state.next_output_node_id).abs() - 1;
+        }
     }
 
     edges.retain(|r| r.node != -1);
@@ -455,6 +470,14 @@ mod tests {
         for a in anc.ancestry.iter() {
             println!("node = {}", a.node);
             for d in a.ancestry.iter() {
+                println!("segs = L{}, R{}, N{}", d.left, d.right, d.node);
+            }
+        }
+        println!("done");
+        println!("edges after second simplification");
+        for a in anc.edges.iter() {
+            println!("node {}", a.node);
+            for d in a.descendants.iter() {
                 println!("segs = L{}, R{}, N{}", d.left, d.right, d.node);
             }
         }
