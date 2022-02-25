@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 ancestry-common = { version = "~0.1.0", path = "../ancestry-common" }
 hashbrown = "~0.12.0"
+GSL = "6.0"
