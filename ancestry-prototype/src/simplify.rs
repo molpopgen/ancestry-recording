@@ -133,7 +133,7 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
                 r = std::cmp::min(r, x.right);
             }
             match queue.peek() {
-                Some(x) => r = std::cmp::min(r, x.left),
+                Some(seg) => r = std::cmp::min(r, seg.left),
                 None => (),
             }
 
@@ -145,12 +145,12 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
                 match queue.peek() {
                     Some(seg) => {
                         if seg.left < x.right {
-                            alpha = Segment::new(x.node, seg.left, x.right);
+                            alpha = Segment::new(x.node, x.left, seg.left);
                             x.left = seg.left;
                             queue.push(x);
                         }
                     }
-                    None => (),
+                    None => assert!(queue.is_empty()),
                 }
                 ancestry_data[record.node as usize].ancestry.push(alpha);
             } else {
