@@ -16,6 +16,7 @@ pub type ChildMap = HashMap<SignedInteger, Vec<Segment>>;
 pub struct Ancestry {
     next_node_id: SignedInteger,
     node_to_index: HashMap<SignedInteger, usize>,
+    genome_length: LargeSignedInteger,
     pub status: Vec<NodeStatus>,
     pub birth_time: Vec<LargeSignedInteger>,
     pub ancestry: Vec<Vec<Segment>>,
@@ -24,7 +25,7 @@ pub struct Ancestry {
 }
 
 impl Ancestry {
-    pub fn new(num_nodes: SignedInteger) -> Self {
+    pub fn new(num_nodes: SignedInteger, genome_length: LargeSignedInteger) -> Self {
         assert!(num_nodes > 0);
 
         let mut node_to_index = HashMap::<SignedInteger, usize>::default();
@@ -36,6 +37,7 @@ impl Ancestry {
         Self {
             next_node_id: num_nodes,
             node_to_index,
+            genome_length,
             status: vec![NodeStatus::ALIVE; num_nodes as usize],
             birth_time: vec![0; num_nodes as usize],
             ancestry: vec![vec![]; num_nodes as usize],
@@ -84,6 +86,10 @@ impl Ancestry {
         rv
     }
 
+    pub fn genome_length(&self) -> LargeSignedInteger {
+        self.genome_length
+    }
+
     // "private" fns (for now at least...)
     fn len(&self) -> usize {
         assert_eq!(self.status.len(), self.ancestry.len());
@@ -109,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_ancestry_new() {
-        let a = Ancestry::new(10);
+        let a = Ancestry::new(10, 100);
         assert_eq!(a.next_node_id, 10);
         assert_eq!(a.len(), 10);
 

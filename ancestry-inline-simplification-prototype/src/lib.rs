@@ -1,6 +1,7 @@
 pub use ancestry_common::{LargeSignedInteger, Segment, SignedInteger};
 
 pub mod ancestry;
+pub mod simulate;
 
 #[cfg(test)]
 mod tests {
