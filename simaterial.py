@@ -41,9 +41,14 @@ def simplify(S: typing.List[int], N: typing.List[Node], E: typing.List[Edge], L:
     No = []
     Eo = []
 
-    for u in S:
+    idmap = [-1 for _ in N]
+    assert len(idmap) == len(N)
+
+    for i, u in enumerate(S):
         No.append(Node(N[u].time, 1))
         A[u] = [Segment(0, L, len(No) - 1)]
+        print(i, u)
+        idmap[u] = i
 
     for input_node in range(len(N)):
         u = len(N) - input_node - 1
@@ -66,6 +71,7 @@ def simplify(S: typing.List[int], N: typing.List[Node], E: typing.List[Edge], L:
             if len(Q) > 0:
                 right_position = min(right_position, Q[0].left)
             assert len(X) > 0
+            print(u, len(X), X)
             if len(X) == 1:
                 x = X[0]
                 alpha = x
@@ -77,6 +83,7 @@ def simplify(S: typing.List[int], N: typing.List[Node], E: typing.List[Edge], L:
                 if output_node == -1:
                     No.append(Node(N[u].time))
                     output_node = len(No) - 1
+                    idmap[u] = output_node
                 assert left_position < right_position
                 alpha = Segment(left_position, right_position, output_node)
                 for x in X:
@@ -89,7 +96,7 @@ def simplify(S: typing.List[int], N: typing.List[Node], E: typing.List[Edge], L:
 
     # Sort, but do not squash, the output edges
     Eo.sort(key=lambda e: (e.parent, e.child, e.right, e.left))
-    return No, Eo, A
+    return No, Eo, A, idmap
 
 
 if __name__ == "__main__":
@@ -123,9 +130,15 @@ if __name__ == "__main__":
     assert len(N) == 6
     assert len(E) == 6
 
-    No, Eo, A = simplify(samples, N, E, L)
+    No, Eo, A, idmap = simplify(samples, N, E, L)
 
-    print(No)
+    print("the id map")
+    for i, j in enumerate(zip(N, idmap)):
+        print(f"{i}, {j[0]} -> {j[1]}")
+
+    print("the edges")
     for i, e in enumerate(Eo):
         print(i, e)
-    print(A)
+    print("the ancestry")
+    for i, a in enumerate(A):
+        print(i, a)
