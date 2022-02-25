@@ -1,5 +1,5 @@
 use crate::{LargeSignedInteger, Segment, SignedInteger};
-// Use this over std::collections b/c the hashing 
+// Use this over std::collections b/c the hashing
 // fn is much faster. (We aren't doing cryptography.)
 // TODO: See the O'Reilly book for which crate
 // they recommend here.
@@ -17,7 +17,7 @@ pub struct Ancestry {
     next_node_id: SignedInteger,
     node_to_index: HashMap<SignedInteger, usize>,
     pub status: Vec<NodeStatus>,
-    pub birth_time: Vec<SignedInteger>,
+    pub birth_time: Vec<LargeSignedInteger>,
     pub ancestry: Vec<Vec<Segment>>,
     pub children: Vec<ChildMap>,
     pub parents: Vec<HashSet<SignedInteger>>,
@@ -44,14 +44,19 @@ impl Ancestry {
         }
     }
 
-    pub fn add_child_segment(&mut self, parent: SignedInteger, child: SignedInteger, left: LargeSignedInteger, right: LargeSignedInteger){
+    pub fn add_child_segment(
+        &mut self,
+        parent: SignedInteger,
+        child: SignedInteger,
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
+    ) {
         if let Some(p) = self.node_to_index.get_mut(&parent) {
             let seg = Segment::new(-1, left, right);
             if let Some(c) = self.children[*p].get_mut(&child) {
                 // TODO: doc why we use a "null" node ID here...
                 c.push(seg);
-            }
-            else {
+            } else {
                 self.children[*p].insert(child, vec![seg]);
             }
         } else {
@@ -60,7 +65,7 @@ impl Ancestry {
     }
 
     /// Returns the "ID" of a new node
-    pub fn add_node(&mut self) -> SignedInteger {
+    pub fn add_node(&mut self, birth_time: LargeSignedInteger, alive: bool) -> SignedInteger {
         if let Some(_) = self.node_to_index.get(&self.next_node_id) {
             panic!("We've done something quite wrong...");
         }
@@ -70,7 +75,12 @@ impl Ancestry {
         }
         self.node_to_index.insert(self.next_node_id, len);
         let rv = self.next_node_id;
-        self.next_node_id+=1;
+        self.next_node_id += 1;
+        let status = match alive {
+            true => NodeStatus::ALIVE,
+            false => NodeStatus::DEAD,
+        };
+        self.add_rows(birth_time, status);
         rv
     }
 
@@ -83,12 +93,20 @@ impl Ancestry {
 
         self.status.len()
     }
+
+    fn add_rows(&mut self, birth_time: LargeSignedInteger, status: NodeStatus) {
+        self.status.push(status);
+        self.birth_time.push(birth_time);
+        self.ancestry.push(vec![]);
+        self.children.push(ChildMap::default());
+        self.parents.push(HashSet::<SignedInteger>::default());
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_ancestry_new() {
         let a = Ancestry::new(10);
