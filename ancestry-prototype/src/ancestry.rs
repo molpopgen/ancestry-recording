@@ -1,12 +1,27 @@
+use std::cmp::Ordering;
 use std::vec;
 
 use crate::{LargeSignedInteger, SignedInteger};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct Segment {
     pub node: SignedInteger,
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
+}
+
+impl Ord for Segment {
+    // Flipped to create min heaps
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.left.cmp(&self.left)
+    }
+}
+
+impl PartialOrd for Segment {
+    // Flipped to create min heaps
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(other.cmp(&self))
+    }
 }
 
 pub struct Parent {
