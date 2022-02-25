@@ -20,7 +20,7 @@ impl Ord for Segment {
 impl PartialOrd for Segment {
     // Flipped to create min heaps
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(other.cmp(&self))
+        Some(self.cmp(&other))
     }
 }
 
@@ -130,5 +130,32 @@ impl Ancestry {
             .edges
             .windows(2)
             .all(|w| w[0].birth_time <= w[1].birth_time));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BinaryHeap;
+
+    #[test]
+    fn test_binary_heap() {
+        let mut v = vec![];
+        v.push(Segment::new(0, 9, 10));
+        v.push(Segment::new(0, 11, 12));
+        v.push(Segment::new(0, 7, 10));
+
+        let mut heap = BinaryHeap::from(v);
+
+        heap.push(Segment::new(1, 8, 9));
+
+        let x = heap.pop().unwrap();
+        assert_eq!(x.left, 7);
+        let x = heap.pop().unwrap();
+        assert_eq!(x.left, 8);
+        let x = heap.pop().unwrap();
+        assert_eq!(x.left, 9);
+        let x = heap.pop().unwrap();
+        assert_eq!(x.left, 11);
     }
 }
