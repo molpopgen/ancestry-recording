@@ -126,12 +126,14 @@ impl SegmentQueue {
         }
         let mut insertion = usize::MAX;
 
+        // FIXME: this is the problem.
         for (i, v) in self.segments.iter().rev().enumerate() {
             if segment.left < v.left {
                 insertion = self.segments.len() - i;
                 break;
             }
         }
+        assert!(insertion < self.segments.len());
         self.segments.insert(insertion, segment);
         let sorted = self.segments.windows(2).all(|w| w[0].left >= w[1].left);
         assert!(sorted);
@@ -190,12 +192,17 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
         let mut output_node: SignedInteger = -1;
 
         while !state.queue.segments.is_empty() {
-            let mut l = state.queue.segments[0].left;
+            let mut l = match &state.queue.segments.last() {
+                Some(x) => x.left,
+                None => panic!("expected Some(Segment)"),
+            };
+            println!("l = {}",l);
             let mut r = ancestry.genome_length;
             let mut overlaps = vec![];
 
-            while !state.queue.segments.is_empty() && state.queue.segments[0].left == l {
+            while !state.queue.segments.is_empty() && state.queue.segments.last().unwrap().left == l {
                 if let Some(x) = state.queue.pop() {
+                    println!("{} {} {}",x.left,x.right,x.node);
                     overlaps.push(x);
                     r = std::cmp::min(r, x.right);
                 } else {
