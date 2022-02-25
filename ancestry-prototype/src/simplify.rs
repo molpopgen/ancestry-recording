@@ -80,25 +80,6 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
     assert!(samples.len() > 1);
     assert_eq!(ancestry.edges.len(), ancestry.ancestry.len());
 
-    // NOTE: this check is now done above, during state setup.
-    // This arguably improves perf, but at the potential cost
-    // of obscuring logic by mixing it with input verification.
-    // input data must be ordered by birth time, past to present
-    // NOTE: this check would be more efficient if done in the
-    // main iter_mut loop below.
-    //let sorted = ancestry
-    //    .edges
-    //    .windows(2)
-    //    .all(|w| w[0].birth_time <= w[1].birth_time);
-    //if !sorted {
-    //    panic!("input Ancestry must be sorted by birth time from past to present");
-    //}
-
-    // clear existing ancestry
-    // for i in ancestry.ancestry.iter_mut() {
-    //     i.ancestry.clear();
-    // }
-
     let mut state = setup_simplification(ancestry, samples);
 
     let edges = &mut ancestry.edges;
