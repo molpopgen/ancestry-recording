@@ -1,4 +1,4 @@
-use crate::{Ancestry, AncestryRecord, LargeSignedInteger, Segment, SignedInteger};
+use crate::{Ancestry, LargeSignedInteger, Segment, SignedInteger};
 
 struct SimplificationInternalState {
     idmap: Vec<SignedInteger>,
@@ -227,6 +227,7 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
                     state.next_output_node_id += 1;
                     state.idmap[record.node as usize] = output_node;
                 }
+                assert!(l < r);
                 let alpha = Segment::new(output_node, l, r);
                 for o in &mut overlaps {
                     record.descendants.push(Segment::new(o.node, l, r));
