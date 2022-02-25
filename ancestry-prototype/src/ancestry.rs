@@ -20,7 +20,7 @@ impl Ord for Segment {
 impl PartialOrd for Segment {
     // Flipped to create min heaps
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(&other))
+        Some(self.cmp(other))
     }
 }
 
@@ -117,7 +117,7 @@ impl Ancestry {
         value
     }
 
-    pub fn validate_post_simplification(&self) -> () {
+    pub fn validate_post_simplification(&self) {
         assert_eq!(self.edges.len(), self.ancestry.len());
         for (i, j) in self.edges.iter().zip(self.ancestry.iter()) {
             assert_eq!(i.node, j.node);

@@ -113,9 +113,8 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
                 overlaps.push(x);
                 r = std::cmp::min(r, x.right);
             }
-            match queue.peek() {
-                Some(seg) => r = std::cmp::min(r, seg.left),
-                None => (),
+            if let Some(seg) = queue.peek() {
+                r = std::cmp::min(r, seg.left);
             }
 
             assert!(!overlaps.is_empty());
@@ -123,15 +122,12 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
             if overlaps.len() == 1 {
                 let mut x = overlaps[0];
                 let mut alpha = x;
-                match queue.peek() {
-                    Some(seg) => {
-                        if seg.left < x.right {
-                            alpha = Segment::new(x.node, x.left, seg.left);
-                            x.left = seg.left;
-                            queue.push(x);
-                        }
+                if let Some(seg) = queue.peek() {
+                    if seg.left < x.right {
+                        alpha = Segment::new(x.node, x.left, seg.left);
+                        x.left = seg.left;
+                        queue.push(x);
                     }
-                    None => assert!(queue.is_empty()),
                 }
                 ancestry_data[record.node as usize].ancestry.push(alpha);
             } else {
@@ -149,7 +145,6 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
                         queue.push(*o);
                     }
                 }
-                println!("adding ancestry for {} -> {}", record.node, alpha.node);
                 ancestry_data[record.node as usize].ancestry.push(alpha);
             }
         }
