@@ -1,5 +1,9 @@
 use crate::{LargeSignedInteger, Segment, SignedInteger};
-use std::{collections::{HashMap, HashSet}, thread::panicking};
+// Use this over std::collections b/c the hashing 
+// fn is much faster. (We aren't doing cryptography.)
+// TODO: See the O'Reilly book for which crate
+// they recommend here.
+use hashbrown::{HashMap, HashSet};
 
 #[derive(Clone, Copy)]
 pub enum NodeStatus {
@@ -16,9 +20,6 @@ pub struct Ancestry {
     pub birth_time: Vec<SignedInteger>,
     pub ancestry: Vec<Vec<Segment>>,
     pub children: Vec<ChildMap>,
-    // TODO: replace hashing function,
-    // as the default is slower than we
-    // need b/c "crypto strength".
     pub parents: Vec<HashSet<SignedInteger>>,
 }
 
