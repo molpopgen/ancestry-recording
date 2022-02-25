@@ -2,5 +2,6 @@
 
 members = [
     "ancestry-common",
+    "ancestry-inline-simplification-prototype",
     "current-algorithm"
 ]
