@@ -183,6 +183,8 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
             }
         }
 
+        state.queue.finalize();
+
         record.descendants.clear();
 
         let mut output_node: SignedInteger = -1;
