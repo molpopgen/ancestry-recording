@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from os import wait
+
 import typing
 import heapq
-import numpy as np
+# import numpy as np
 
 
 @dataclass
@@ -44,7 +44,8 @@ def simplify(S: typing.List[int], N: typing.List[Node], E: typing.List[Edge], L:
         No.append(Node(N[u].time, 1))
         A[u] = [Segment(0, L, len(No) - 1)]
 
-    for u in range(len(N)):
+    for input_node in range(len(N)):
+        u = len(N) - input_node - 1
         assert len(Q) == 0
         for e in [e for e in E if e.parent == u]:
             for x in A[e.child]:
