@@ -165,7 +165,6 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
     // }
     for i in state.idmap.iter_mut() {
         if *i >= 0 {
-            let u = *i;
             *i = (*i - state.next_output_node_id).abs() - 1;
             assert!(*i >= 0);
         }
