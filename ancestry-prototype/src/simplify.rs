@@ -111,6 +111,8 @@ impl SegmentQueue {
                 .partial_cmp(&std::cmp::Reverse(b.left))
                 .unwrap()
         });
+        let sorted = self.segments.windows(2).all(|w| w[0].left >= w[1].left);
+        assert!(sorted);
     }
 
     fn pop(&mut self) -> Option<Segment> {
