@@ -1,15 +1,10 @@
 use crate::{Ancestry, LargeSignedInteger, Segment, SignedInteger};
+use std::collections::BinaryHeap;
 
 struct SimplificationInternalState {
     idmap: Vec<SignedInteger>,
-    queue: SegmentQueue,
     is_sample: Vec<bool>,
     next_output_node_id: SignedInteger,
-}
-
-#[derive(Default)]
-struct SegmentQueue {
-    segments: Vec<Segment>,
 }
 
 impl SimplificationInternalState {
@@ -63,82 +58,9 @@ impl SimplificationInternalState {
         }
         Self {
             idmap,
-            queue: SegmentQueue::default(),
             is_sample,
             next_output_node_id,
         }
-    }
-}
-
-impl SegmentQueue {
-    fn new_from_vec(input: Vec<Segment>) -> Self {
-        let mut segments = input;
-        segments.sort_by(|a, b| {
-            std::cmp::Reverse(a.left)
-                .partial_cmp(&std::cmp::Reverse(b.left))
-                .unwrap()
-        });
-        Self { segments }
-    }
-
-    // NOTE: not clear this should be in the API...
-    fn new_from_input_edges(input: &[Segment]) -> Self {
-        let mut segments = input.to_vec();
-        segments.sort_by(|a, b| {
-            std::cmp::Reverse(a.left)
-                .partial_cmp(&std::cmp::Reverse(b.left))
-                .unwrap()
-        });
-        Self { segments }
-    }
-
-    fn clear(&mut self) {
-        self.segments.clear();
-    }
-
-    fn add_segment(
-        &mut self,
-        node: SignedInteger,
-        left: LargeSignedInteger,
-        right: LargeSignedInteger,
-    ) {
-        assert!(left < right);
-        self.segments.push(Segment { node, left, right });
-    }
-
-    fn finalize(&mut self) {
-        self.segments.sort_by(|a, b| {
-            std::cmp::Reverse(a.left)
-                .partial_cmp(&std::cmp::Reverse(b.left))
-                .unwrap()
-        });
-        let sorted = self.segments.windows(2).all(|w| w[0].left >= w[1].left);
-        assert!(sorted);
-    }
-
-    fn pop(&mut self) -> Option<Segment> {
-        self.segments.pop()
-    }
-
-    fn enqueue(&mut self, segment: Segment) {
-        if self.segments.is_empty() {
-            self.segments.push(segment);
-            return;
-        }
-        let mut insertion = usize::MAX;
-
-        // FIXME: this is the problem.
-        for (i, v) in self.segments.iter().rev().enumerate() {
-            println!("i = {}",i);
-            if segment.left <= v.left {
-                insertion = self.segments.len() - i;
-                break;
-            }
-        }
-        assert!(insertion <= self.segments.len());
-        self.segments.insert(insertion, segment);
-        let sorted = self.segments.windows(2).all(|w| w[0].left >= w[1].left);
-        assert!(sorted);
     }
 }
 
@@ -172,47 +94,36 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
 
     let edges = &mut ancestry.edges;
     let ancestry_data = &mut ancestry.ancestry;
+    let mut queue = BinaryHeap::<Segment>::default();
 
     for record in edges.iter_mut().rev() {
-        state.queue.clear();
         for e in record.descendants.iter() {
             for x in ancestry_data[e.node as usize].ancestry.iter() {
                 if x.right > e.left && e.right > x.left {
-                    state.queue.add_segment(
+                    queue.push(Segment::new(
                         x.node,
                         std::cmp::max(x.left, e.left),
                         std::cmp::min(x.right, e.right),
-                    )
+                    ));
                 }
             }
         }
-
-        state.queue.finalize();
 
         record.descendants.clear();
 
         let mut output_node: SignedInteger = -1;
 
-        while !state.queue.segments.is_empty() {
-            let mut l = match &state.queue.segments.last() {
-                Some(x) => x.left,
-                None => panic!("expected Some(Segment)"),
-            };
-            println!("l = {}", l);
+        while !queue.is_empty() {
+            let l = queue.peek().unwrap().left;
             let mut r = ancestry.genome_length;
             let mut overlaps = vec![];
 
-            while !state.queue.segments.is_empty() && state.queue.segments.last().unwrap().left == l
-            {
-                if let Some(x) = state.queue.pop() {
-                    println!("{} {} {}", x.left, x.right, x.node);
-                    overlaps.push(x);
-                    r = std::cmp::min(r, x.right);
-                } else {
-                    panic!("expected Some(segment)");
-                }
+            while !queue.is_empty() && queue.peek().unwrap().left == l {
+                let x = queue.pop().unwrap();
+                overlaps.push(x);
+                r = std::cmp::min(r, x.right);
             }
-            match &state.queue.segments.last() {
+            match queue.peek() {
                 Some(x) => r = std::cmp::min(r, x.left),
                 None => (),
             }
@@ -222,13 +133,13 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
             if overlaps.len() == 1 {
                 let mut x = overlaps[0];
                 let mut alpha = x;
-                match &state.queue.segments.last() {
-
+                match queue.peek() {
                     Some(seg) => {
-                        assert!(seg.left < x.right);
-                        alpha = Segment::new(x.node, seg.left, x.right);
-                        x.left = seg.left;
-                        state.queue.enqueue(x);
+                        if seg.left < x.right {
+                            alpha = Segment::new(x.node, seg.left, x.right);
+                            x.left = seg.left;
+                            queue.push(x);
+                        }
                     }
                     None => (),
                 }
@@ -241,11 +152,11 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
                 }
                 assert!(l < r);
                 let alpha = Segment::new(output_node, l, r);
-                for o in &mut overlaps {
+                for o in overlaps.iter_mut() {
                     record.descendants.push(Segment::new(o.node, l, r));
                     if o.right > r {
                         o.left = r;
-                        state.queue.enqueue(*o);
+                        queue.push(*o);
                     }
                 }
                 println!("adding ancestry for {} -> {}", record.node, alpha.node);
@@ -257,7 +168,7 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
     // Remap node ids.
 
     // for i in samples.iter() {
-    //     assert!( state.idmap[*i as usize] >= 0);
+    //     assert!( push.idmap[*i as usize] >= 0);
     //     let u = *i as usize;
     //     state.idmap[u] = (state.idmap[u] - state.next_output_node_id).abs()-1;
     //     assert!(state.idmap[u] >=0);
@@ -324,36 +235,6 @@ mod tests {
         rv
     }
 
-    #[test]
-    fn test_segment_queue_creation() {
-        let segments = make_segments();
-        let q = SegmentQueue::new_from_vec(segments);
-        let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
-        assert!(sorted);
-    }
-
-    #[test]
-    fn test_segment_queue_enqueue() {
-        let segments = make_segments();
-        let mut q = SegmentQueue::default();
-        for s in segments.into_iter() {
-            q.segments.push(s);
-        }
-        q.finalize();
-        let sorted = q.segments.windows(2).all(|w| w[0].left >= w[1].left);
-        assert!(sorted);
-        q.enqueue(Segment {
-            node: 0,
-            left: 2,
-            right: 5,
-        });
-        q.enqueue(Segment {
-            node: 0,
-            left: 0,
-            right: 5,
-        });
-    }
-
     fn feb_11_example() -> Ancestry {
         // 11 Feb example from my notebook
 
@@ -395,7 +276,7 @@ mod tests {
         {
             let mut a = feb_11_example();
             let samples = vec![4, 5];
-            let idmap = simplify(&samples, &mut a);
+            let _idmap = simplify(&samples, &mut a);
 
             for (i, e) in a.edges.iter().enumerate() {
                 assert_eq!(i, e.node as usize);

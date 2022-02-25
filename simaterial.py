@@ -65,6 +65,7 @@ def simplify(S: typing.List[int], N: typing.List[Node], E: typing.List[Edge], L:
                 right_position = min(right_position, x.right)
             if len(Q) > 0:
                 right_position = min(right_position, Q[0].left)
+            assert len(X) > 0
             if len(X) == 1:
                 x = X[0]
                 alpha = x
@@ -76,6 +77,7 @@ def simplify(S: typing.List[int], N: typing.List[Node], E: typing.List[Edge], L:
                 if output_node == -1:
                     No.append(Node(N[u].time))
                     output_node = len(No) - 1
+                assert left_position < right_position
                 alpha = Segment(left_position, right_position, output_node)
                 for x in X:
                     Eo.append(Edge(left_position, right_position, output_node, x.node))
