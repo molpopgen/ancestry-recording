@@ -8,60 +8,69 @@ struct SimplificationInternalState {
 }
 
 impl SimplificationInternalState {
-    fn new(ancestry: &mut Ancestry, samples: &[SignedInteger]) -> Self {
-        let mut is_sample = vec![false; ancestry.ancestry.len()];
-        let mut idmap = vec![-1; ancestry.ancestry.len()];
-        let mut next_output_node_id = 0;
-
-        // Unlike tskit, we do 2
-        // passes here so that the output ids
-        // do not depend on the order specified in
-        // the samples list.
-        for s in samples {
-            assert!(*s >= 0);
-            let u = *s as usize;
-            assert!(u < ancestry.ancestry.len());
-            if is_sample[u] {
-                panic!("duplicate samples");
-            }
-            is_sample[u] = true;
-        }
-
-        let mut last_birth_time = LargeSignedInteger::MAX;
-        for a in ancestry.edges.iter_mut().rev() {
-            // Validate input order "on demand"
-            if a.birth_time > last_birth_time {
-                panic!("input data must be sorted by birth time from past to present");
-            }
-            last_birth_time = a.birth_time;
-            let u = a.node as usize;
-
-            // Clear out pre-existing ancestry
-            ancestry.ancestry[u].ancestry.clear();
-
-            if is_sample[u] {
-                // add an output id
-                idmap[u] = next_output_node_id;
-                next_output_node_id += 1;
-
-                // Add initial ancestry for this node
-                // FIXME: this is a problem!!
-                // Sample nodes must have their "ancestry
-                // mapping to self" somehow "fixed"
-                // to map to the "right place".
-                ancestry.ancestry[u].ancestry.push(Segment::new(
-                    idmap[u],
-                    0,
-                    ancestry.genome_length,
-                ));
-            }
-        }
+    fn new(
+        idmap: Vec<SignedInteger>,
+        is_sample: Vec<bool>,
+        next_output_node_id: SignedInteger,
+    ) -> Self {
         Self {
             idmap,
             is_sample,
             next_output_node_id,
         }
     }
+}
+
+fn setup_simplification(
+    ancestry: &mut Ancestry,
+    samples: &[SignedInteger],
+) -> SimplificationInternalState {
+    let mut is_sample = vec![false; ancestry.ancestry.len()];
+    let mut idmap = vec![-1; ancestry.ancestry.len()];
+    let mut next_output_node_id = 0;
+
+    // Unlike tskit, we do 2
+    // passes here so that the output ids
+    // do not depend on the order specified in
+    // the samples list.
+    for s in samples {
+        assert!(*s >= 0);
+        let u = *s as usize;
+        assert!(u < ancestry.ancestry.len());
+        if is_sample[u] {
+            panic!("duplicate samples");
+        }
+        is_sample[u] = true;
+    }
+
+    let mut last_birth_time = LargeSignedInteger::MAX;
+    for a in ancestry.edges.iter_mut().rev() {
+        // Validate input order "on demand"
+        if a.birth_time > last_birth_time {
+            panic!("input data must be sorted by birth time from past to present");
+        }
+        last_birth_time = a.birth_time;
+        let u = a.node as usize;
+
+        // Clear out pre-existing ancestry
+        ancestry.ancestry[u].ancestry.clear();
+
+        if is_sample[u] {
+            // add an output id
+            idmap[u] = next_output_node_id;
+            next_output_node_id += 1;
+
+            // Add initial ancestry for this node
+            // FIXME: this is a problem!!
+            // Sample nodes must have their "ancestry
+            // mapping to self" somehow "fixed"
+            // to map to the "right place".
+            ancestry.ancestry[u]
+                .ancestry
+                .push(Segment::new(idmap[u], 0, ancestry.genome_length));
+        }
+    }
+    SimplificationInternalState::new(idmap, is_sample, next_output_node_id)
 }
 
 /// No error handling, all panics right now.
@@ -90,7 +99,7 @@ pub fn simplify(samples: &[SignedInteger], ancestry: &mut Ancestry) -> Vec<Signe
     //     i.ancestry.clear();
     // }
 
-    let mut state = SimplificationInternalState::new(ancestry, samples);
+    let mut state = setup_simplification(ancestry, samples);
 
     let edges = &mut ancestry.edges;
     let ancestry_data = &mut ancestry.ancestry;
