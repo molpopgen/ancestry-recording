@@ -41,7 +41,7 @@ impl Parent {
 
 impl Segment {
     pub fn new(node: SignedInteger, left: LargeSignedInteger, right: LargeSignedInteger) -> Self {
-        assert!(left < right);
+        assert!(left < right, "{} {}", left, right);
         assert!(node >= 0);
         Self { node, left, right }
     }
