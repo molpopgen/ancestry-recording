@@ -13,6 +13,14 @@ pub enum NodeStatus {
 
 pub type ChildMap = HashMap<SignedInteger, Vec<Segment>>;
 
+#[derive(Clone)]
+pub struct Individual {
+    index: SignedInteger,
+    parents: Vec<Individual>,
+    ancestry: Vec<Segment>,
+    children: ChildMap,
+}
+
 pub struct Ancestry {
     next_node_id: SignedInteger,
     node_to_index: HashMap<SignedInteger, usize>,
