@@ -13,7 +13,7 @@ impl Population {
         let mut individuals = vec![];
 
         for i in 0..next_individual_id {
-            individuals.push(IndividualPointer::new(i,0));
+            individuals.push(IndividualPointer::new(i, 0));
         }
 
         Self {

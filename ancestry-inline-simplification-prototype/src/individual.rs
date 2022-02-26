@@ -19,7 +19,7 @@ pub struct IndividualPointer(Rc<RefCell<Individual>>);
 pub type ChildMap = HashMap<IndividualPointer, Vec<Segment>>;
 pub type ParentSet = HashSet<IndividualPointer>;
 
-#[derive(Clone)]
+#[derive(Clone)] // NOTE: this does not have to be Clone b/c we work via pointers
 pub struct Individual {
     pub index: SignedInteger,
     pub birth_time: LargeSignedInteger,
