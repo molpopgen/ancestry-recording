@@ -21,11 +21,11 @@ pub type ParentSet = HashSet<IndividualPointer>;
 
 #[derive(Clone)]
 pub struct Individual {
-    index: SignedInteger,
-    alive: bool,
-    parents: ParentSet,
-    ancestry: Vec<Segment>,
-    children: ChildMap,
+    pub index: SignedInteger,
+    pub alive: bool,
+    pub parents: ParentSet,
+    pub ancestry: Vec<Segment>,
+    pub children: ChildMap,
 }
 
 impl Deref for IndividualPointer {
