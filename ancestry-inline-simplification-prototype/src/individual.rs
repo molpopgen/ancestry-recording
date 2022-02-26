@@ -137,6 +137,11 @@ mod practice_tests {
         pop.push(IndividualPointer::new(0, 0));
         pop.push(IndividualPointer::new(1, 1));
 
+        // NOTE: creating interior references like this
+        // can easily lead to runtime errors b/c the 
+        // underlying instance has been mutably borrowed already.
+        // Using scope blocks like this ensures that the mutable
+        // borrow is dropped ASAP.
         {
             let ind = &mut *pop[0].borrow_mut();
 
