@@ -13,6 +13,8 @@ use hashbrown::{HashMap, HashSet};
 ///
 /// Derefs to Rc<RefCell<Individual>>.
 /// Required so that we can hash Rc instances.
+/// Hashing is via the underlying [Individual](Individual)'s
+/// [index](Individual::index) value.
 #[derive(Clone)]
 pub struct IndividualPointer(Rc<RefCell<Individual>>);
 
