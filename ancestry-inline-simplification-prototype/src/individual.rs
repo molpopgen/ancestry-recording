@@ -22,6 +22,7 @@ pub type ParentSet = HashSet<IndividualPointer>;
 #[derive(Clone)]
 pub struct Individual {
     pub index: SignedInteger,
+    pub birth_time: LargeSignedInteger,
     pub alive: bool,
     pub parents: ParentSet,
     pub ancestry: Vec<Segment>,
@@ -51,17 +52,20 @@ impl Hash for IndividualPointer {
 }
 
 impl IndividualPointer {
-    pub fn new(index: SignedInteger) -> Self {
+    pub fn new(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self {
-            0: Rc::new(RefCell::<Individual>::new(Individual::new(index))),
+            0: Rc::new(RefCell::<Individual>::new(Individual::new(
+                index, birth_time,
+            ))),
         }
     }
 }
 
 impl Individual {
-    pub fn new(index: SignedInteger) -> Self {
+    pub fn new(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self {
             index,
+            birth_time,
             alive: true,
             parents: ParentSet::default(),
             ancestry: vec![],
@@ -88,8 +92,8 @@ mod practice_tests {
     fn test_interior_mutability() {
         let mut pop: Vec<IndividualPointer> = vec![];
 
-        pop.push(IndividualPointer::new(0));
-        pop.push(IndividualPointer::new(1));
+        pop.push(IndividualPointer::new(0, 0));
+        pop.push(IndividualPointer::new(1, 1));
 
         pop[0]
             .borrow_mut()
@@ -108,8 +112,8 @@ mod practice_tests {
     fn test_interior_mutability_via_ref() {
         let mut pop: Vec<IndividualPointer> = vec![];
 
-        pop.push(IndividualPointer::new(0));
-        pop.push(IndividualPointer::new(1));
+        pop.push(IndividualPointer::new(0, 0));
+        pop.push(IndividualPointer::new(1, 1));
 
         pop[0]
             .borrow_mut()
@@ -128,8 +132,8 @@ mod practice_tests {
     fn test_interior_mutability_using_scoped_blocks() {
         let mut pop: Vec<IndividualPointer> = vec![];
 
-        pop.push(IndividualPointer::new(0));
-        pop.push(IndividualPointer::new(1));
+        pop.push(IndividualPointer::new(0, 0));
+        pop.push(IndividualPointer::new(1, 1));
 
         {
             let ind = &mut *pop[0].borrow_mut();
