@@ -27,7 +27,16 @@ pub fn simulate(seed: u64, params: SimParams) -> Population {
         let mut replacements: Vec<Individual> = vec![];
 
         // main loop here
-
+        for i in 0..pop.len() {
+            match u01.sample(&mut rng).partial_cmp(&params.death_prob) {
+                Some(std::cmp::Ordering::Greater) => (),
+                Some(_) => {
+                    pop.kill(i);
+                    deaths.push(i);
+                }
+                None => panic!("didn't expect None..."),
+            }
+        }
         assert_eq!(deaths.len(), replacements.len());
 
         for (i, r) in deaths.iter().zip(replacements.iter_mut()) {
