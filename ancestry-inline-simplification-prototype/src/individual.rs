@@ -142,18 +142,7 @@ impl SegmentOverlapper {
             LargeSignedInteger::MAX,
             None,
         ));
-
         let right = segments[0].left;
-
-        //if !segments.is_empty() {
-        //    let mut right = segments.last().unwrap().left;
-        //    while !segments.is_empty() {
-        //        let left = right;
-        //        overlaps.retain(|x| x.right > left);
-        //        while !segments.is_empty() && segments.last().unwrap().left == right {}
-        //    }
-        //}
-
         let n = segments.len() - 1;
         Self {
             segments,
