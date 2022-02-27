@@ -47,13 +47,14 @@ def simplify(S: typing.List[int], N: typing.List[Node], E: typing.List[Edge], L:
     for i, u in enumerate(S):
         No.append(Node(N[u].time, 1))
         A[u] = [Segment(0, L, len(No) - 1)]
-        print(i, u)
         idmap[u] = i
 
     for input_node in range(len(N)):
         u = len(N) - input_node - 1
+        print(f"input node index {input_node} -> parent node {u}")
         assert len(Q) == 0
         for e in [e for e in E if e.parent == u]:
+            print(f"edge -> {e}")
             for x in A[e.child]:
                 if x.right > e.left and e.right > x.left:
                     y = Segment(max(x.left, e.left), min(x.right, e.right), x.node)

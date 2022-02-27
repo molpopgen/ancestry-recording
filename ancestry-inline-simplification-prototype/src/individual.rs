@@ -1,4 +1,4 @@
-use crate::{LargeSignedInteger, Segment, SignedInteger};
+use crate::{segment::Segment, LargeSignedInteger, SignedInteger};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -97,17 +97,17 @@ mod practice_tests {
         pop.push(IndividualPointer::new(0, 0));
         pop.push(IndividualPointer::new(1, 1));
 
-        pop[0]
-            .borrow_mut()
-            .children
-            .insert(pop[1].clone(), vec![Segment::new(0, 0, 2)]);
+        pop[0].borrow_mut().children.insert(
+            pop[1].clone(),
+            vec![Segment::new(0, 1, Some(pop[1].clone()))],
+        );
         pop[1].borrow_mut().parents.insert(pop[0].clone());
         assert_eq!(Rc::strong_count(&pop[0]), 2);
-        assert_eq!(Rc::strong_count(&pop[1]), 2);
+        assert_eq!(Rc::strong_count(&pop[1]), 3);
 
         remove_parent(pop[0].clone(), pop[1].clone());
         assert_eq!(Rc::strong_count(&pop[0]), 1);
-        assert_eq!(Rc::strong_count(&pop[1]), 2);
+        assert_eq!(Rc::strong_count(&pop[1]), 3);
     }
 
     #[test]
@@ -117,17 +117,17 @@ mod practice_tests {
         pop.push(IndividualPointer::new(0, 0));
         pop.push(IndividualPointer::new(1, 1));
 
-        pop[0]
-            .borrow_mut()
-            .children
-            .insert(pop[1].clone(), vec![Segment::new(0, 0, 2)]);
+        pop[0].borrow_mut().children.insert(
+            pop[1].clone(),
+            vec![Segment::new(0, 1, Some(pop[1].clone()))],
+        );
         pop[1].borrow_mut().parents.insert(pop[0].clone());
         assert_eq!(Rc::strong_count(&pop[0]), 2);
-        assert_eq!(Rc::strong_count(&pop[1]), 2);
+        assert_eq!(Rc::strong_count(&pop[1]), 3);
 
         remove_parent_via_ref(&pop[0], &pop[1]);
         assert_eq!(Rc::strong_count(&pop[0]), 1);
-        assert_eq!(Rc::strong_count(&pop[1]), 2);
+        assert_eq!(Rc::strong_count(&pop[1]), 3);
     }
 
     #[test]
@@ -138,15 +138,17 @@ mod practice_tests {
         pop.push(IndividualPointer::new(1, 1));
 
         // NOTE: creating interior references like this
-        // can easily lead to runtime errors b/c the 
+        // can easily lead to runtime errors b/c the
         // underlying instance has been mutably borrowed already.
         // Using scope blocks like this ensures that the mutable
         // borrow is dropped ASAP.
         {
             let ind = &mut *pop[0].borrow_mut();
 
-            ind.children
-                .insert(pop[1].clone(), vec![Segment::new(0, 0, 2)]);
+            ind.children.insert(
+                pop[1].clone(),
+                vec![Segment::new(0, 1, Some(pop[1].clone()))],
+            );
         }
 
         {
@@ -156,10 +158,10 @@ mod practice_tests {
         }
 
         assert_eq!(Rc::strong_count(&pop[0]), 2);
-        assert_eq!(Rc::strong_count(&pop[1]), 2);
+        assert_eq!(Rc::strong_count(&pop[1]), 3);
 
         remove_parent(pop[0].clone(), pop[1].clone());
         assert_eq!(Rc::strong_count(&pop[0]), 1);
-        assert_eq!(Rc::strong_count(&pop[1]), 2);
+        assert_eq!(Rc::strong_count(&pop[1]), 3);
     }
 }
