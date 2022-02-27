@@ -93,7 +93,7 @@ impl Individual {
     }
 
     fn update_ancestry(&mut self) {
-        let mut overlapper = SegmentOverlapper::new(self.intersecting_ancestry());
+        let overlapper = SegmentOverlapper::new(self.intersecting_ancestry());
 
         let mut mapped_ind: Option<Individual>;
         for (left, right, overlaps) in overlapper {
@@ -179,8 +179,10 @@ impl Iterator for SegmentOverlapper {
     type Item = (LargeSignedInteger, LargeSignedInteger, Vec<Segment>);
 
     fn next(&mut self) -> Option<Self::Item> {
+        println!("internal {} {} {}", self.j, self.n, self.overlaps.len());
         if self.j < self.n {
             self.left = self.right;
+            println!("left = {}, right = {}", self.left, self.right);
             self.overlaps.retain(|x| x.right > self.left);
             if self.overlaps.is_empty() {
                 self.left = self.segments[self.j].left;
@@ -196,6 +198,7 @@ impl Iterator for SegmentOverlapper {
             }
             self.right = std::cmp::min(self.right, self.segments[self.j + 1].right);
             self.j += 1;
+            println!("returning {} {}", self.j, self.n);
             return Some((self.left, self.right, self.overlaps.clone()));
         }
 
@@ -207,7 +210,6 @@ impl Iterator for SegmentOverlapper {
                 for seg in self.overlaps.iter() {
                     rmin = std::cmp::min(rmin, seg.right);
                 }
-                self.right = std::cmp::min(self.right, self.segments[self.j + 1].right);
                 return Some((self.left, self.right, self.overlaps.clone()));
             }
         }
@@ -276,5 +278,38 @@ mod practice_tests {
         remove_parent_via_ref(&pop[0], &pop[1]);
         assert_eq!(Rc::strong_count(&pop[0]), 1);
         assert_eq!(Rc::strong_count(&pop[1]), 2);
+    }
+}
+
+#[cfg(test)]
+mod overlapper_tests {
+    use super::*;
+
+    //#[test]
+    fn test_single_overlap() {
+        let mut parent = Individual::new(0, 0);
+
+        let child1 = Individual::new(1, 1);
+        let child2 = Individual::new(2, 1);
+
+        {
+            child1
+                .borrow_mut()
+                .ancestry
+                .push(Segment::new(0, 5, Some(child1.clone())));
+            child2
+                .borrow_mut()
+                .ancestry
+                .push(Segment::new(1, 6, Some(child2.clone())));
+        }
+
+        parent.add_child_segment(0, 5, child1.clone());
+        parent.add_child_segment(1, 6, child2.clone());
+
+        let overlapper = SegmentOverlapper::new(parent.intersecting_ancestry());
+
+        for (left, right, overlaps) in overlapper {
+            println!("{} {} {}", left, right, overlaps.len());
+        }
     }
 }
