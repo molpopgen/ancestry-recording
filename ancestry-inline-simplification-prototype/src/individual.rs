@@ -34,6 +34,10 @@ pub struct IndividualData {
 struct SegmentOverlapper {
     segments: Vec<Segment>,
     overlaps: Vec<Segment>,
+    j: usize,
+    n: usize,
+    left: LargeSignedInteger,
+    right: LargeSignedInteger,
 }
 
 impl Deref for Individual {
@@ -129,13 +133,77 @@ impl IndividualData {
 impl SegmentOverlapper {
     fn new(segments: Vec<Segment>) -> Self {
         let mut segments = segments;
+        let overlaps = vec![];
 
         segments.sort_by(|a, b| a.left.cmp(&b.left));
+        // Sentinel
+        segments.push(Segment::new(
+            LargeSignedInteger::MAX - 1,
+            LargeSignedInteger::MAX,
+            None,
+        ));
 
+        let right = segments[0].left;
+
+        //if !segments.is_empty() {
+        //    let mut right = segments.last().unwrap().left;
+        //    while !segments.is_empty() {
+        //        let left = right;
+        //        overlaps.retain(|x| x.right > left);
+        //        while !segments.is_empty() && segments.last().unwrap().left == right {}
+        //    }
+        //}
+
+        let n = segments.len() - 1;
         Self {
             segments,
-            overlaps: vec![],
+            overlaps,
+            j: 0,
+            n,
+            left: LargeSignedInteger::MAX,
+            right,
         }
+    }
+}
+
+impl Iterator for SegmentOverlapper {
+    type Item = (LargeSignedInteger, LargeSignedInteger, Vec<Segment>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.j < self.n {
+            self.left = self.right;
+            self.overlaps.retain(|x| x.right > self.left);
+            if self.overlaps.is_empty() {
+                self.left = self.segments[self.j].left;
+            }
+            while self.j < self.n && self.segments[self.j].left == self.left {
+                self.overlaps.push(self.segments[self.j].clone());
+                self.j += 1;
+            }
+            self.j -= 1;
+            let mut rmin = LargeSignedInteger::MAX;
+            for seg in self.overlaps.iter() {
+                rmin = std::cmp::min(rmin, seg.right);
+            }
+            self.right = std::cmp::min(self.right, self.segments[self.j + 1].right);
+            self.j += 1;
+            return Some((self.left, self.right, self.overlaps.clone()));
+        }
+
+        if !self.overlaps.is_empty() {
+            self.left = self.right;
+            self.overlaps.retain(|x| x.right > self.left);
+            if !self.overlaps.is_empty() {
+                let mut rmin = LargeSignedInteger::MAX;
+                for seg in self.overlaps.iter() {
+                    rmin = std::cmp::min(rmin, seg.right);
+                }
+                self.right = std::cmp::min(self.right, self.segments[self.j + 1].right);
+                return Some((self.left, self.right, self.overlaps.clone()));
+            }
+        }
+
+        None
     }
 }
 
