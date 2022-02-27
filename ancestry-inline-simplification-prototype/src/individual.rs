@@ -97,8 +97,10 @@ impl Individual {
         let mut mapped_ind: Option<Individual>;
         for (left, right, overlaps) in overlapper {
             if overlaps.borrow().len() == 1 {
+                // unary edge transmission to child.
                 mapped_ind = overlaps.borrow()[0].child.clone();
             } else {
+                // overlap (coalescence) => ancestry segment maps to self (parent).
                 mapped_ind = Some(self.clone());
                 for x in overlaps.borrow().iter() {
                     assert!(x.child.is_some());
