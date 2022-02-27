@@ -7,17 +7,17 @@ use std::cmp::Ordering;
 pub struct Segment {
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
-    pub node: Option<Individual>,
+    pub child: Option<Individual>,
 }
 
 impl Segment {
     pub fn new(
         left: LargeSignedInteger,
         right: LargeSignedInteger,
-        node: Option<Individual>,
+        child: Option<Individual>,
     ) -> Self {
         assert!(left < right, "{} {}", left, right);
-        Self { left, right, node }
+        Self { left, right, child }
     }
 }
 

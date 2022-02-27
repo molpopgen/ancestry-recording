@@ -98,12 +98,12 @@ impl Individual {
         let mut mapped_ind: Option<Individual>;
         for (left, right, overlaps) in overlapper {
             if overlaps.len() == 1 {
-                mapped_ind = overlaps[0].node.clone();
+                mapped_ind = overlaps[0].child.clone();
             } else {
                 mapped_ind = Some(self.clone());
                 for x in overlaps {
-                    assert!(x.node.is_some());
-                    self.add_child_segment(left, right, x.node.unwrap().clone());
+                    assert!(x.child.is_some());
+                    self.add_child_segment(left, right, x.child.unwrap().clone());
                 }
             }
             // NOTE: this ends up adding redundant ancestry?
