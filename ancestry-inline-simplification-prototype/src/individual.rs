@@ -94,6 +94,26 @@ impl Individual {
 
     fn update_ancestry(&mut self) {
         let mut overlapper = SegmentOverlapper::new(self.intersecting_ancestry());
+
+        let mut mapped_ind: Option<Individual>;
+        for (left, right, overlaps) in overlapper {
+            if overlaps.len() == 1 {
+                mapped_ind = overlaps[0].node.clone();
+            } else {
+                mapped_ind = Some(self.clone());
+                for x in overlaps {
+                    assert!(x.node.is_some());
+                    self.add_child_segment(left, right, x.node.unwrap().clone());
+                }
+            }
+            // NOTE: this ends up adding redundant ancestry?
+            let mut b = self.borrow_mut();
+            if !b.alive {
+                b.ancestry.push(Segment::new(left, right, mapped_ind));
+            }
+            let sorted = b.ancestry.windows(2).all(|w| w[0].left <= w[1].left);
+            assert!(sorted);
+        }
     }
 
     fn intersecting_ancestry(&self) -> Vec<Segment> {
