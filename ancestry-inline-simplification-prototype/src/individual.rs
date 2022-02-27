@@ -31,6 +31,11 @@ pub struct IndividualData {
     pub children: ChildMap,
 }
 
+struct SegmentOverlapper {
+    segments: Vec<Segment>,
+    overlaps: Vec<Segment>,
+}
+
 impl Deref for Individual {
     type Target = Rc<RefCell<IndividualData>>;
 
@@ -82,6 +87,30 @@ impl Individual {
             b.children.insert(child, vec![seg]);
         }
     }
+
+    fn update_ancestry(&mut self) {
+        let mut overlapper = SegmentOverlapper::new(self.intersecting_ancestry());
+    }
+
+    fn intersecting_ancestry(&self) -> Vec<Segment> {
+        let mut rv = vec![];
+
+        for (child, segs) in self.borrow().children.iter() {
+            for seg in segs.iter() {
+                for x in child.borrow().ancestry.iter() {
+                    if x.right > seg.left && seg.right > x.left {
+                        rv.push(Segment::new(
+                            std::cmp::max(x.left, seg.left),
+                            std::cmp::min(x.right, seg.right),
+                            Some(child.clone()),
+                        ));
+                    }
+                }
+            }
+        }
+
+        rv
+    }
 }
 
 impl IndividualData {
@@ -93,6 +122,19 @@ impl IndividualData {
             parents: ParentSet::default(),
             ancestry: vec![],
             children: ChildMap::default(),
+        }
+    }
+}
+
+impl SegmentOverlapper {
+    fn new(segments: Vec<Segment>) -> Self {
+        let mut segments = segments;
+
+        segments.sort_by(|a, b| a.left.cmp(&b.left));
+
+        Self {
+            segments,
+            overlaps: vec![],
         }
     }
 }
