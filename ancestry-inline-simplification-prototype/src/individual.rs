@@ -98,6 +98,7 @@ impl Individual {
         while !stack.is_empty() {
             let mut ind = stack.pop().unwrap();
             ind.update_ancestry();
+            assert!(ind.non_overlapping_segments());
             for parent in ind.borrow().parents.iter() {
                 stack.push(parent.clone());
             }
@@ -148,6 +149,26 @@ impl Individual {
         }
 
         rv
+    }
+
+    fn non_overlapping_segments(&self) -> bool {
+        let sorted = self
+            .borrow()
+            .ancestry
+            .windows(2)
+            .all(|w| w[0].left <= w[1].left);
+        if !sorted {
+            return false;
+        }
+
+        for (_child, segments) in self.borrow().children.iter() {
+            let sorted = segments.windows(2).all(|w| w[0].left <= w[1].left);
+            if !sorted {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
