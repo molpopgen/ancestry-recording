@@ -1,16 +1,12 @@
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
-use rgsl::rng;
+use rand::prelude::*;
+use rand_pcg::Pcg64;
 
-fn ran_flat(rng: &mut rng::Rng, lo: f64, hi: f64) -> f64 {
-    let mut rv = rng.flat(lo, hi);
+pub fn simulate(seed: u64, popsize: SignedInteger, genome_length: LargeSignedInteger) {
+    let mut rng = Pcg64::seed_from_u64(seed);
 
-    while match rv.partial_cmp(&hi) {
-        Some(std::cmp::Ordering::Equal) => true,
-        Some(_) => false,
-        None => panic!("gsl_rng_ran_flat should not return NaN"),
-    } {
-        rv = rng.flat(lo, hi);
-    }
-    rv
+    let breakpoint = rand::distributions::Uniform::<LargeSignedInteger>::new(0, genome_length);
+
+    let _ = breakpoint.sample(&mut rng);
 }
