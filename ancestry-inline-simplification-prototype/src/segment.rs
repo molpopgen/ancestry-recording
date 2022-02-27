@@ -1,4 +1,4 @@
-use crate::individual::IndividualPointer;
+use crate::individual::Individual;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
 use std::cmp::Ordering;
@@ -7,14 +7,14 @@ use std::cmp::Ordering;
 pub struct Segment {
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
-    pub node: Option<IndividualPointer>,
+    pub node: Option<Individual>,
 }
 
 impl Segment {
     pub fn new(
         left: LargeSignedInteger,
         right: LargeSignedInteger,
-        node: Option<IndividualPointer>,
+        node: Option<Individual>,
     ) -> Self {
         assert!(left < right, "{} {}", left, right);
         Self { left, right, node }

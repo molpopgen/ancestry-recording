@@ -1,9 +1,9 @@
-use crate::individual::IndividualPointer;
+use crate::individual::Individual;
 use crate::SignedInteger;
 
 pub struct Population {
     next_individual_id: SignedInteger,
-    pub individuals: Vec<IndividualPointer>,
+    pub individuals: Vec<Individual>,
 }
 
 impl Population {
@@ -13,7 +13,7 @@ impl Population {
         let mut individuals = vec![];
 
         for i in 0..next_individual_id {
-            individuals.push(IndividualPointer::new(i, 0));
+            individuals.push(Individual::new(i, 0));
         }
 
         Self {
