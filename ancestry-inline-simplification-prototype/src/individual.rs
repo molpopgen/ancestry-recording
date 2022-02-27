@@ -61,6 +61,27 @@ impl IndividualPointer {
             ))),
         }
     }
+
+    pub fn add_parent(&mut self, parent: IndividualPointer) {
+        assert!(self.borrow_mut().birth_time > parent.borrow().birth_time);
+        self.borrow_mut().parents.insert(parent);
+    }
+
+    pub fn add_child_segment(
+        &mut self,
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
+        child: IndividualPointer,
+    ) {
+        assert!(child.borrow().birth_time > self.borrow().birth_time);
+        let mut b = self.borrow_mut();
+        let seg = Segment::new(left, right, None);
+        if let Some(v) = b.children.get_mut(&child) {
+            v.push(seg);
+        } else {
+            b.children.insert(child, vec![seg]);
+        }
+    }
 }
 
 impl Individual {
@@ -97,17 +118,21 @@ mod practice_tests {
         pop.push(IndividualPointer::new(0, 0));
         pop.push(IndividualPointer::new(1, 1));
 
-        pop[0].borrow_mut().children.insert(
-            pop[1].clone(),
-            vec![Segment::new(0, 1, Some(pop[1].clone()))],
-        );
-        pop[1].borrow_mut().parents.insert(pop[0].clone());
+        {
+            let c = pop[1].clone();
+            pop[0].add_child_segment(0, 1, c);
+        }
+
+        {
+            let p = pop[0].clone();
+            pop[1].add_parent(p);
+        }
         assert_eq!(Rc::strong_count(&pop[0]), 2);
-        assert_eq!(Rc::strong_count(&pop[1]), 3);
+        assert_eq!(Rc::strong_count(&pop[1]), 2);
 
         remove_parent(pop[0].clone(), pop[1].clone());
         assert_eq!(Rc::strong_count(&pop[0]), 1);
-        assert_eq!(Rc::strong_count(&pop[1]), 3);
+        assert_eq!(Rc::strong_count(&pop[1]), 2);
     }
 
     #[test]
@@ -117,51 +142,20 @@ mod practice_tests {
         pop.push(IndividualPointer::new(0, 0));
         pop.push(IndividualPointer::new(1, 1));
 
-        pop[0].borrow_mut().children.insert(
-            pop[1].clone(),
-            vec![Segment::new(0, 1, Some(pop[1].clone()))],
-        );
-        pop[1].borrow_mut().parents.insert(pop[0].clone());
+        {
+            let c = pop[1].clone();
+            pop[0].add_child_segment(0, 1, c);
+        }
+
+        {
+            let p = pop[0].clone();
+            pop[1].add_parent(p);
+        }
         assert_eq!(Rc::strong_count(&pop[0]), 2);
-        assert_eq!(Rc::strong_count(&pop[1]), 3);
+        assert_eq!(Rc::strong_count(&pop[1]), 2);
 
         remove_parent_via_ref(&pop[0], &pop[1]);
         assert_eq!(Rc::strong_count(&pop[0]), 1);
-        assert_eq!(Rc::strong_count(&pop[1]), 3);
-    }
-
-    #[test]
-    fn test_interior_mutability_using_scoped_blocks() {
-        let mut pop: Vec<IndividualPointer> = vec![];
-
-        pop.push(IndividualPointer::new(0, 0));
-        pop.push(IndividualPointer::new(1, 1));
-
-        // NOTE: creating interior references like this
-        // can easily lead to runtime errors b/c the
-        // underlying instance has been mutably borrowed already.
-        // Using scope blocks like this ensures that the mutable
-        // borrow is dropped ASAP.
-        {
-            let ind = &mut *pop[0].borrow_mut();
-
-            ind.children.insert(
-                pop[1].clone(),
-                vec![Segment::new(0, 1, Some(pop[1].clone()))],
-            );
-        }
-
-        {
-            let ind = &mut *pop[1].borrow_mut();
-
-            ind.parents.insert(pop[0].clone());
-        }
-
-        assert_eq!(Rc::strong_count(&pop[0]), 2);
-        assert_eq!(Rc::strong_count(&pop[1]), 3);
-
-        remove_parent(pop[0].clone(), pop[1].clone());
-        assert_eq!(Rc::strong_count(&pop[0]), 1);
-        assert_eq!(Rc::strong_count(&pop[1]), 3);
+        assert_eq!(Rc::strong_count(&pop[1]), 2);
     }
 }
