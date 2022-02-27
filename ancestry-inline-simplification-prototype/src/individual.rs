@@ -36,7 +36,6 @@ struct SegmentOverlapper {
     overlaps: Vec<Segment>,
     j: usize,
     n: usize,
-    left: LargeSignedInteger,
     right: LargeSignedInteger,
 }
 
@@ -153,6 +152,7 @@ impl IndividualData {
 impl SegmentOverlapper {
     fn new(segments: Vec<Segment>) -> Self {
         let mut segments = segments;
+        let n = segments.len();
         let overlaps = vec![];
 
         segments.sort_by(|a, b| a.left.cmp(&b.left));
@@ -162,14 +162,14 @@ impl SegmentOverlapper {
             LargeSignedInteger::MAX,
             None,
         ));
+        let sorted = segments.windows(2).all(|w| w[0].left <= w[1].left);
+        assert!(sorted);
         let right = segments[0].left;
-        let n = segments.len() - 1;
         Self {
             segments,
             overlaps,
             j: 0,
             n,
-            left: LargeSignedInteger::MAX,
             right,
         }
     }
@@ -179,38 +179,35 @@ impl Iterator for SegmentOverlapper {
     type Item = (LargeSignedInteger, LargeSignedInteger, Vec<Segment>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        println!("internal {} {} {}", self.j, self.n, self.overlaps.len());
         if self.j < self.n {
-            self.left = self.right;
-            println!("left = {}, right = {}", self.left, self.right);
-            self.overlaps.retain(|x| x.right > self.left);
+            let mut left = self.right;
+            self.overlaps.retain(|x| x.right > left);
             if self.overlaps.is_empty() {
-                self.left = self.segments[self.j].left;
+                left = self.segments[self.j].left;
             }
-            while self.j < self.n && self.segments[self.j].left == self.left {
+            while self.j < self.n && self.segments[self.j].left == left {
                 self.overlaps.push(self.segments[self.j].clone());
                 self.j += 1;
             }
             self.j -= 1;
-            let mut rmin = LargeSignedInteger::MAX;
-            for seg in self.overlaps.iter() {
-                rmin = std::cmp::min(rmin, seg.right);
-            }
+            self.right = self
+                .overlaps
+                .iter()
+                .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right));
             self.right = std::cmp::min(self.right, self.segments[self.j + 1].right);
             self.j += 1;
-            println!("returning {} {}", self.j, self.n);
-            return Some((self.left, self.right, self.overlaps.clone()));
+            return Some((left, self.right, self.overlaps.clone()));
         }
 
         if !self.overlaps.is_empty() {
-            self.left = self.right;
-            self.overlaps.retain(|x| x.right > self.left);
+            let left = self.right;
+            self.overlaps.retain(|x| x.right > left);
             if !self.overlaps.is_empty() {
-                let mut rmin = LargeSignedInteger::MAX;
-                for seg in self.overlaps.iter() {
-                    rmin = std::cmp::min(rmin, seg.right);
-                }
-                return Some((self.left, self.right, self.overlaps.clone()));
+                self.right = self
+                    .overlaps
+                    .iter()
+                    .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right));
+                return Some((left, self.right, self.overlaps.clone()));
             }
         }
 
@@ -285,7 +282,7 @@ mod practice_tests {
 mod overlapper_tests {
     use super::*;
 
-    //#[test]
+    #[test]
     fn test_single_overlap() {
         let mut parent = Individual::new(0, 0);
 
@@ -308,8 +305,11 @@ mod overlapper_tests {
 
         let overlapper = SegmentOverlapper::new(parent.intersecting_ancestry());
 
-        for (left, right, overlaps) in overlapper {
-            println!("{} {} {}", left, right, overlaps.len());
+        let expected = vec![vec![0,5], vec![1,6]];
+
+        for (i,(left, right, _overlaps)) in overlapper.enumerate() {
+            assert_eq!(expected[i][0], left);
+            assert_eq!(expected[i][1], right);
         }
     }
 }

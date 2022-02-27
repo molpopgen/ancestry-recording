@@ -14,4 +14,3 @@ fn ran_flat(rng: &mut rng::Rng, lo: f64, hi: f64) -> f64 {
     }
     rv
 }
-
