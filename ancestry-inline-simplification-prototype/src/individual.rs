@@ -91,6 +91,19 @@ impl Individual {
         }
     }
 
+    // FIXME: this is where things are going wrong,
+    // and may be the root cause of what we see in update_ancestry.
+    pub fn propagate_upwards(&mut self) {
+        let mut stack = vec![self.clone()];
+        while !stack.is_empty() {
+            let mut ind = stack.pop().unwrap();
+            ind.update_ancestry();
+            for parent in ind.borrow().parents.iter() {
+                stack.push(parent.clone());
+            }
+        }
+    }
+
     fn update_ancestry(&mut self) {
         let overlapper = SegmentOverlapper::new(self.intersecting_ancestry());
 
