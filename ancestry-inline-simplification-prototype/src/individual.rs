@@ -63,11 +63,9 @@ impl Hash for Individual {
 
 impl Individual {
     pub fn new(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
-        Self {
-            0: Rc::new(RefCell::<IndividualData>::new(IndividualData::new(
-                index, birth_time,
-            ))),
-        }
+        Self(Rc::new(RefCell::<IndividualData>::new(
+            IndividualData::new(index, birth_time),
+        )))
     }
 
     pub fn add_parent(&mut self, parent: Individual) {

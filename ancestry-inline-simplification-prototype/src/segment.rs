@@ -1,6 +1,5 @@
 use crate::individual::Individual;
 use crate::LargeSignedInteger;
-use crate::SignedInteger;
 use std::cmp::Ordering;
 
 #[derive(Clone, Eq, PartialEq)]
