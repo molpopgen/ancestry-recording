@@ -106,6 +106,7 @@ impl Individual {
     fn update_ancestry(&mut self) {
         let overlapper = SegmentOverlapper::new(self.intersecting_ancestry());
 
+        self.borrow_mut().children.clear();
         for (left, right, overlaps) in overlapper {
             if overlaps.borrow().len() == 1 {
                 // unary edge transmission to child.
