@@ -2,6 +2,11 @@ use crate::individual::Individual;
 use crate::LargeSignedInteger;
 use std::cmp::Ordering;
 
+/// A genomic segment, `[left, right)` inherited
+/// by a `child`.
+///
+/// See implementation of [Individual::add_child_segment]
+/// for how the `Option` is used.
 #[derive(Clone, Eq, PartialEq)]
 pub struct Segment {
     pub left: LargeSignedInteger,
@@ -9,11 +14,6 @@ pub struct Segment {
     pub child: Option<Individual>,
 }
 
-/// A genomic segment, `[left, right)` inherited
-/// by a `child`.
-///
-/// See implementation of [Individual::add_child_segment]
-/// for how the `Option` is used.
 impl Segment {
     pub fn new(
         left: LargeSignedInteger,
