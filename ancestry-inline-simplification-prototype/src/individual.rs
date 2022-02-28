@@ -106,26 +106,25 @@ impl Individual {
     fn update_ancestry(&mut self) {
         let overlapper = SegmentOverlapper::new(self.intersecting_ancestry());
 
-        let mut mapped_ind: Option<Individual>;
         for (left, right, overlaps) in overlapper {
             if overlaps.borrow().len() == 1 {
                 // unary edge transmission to child.
-                mapped_ind = overlaps.borrow()[0].child.clone();
+                // mapped_ind = overlaps.borrow()[0].child.clone();
             } else {
                 // overlap (coalescence) => ancestry segment maps to self (parent).
-                mapped_ind = Some(self.clone());
+                let mapped_ind = Some(self.clone());
                 for x in overlaps.borrow().iter() {
                     assert!(x.child.is_some());
                     self.add_child_segment(left, right, x.child.as_ref().unwrap().clone());
                 }
+                // NOTE: this ends up adding redundant ancestry?
+                let mut b = self.borrow_mut();
+                if !b.alive {
+                    b.ancestry.push(Segment::new(left, right, mapped_ind));
+                }
+                let sorted = b.ancestry.windows(2).all(|w| w[0].left <= w[1].left);
+                assert!(sorted);
             }
-            // NOTE: this ends up adding redundant ancestry?
-            let mut b = self.borrow_mut();
-            if !b.alive {
-                b.ancestry.push(Segment::new(left, right, mapped_ind));
-            }
-            let sorted = b.ancestry.windows(2).all(|w| w[0].left <= w[1].left);
-            assert!(sorted);
         }
     }
 
