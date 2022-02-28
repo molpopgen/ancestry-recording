@@ -258,6 +258,27 @@ impl Iterator for SegmentOverlapper {
         }
 
         None
+
+        // TODO: see of this code also works.  It is a cleaner way to do, I think.
+        //if !self.segments.is_empty() {
+        //    let mut left = self.right;
+        //    self.overlaps.borrow_mut().retain(|x| x.right > left);
+        //    if self.overlaps.borrow().is_empty() {
+        //        left = self.segments.last().unwrap().left;
+        //    }
+        //    while !self.segments.is_empty() && self.segments.last().unwrap().left == left {
+        //        let x = self.segments.pop().unwrap();
+        //        self.overlaps.borrow_mut().push(x);
+        //    }
+        //    self.right = self
+        //        .overlaps
+        //        .borrow()
+        //        .iter()
+        //        .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right));
+        //    if let Some(seg) = self.segments.last() {
+        //        self.right = std::cmp::min(self.right, seg.right);
+        //    }
+        //}
     }
 }
 
