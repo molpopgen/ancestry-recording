@@ -189,7 +189,7 @@ impl SegmentOverlapper {
         let n = segments.len();
         let overlaps = vec![];
 
-        segments.sort_by(|a, b| a.left.cmp(&b.left));
+        segments.sort();
         // Sentinel
         segments.push(Segment::new(
             LargeSignedInteger::MAX - 1,
