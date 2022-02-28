@@ -9,6 +9,11 @@ pub struct Segment {
     pub child: Option<Individual>,
 }
 
+/// A genomic segment, `[left, right)` inherited
+/// by a `child`.
+///
+/// See implementation of [Individual::add_child_segment]
+/// for how the `Option` is used.
 impl Segment {
     pub fn new(
         left: LargeSignedInteger,
@@ -21,9 +26,8 @@ impl Segment {
 }
 
 impl Ord for Segment {
-    // Flipped to create min heaps
     fn cmp(&self, other: &Self) -> Ordering {
-        other.left.cmp(&self.left)
+        self.left.cmp(&other.left)
     }
 }
 
