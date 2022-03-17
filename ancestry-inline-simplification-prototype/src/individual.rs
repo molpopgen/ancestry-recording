@@ -153,7 +153,6 @@ impl Individual {
 
         let mut mapped_ind: Option<Individual> = None;
 
-        self.borrow_mut().children.clear();
         for (left, right, overlaps) in overlapper {
             let num_overlaps = overlaps.borrow().len();
             if num_overlaps == 1 {
