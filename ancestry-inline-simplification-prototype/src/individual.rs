@@ -157,32 +157,38 @@ impl Individual {
             }
         }
 
-
         let mut mapped_ind: Individual;
 
         for (left, right, overlaps) in overlapper {
             let num_overlaps = overlaps.borrow().len();
             if num_overlaps == 1 {
                 // unary edge transmission to child.
-                if let Some(ref mut child) = overlaps.borrow_mut()[0].child {
-                    mapped_ind = child.clone();
+                //if let Some(ref mut child) = overlaps.borrow_mut()[0].child {
+                //    mapped_ind = child.clone();
+                //} else {
+                //    panic!("cannot happen");
+                //}
+
+                let temp_mapped_ind = if let Some(ref mut child) = overlaps.borrow_mut()[0].child {
+                    child.clone()
                 } else {
                     panic!("cannot happen");
-                }
+                };
 
                 {
                     // If mapped_ind is not a child of self,
                     // ensure that self is not a parent of mapped_ind
                     let mut b = self.borrow_mut();
-                    if b.children.get_mut(&mapped_ind).is_none() {
-                        mapped_ind.borrow_mut().parents.remove(&self);
+                    if b.children.get_mut(&temp_mapped_ind).is_none() {
+                        temp_mapped_ind.borrow_mut().parents.remove(&self);
                     }
                 }
 
                 if self_alive {
-                    let mapped_ind_alive = mapped_ind.borrow().alive;
+                    let mapped_ind_alive = temp_mapped_ind.borrow().alive;
 
                     if mapped_ind_alive {
+                        mapped_ind = temp_mapped_ind;
                         self.update_child_segments(
                             &mapped_ind,
                             left,
@@ -190,6 +196,25 @@ impl Individual {
                             &mut input_child_details,
                         );
                     } else {
+                        // NOTE: this pattern of traversing the
+                        // ancestry to hunt for unary segments
+                        // really pisses off the borrow checker.
+                        for a in &temp_mapped_ind.borrow().ancestry {
+                            if a.right > left && right > a.left {
+                                // NOTE: will panic! if child is None
+                                mapped_ind = a.child.as_ref().unwrap().clone();
+
+                                mapped_ind.borrow_mut().parents.insert(self.clone());
+
+                                self.update_child_segments(
+                                    &mapped_ind,
+                                    std::cmp::max(left, a.left),
+                                    std::cmp::min(right, a.right),
+                                    &mut input_child_details,
+                                );
+                                break;
+                            }
+                        }
                     }
                 }
             } else {
