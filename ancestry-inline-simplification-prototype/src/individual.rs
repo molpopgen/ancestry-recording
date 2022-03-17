@@ -96,7 +96,7 @@ impl Individual {
 
     fn update_child_segments(
         &mut self,
-        child: Individual,
+        child: &Individual,
         left: LargeSignedInteger,
         right: LargeSignedInteger,
         details: &mut HashMap<Self, ChildInputDetails>,
@@ -146,21 +146,44 @@ impl Individual {
         let mut input_child_details: HashMap<Individual, ChildInputDetails> = HashMap::default();
         let mut current_ancestry_seg = 0_usize;
         let input_ancestry_len = self.borrow().ancestry.len();
+        let self_alive = self.borrow().alive;
 
         for (c, segs) in &self.borrow().children {
             input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
         }
 
-        let mut mapped_ind: Option<Individual> = None;
+        let mut mapped_ind: Individual;
 
         for (left, right, overlaps) in overlapper {
             let num_overlaps = overlaps.borrow().len();
             if num_overlaps == 1 {
                 // unary edge transmission to child.
                 if let Some(ref mut child) = overlaps.borrow_mut()[0].child {
-                    mapped_ind = Some(child.clone());
-                    if let Some(parent) = child.borrow().parents.get(&self) {
-                        child.borrow_mut().parents.remove(&parent);
+                    mapped_ind = child.clone();
+                } else {
+                    panic!("cannot happen");
+                }
+
+                {
+                    // If mapped_ind is not a child of self,
+                    // ensure that self is not a parent of mapped_ind
+                    let mut b = self.borrow_mut();
+                    if b.children.get_mut(&mapped_ind).is_none() {
+                        mapped_ind.borrow_mut().parents.remove(&self);
+                    }
+                }
+
+                if self_alive {
+                    let mapped_ind_alive = mapped_ind.borrow().alive;
+
+                    if mapped_ind_alive {
+                        self.update_child_segments(
+                            &mapped_ind,
+                            left,
+                            right,
+                            &mut input_child_details,
+                        );
+                    } else {
                     }
                 }
             } else {
