@@ -39,6 +39,11 @@ struct SegmentOverlapper {
     right: LargeSignedInteger,
 }
 
+struct ChildInputDetails {
+    input_number_segs: usize,
+    output_number_segs: usize,
+}
+
 impl Deref for Individual {
     type Target = Rc<RefCell<IndividualData>>;
 
@@ -106,9 +111,20 @@ impl Individual {
     fn update_ancestry(&mut self) {
         let overlapper = SegmentOverlapper::new(self.intersecting_ancestry());
 
+        let mut input_child_details: HashMap<Individual, ChildInputDetails> = HashMap::default();
+        let mut current_ancestry_seg = 0_usize;
+        let input_ancestry_len = self.borrow().ancestry.len();
+
+        for (c, segs) in &self.borrow().children {
+            input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
+        }
+
+        let mut mapped_ind: Option<Individual> = None;
+
         self.borrow_mut().children.clear();
         for (left, right, overlaps) in overlapper {
-            if overlaps.borrow().len() == 1 {
+            let num_overlaps = overlaps.borrow().len();
+            if num_overlaps == 1 {
                 // unary edge transmission to child.
                 if let Some(ref mut child) = overlaps.borrow_mut()[0].child {
                     if let Some(parent) = child.borrow().parents.get(&self) {
@@ -183,6 +199,15 @@ impl IndividualData {
             parents: ParentSet::default(),
             ancestry: vec![],
             children: ChildMap::default(),
+        }
+    }
+}
+
+impl ChildInputDetails {
+    fn new(input_number_segs: usize) -> Self {
+        Self {
+            input_number_segs,
+            output_number_segs: 0,
         }
     }
 }
