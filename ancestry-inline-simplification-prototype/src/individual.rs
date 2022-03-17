@@ -145,12 +145,18 @@ impl Individual {
 
         let mut input_child_details: HashMap<Individual, ChildInputDetails> = HashMap::default();
         let mut current_ancestry_seg = 0_usize;
-        let input_ancestry_len = self.borrow().ancestry.len();
-        let self_alive = self.borrow().alive;
+        let input_ancestry_len: usize;
+        let self_alive: bool;
 
-        for (c, segs) in &self.borrow().children {
-            input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
+        {
+            let b = self.borrow();
+            self_alive = b.alive;
+            input_ancestry_len = b.ancestry.len();
+            for (c, segs) in &b.children {
+                input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
+            }
         }
+
 
         let mut mapped_ind: Individual;
 
