@@ -199,6 +199,7 @@ impl Individual {
                         // NOTE: this pattern of traversing the
                         // ancestry to hunt for unary segments
                         // really pisses off the borrow checker.
+                        let mut found = false;
                         for a in &temp_mapped_ind.borrow().ancestry {
                             if a.right > left && right > a.left {
                                 // NOTE: will panic! if child is None
@@ -212,9 +213,11 @@ impl Individual {
                                     std::cmp::min(right, a.right),
                                     &mut input_child_details,
                                 );
+                                found = true;
                                 break;
                             }
                         }
+                        assert!(found);
                     }
                 }
             } else {
