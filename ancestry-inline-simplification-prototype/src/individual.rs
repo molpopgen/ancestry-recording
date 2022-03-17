@@ -94,6 +94,38 @@ impl Individual {
         }
     }
 
+    fn update_child_segments(
+        &mut self,
+        child: Individual,
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
+        details: &mut HashMap<Self, ChildInputDetails>,
+    ) {
+        if !details.contains_key(&child) {
+            details.insert(child.clone(), ChildInputDetails::new(0));
+        }
+
+        let seg = Segment::new(left, right, None);
+        let mut ind = self.borrow_mut();
+
+        // Add child if it does not exist
+        if ind.children.get_mut(&child).is_none() {
+            ind.children.insert(child.clone(), vec![]);
+        }
+
+        if let Some(ref mut entry) = details.get_mut(&child) {
+            let child_ref = ind.children.get_mut(&child).unwrap();
+            if entry.output_number_segs < entry.input_number_segs {
+                child_ref[entry.output_number_segs] = seg;
+            } else {
+                child_ref.push(seg);
+            }
+            entry.output_number_segs += 1;
+        } else {
+            panic!("this cannot happen");
+        }
+    }
+
     // FIXME: this is where things are going wrong,
     // and may be the root cause of what we see in update_ancestry.
     pub fn propagate_upwards(&mut self) {
