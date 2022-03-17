@@ -222,18 +222,9 @@ impl Individual {
                 }
             } else {
                 // overlap (coalescence) => ancestry segment maps to self (parent).
-                let mapped_ind = Some(self.clone());
-                for x in overlaps.borrow().iter() {
-                    assert!(x.child.is_some());
-                    self.add_child_segment(left, right, x.child.as_ref().unwrap().clone());
+                mapped_ind = self.clone();
+                for x in overlaps.borrow_mut().iter_mut() {
                 }
-                // NOTE: this ends up adding redundant ancestry?
-                let mut b = self.borrow_mut();
-                if !b.alive {
-                    b.ancestry.push(Segment::new(left, right, mapped_ind));
-                }
-                let sorted = b.ancestry.windows(2).all(|w| w[0].left <= w[1].left);
-                assert!(sorted);
             }
         }
     }
