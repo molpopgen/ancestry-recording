@@ -2,5 +2,5 @@
 
 members = [
     "ancestry-common",
-    "ancestry-inline-simplification-prototype",
+    "ancestry-inline-simplification",
 ]
