@@ -128,6 +128,8 @@ impl Individual {
 
     // FIXME: this is where things are going wrong,
     // and may be the root cause of what we see in update_ancestry.
+    // FIXME: The stack should contain a transparent newtype of Individual
+    // that allows sorting based on birth time.
     pub fn propagate_upwards(&mut self) {
         let mut stack = vec![self.clone()];
         while !stack.is_empty() {
