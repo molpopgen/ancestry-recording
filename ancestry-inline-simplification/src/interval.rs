@@ -1,5 +1,6 @@
 use crate::LargeSignedInteger;
 
+#[derive(Copy, Clone)]
 pub struct Interval {
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,

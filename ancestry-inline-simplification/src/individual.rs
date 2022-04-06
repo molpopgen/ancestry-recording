@@ -1,4 +1,4 @@
-use crate::{segment::Segment, LargeSignedInteger, SignedInteger};
+use crate::{interval::Interval, segment::Segment, LargeSignedInteger, SignedInteger};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -18,7 +18,7 @@ use hashbrown::{HashMap, HashSet};
 #[derive(Clone)]
 pub struct Individual(Rc<RefCell<IndividualData>>);
 
-pub type ChildMap = HashMap<Individual, Vec<Segment>>;
+pub type ChildMap = HashMap<Individual, Vec<Interval>>;
 pub type ParentSet = HashSet<Individual>;
 
 #[derive(Clone)] // NOTE: this does not have to be Clone b/c we work via pointers
@@ -86,11 +86,11 @@ impl Individual {
     ) {
         assert!(child.borrow().birth_time > self.borrow().birth_time);
         let mut b = self.borrow_mut();
-        let seg = Segment::new(left, right, None);
+        let interval = Interval::new(left, right);
         if let Some(v) = b.children.get_mut(&child) {
-            v.push(seg);
+            v.push(interval);
         } else {
-            b.children.insert(child, vec![seg]);
+            b.children.insert(child, vec![interval]);
         }
     }
 
@@ -105,7 +105,7 @@ impl Individual {
             details.insert(child.clone(), ChildInputDetails::new(0));
         }
 
-        let seg = Segment::new(left, right, None);
+        let interval = Interval::new(left, right);
         let mut ind = self.borrow_mut();
 
         // Add child if it does not exist
@@ -116,9 +116,9 @@ impl Individual {
         if let Some(ref mut entry) = details.get_mut(&child) {
             let child_ref = ind.children.get_mut(&child).unwrap();
             if entry.output_number_segs < entry.input_number_segs {
-                child_ref[entry.output_number_segs] = seg;
+                child_ref[entry.output_number_segs] = interval;
             } else {
-                child_ref.push(seg);
+                child_ref.push(interval);
             }
             entry.output_number_segs += 1;
         } else {
