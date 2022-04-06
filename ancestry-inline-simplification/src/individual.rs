@@ -248,8 +248,8 @@ impl Individual {
                         Some(mut unary) => {
                             self.update_child_segments(
                                 &unary.child,
-                                left,
-                                right,
+                                std::cmp::max(left, unary.left),
+                                std::cmp::min(right, unary.right),
                                 &mut input_child_details,
                             );
                             unary.child.add_parent(self.clone());
