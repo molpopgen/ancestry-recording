@@ -148,12 +148,26 @@ impl Individual {
         let input_ancestry_len: usize;
         let self_alive: bool;
 
+        let mut input_unary_ancestry = vec![];
+        let mut input_non_unary_ancestry = vec![];
+
         {
             let b = self.borrow();
             self_alive = b.alive;
             input_ancestry_len = b.ancestry.len();
             for (c, segs) in &b.children {
                 input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
+            }
+            for (i, a) in b.ancestry.iter().rev().enumerate() {
+                let ci = match &a.child {
+                    Some(seg) => seg.borrow().index,
+                    None => panic!("should not be None"),
+                };
+                if ci == b.index {
+                    input_non_unary_ancestry.push(input_ancestry_len - i - 1);
+                } else {
+                    input_unary_ancestry.push(input_ancestry_len - i - 1);
+                }
             }
         }
 
@@ -223,8 +237,7 @@ impl Individual {
             } else {
                 // overlap (coalescence) => ancestry segment maps to self (parent).
                 mapped_ind = self.clone();
-                for x in overlaps.borrow_mut().iter_mut() {
-                }
+                for x in overlaps.borrow_mut().iter_mut() {}
             }
         }
     }
