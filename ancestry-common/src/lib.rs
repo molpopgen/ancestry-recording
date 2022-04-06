@@ -3,13 +3,6 @@ use bitflags::bitflags;
 pub type SignedInteger = i32;
 pub type LargeSignedInteger = i64;
 
-#[derive(Clone, Copy, Eq, PartialEq)]
-pub struct Segment {
-    pub node: SignedInteger,
-    pub left: LargeSignedInteger,
-    pub right: LargeSignedInteger,
-}
-
 // #[repr(transparent)]
 // #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Hash)]
 // pub struct NodeId {
