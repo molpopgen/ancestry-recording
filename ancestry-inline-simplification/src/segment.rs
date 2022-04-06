@@ -29,8 +29,19 @@ impl Ord for Segment {
 }
 
 impl PartialOrd for Segment {
-    // Flipped to create min heaps
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sorting() {
+        let mut v = vec![Segment::new(3, 4, None), Segment::new(2,3,None), Segment::new(1,2, None)];
+        v.sort();
+        assert!(v.windows(2).all(|w| w[0].left < w[1].left));
     }
 }
