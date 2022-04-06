@@ -1,5 +1,4 @@
 use bitflags::bitflags;
-use std::cmp::Ordering;
 
 pub type SignedInteger = i32;
 pub type LargeSignedInteger = i64;
@@ -9,28 +8,6 @@ pub struct Segment {
     pub node: SignedInteger,
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
-}
-
-impl Segment {
-    pub fn new(node: SignedInteger, left: LargeSignedInteger, right: LargeSignedInteger) -> Self {
-        assert!(left < right, "{} {}", left, right);
-        assert!(node >= 0);
-        Self { node, left, right }
-    }
-}
-
-impl Ord for Segment {
-    // Flipped to create min heaps
-    fn cmp(&self, other: &Self) -> Ordering {
-        other.left.cmp(&self.left)
-    }
-}
-
-impl PartialOrd for Segment {
-    // Flipped to create min heaps
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
 }
 
 // #[repr(transparent)]
