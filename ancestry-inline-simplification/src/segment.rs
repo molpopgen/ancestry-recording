@@ -4,6 +4,13 @@ use std::cmp::Ordering;
 
 /// A genomic segment, `[left, right)` inherited
 /// by a `child`.
+///
+/// # Note
+///
+/// The only reason that the child is Option
+/// is b/c of how we generate a Sentinel value
+/// on the segment queue.  This causes serious API
+/// clutter and we should fix this
 #[derive(Clone, Eq, PartialEq)]
 pub struct Segment {
     pub left: LargeSignedInteger,
