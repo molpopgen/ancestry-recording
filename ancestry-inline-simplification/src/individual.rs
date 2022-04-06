@@ -66,6 +66,25 @@ impl Hash for Individual {
     }
 }
 
+fn find_unary_ovarlap(
+    left: LargeSignedInteger,
+    right: LargeSignedInteger,
+    child: &Individual,
+    require_unary: bool,
+) -> Option<Segment> {
+    for a in child.borrow().ancestry.iter() {
+        if right > a.left && a.right > left {
+            if require_unary && a.child.borrow().index != child.borrow().index {
+                return Some(Segment::new(left, right, a.child.clone()));
+            } else {
+                return Some(Segment::new(left, right, a.child.clone()));
+            }
+        }
+    }
+
+    None
+}
+
 impl Individual {
     pub fn new(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self(Rc::new(RefCell::<IndividualData>::new(
@@ -205,34 +224,47 @@ impl Individual {
                             &mut input_child_details,
                         );
                     } else {
-                        // NOTE: this pattern of traversing the
-                        // ancestry to hunt for unary segments
-                        // really pisses off the borrow checker.
-                        let mut found = false;
-                        for a in &temp_mapped_ind.borrow().ancestry {
-                            if a.right > left && right > a.left {
-                                // NOTE: will panic! if child is None
-                                mapped_ind = a.child.clone();
+                        if let Some(overlap) =
+                            find_unary_ovarlap(left, right, &temp_mapped_ind, false)
+                        {
+                            mapped_ind = overlap.child.clone();
 
-                                mapped_ind.borrow_mut().parents.insert(self.clone());
+                            mapped_ind.add_parent(self.clone());
 
-                                self.update_child_segments(
-                                    &mapped_ind,
-                                    std::cmp::max(left, a.left),
-                                    std::cmp::min(right, a.right),
-                                    &mut input_child_details,
-                                );
-                                found = true;
-                                break;
-                            }
+                            self.update_child_segments(
+                                &mapped_ind,
+                                left,
+                                right,
+                                &mut input_child_details,
+                            );
                         }
-                        assert!(found);
                     }
                 }
             } else {
                 // overlap (coalescence) => ancestry segment maps to self (parent).
                 mapped_ind = self.clone();
-                for x in overlaps.borrow_mut().iter_mut() {}
+                for x in overlaps.borrow_mut().iter_mut() {
+                    match find_unary_ovarlap(left, right, &x.child, true) {
+                        Some(mut unary) => {
+                            self.update_child_segments(
+                                &unary.child,
+                                left,
+                                right,
+                                &mut input_child_details,
+                            );
+                            unary.child.add_parent(self.clone());
+                        }
+                        None => {
+                            self.update_child_segments(
+                                &x.child,
+                                left,
+                                right,
+                                &mut input_child_details,
+                            );
+                            x.child.add_parent(self.clone());
+                        }
+                    }
+                }
             }
         }
     }
