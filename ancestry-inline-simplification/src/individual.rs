@@ -159,10 +159,7 @@ impl Individual {
                 input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
             }
             for (i, a) in b.ancestry.iter().rev().enumerate() {
-                let ci = match &a.child {
-                    Some(seg) => seg.borrow().index,
-                    None => panic!("should not be None"),
-                };
+                let ci = a.child.borrow().index;
                 if ci == b.index {
                     input_non_unary_ancestry.push(input_ancestry_len - i - 1);
                 } else {
@@ -183,11 +180,7 @@ impl Individual {
                 //    panic!("cannot happen");
                 //}
 
-                let temp_mapped_ind = if let Some(ref mut child) = overlaps.borrow_mut()[0].child {
-                    child.clone()
-                } else {
-                    panic!("cannot happen");
-                };
+                let temp_mapped_ind = overlaps.borrow_mut()[0].child.clone();
 
                 {
                     // If mapped_ind is not a child of self,
@@ -217,7 +210,7 @@ impl Individual {
                         for a in &temp_mapped_ind.borrow().ancestry {
                             if a.right > left && right > a.left {
                                 // NOTE: will panic! if child is None
-                                mapped_ind = a.child.as_ref().unwrap().clone();
+                                mapped_ind = a.child.clone();
 
                                 mapped_ind.borrow_mut().parents.insert(self.clone());
 
@@ -252,7 +245,7 @@ impl Individual {
                         rv.push(Segment::new(
                             std::cmp::max(x.left, seg.left),
                             std::cmp::min(x.right, seg.right),
-                            Some(child.clone()),
+                            child.clone(),
                         ));
                     }
                 }
@@ -316,7 +309,9 @@ impl SegmentOverlapper {
         segments.push(Segment::new(
             LargeSignedInteger::MAX - 1,
             LargeSignedInteger::MAX,
-            None,
+            // NOTE: dummy individual here to avoid using Option globally for
+            // child field of Segment
+            Individual::new(SignedInteger::MAX, LargeSignedInteger::MAX),
         ));
         let sorted = segments.windows(2).all(|w| w[0].left <= w[1].left);
         assert!(sorted);
@@ -478,11 +473,11 @@ mod overlapper_tests {
             child1
                 .borrow_mut()
                 .ancestry
-                .push(Segment::new(0, 5, Some(child1.clone())));
+                .push(Segment::new(0, 5, child1.clone()));
             child2
                 .borrow_mut()
                 .ancestry
-                .push(Segment::new(1, 6, Some(child2.clone())));
+                .push(Segment::new(1, 6, child2.clone()));
         }
 
         parent.add_child_segment(0, 5, child1.clone());

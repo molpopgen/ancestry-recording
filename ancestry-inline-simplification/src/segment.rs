@@ -4,26 +4,15 @@ use std::cmp::Ordering;
 
 /// A genomic segment, `[left, right)` inherited
 /// by a `child`.
-///
-/// # Note
-///
-/// The only reason that the child is Option
-/// is b/c of how we generate a Sentinel value
-/// on the segment queue.  This causes serious API
-/// clutter and we should fix this
 #[derive(Clone, Eq, PartialEq)]
 pub struct Segment {
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
-    pub child: Option<Individual>,
+    pub child: Individual,
 }
 
 impl Segment {
-    pub fn new(
-        left: LargeSignedInteger,
-        right: LargeSignedInteger,
-        child: Option<Individual>,
-    ) -> Self {
+    pub fn new(left: LargeSignedInteger, right: LargeSignedInteger, child: Individual) -> Self {
         assert!(left < right, "{} {}", left, right);
         Self { left, right, child }
     }
@@ -48,9 +37,9 @@ mod tests {
     #[test]
     fn test_sorting() {
         let mut v = vec![
-            Segment::new(3, 4, None),
-            Segment::new(2, 3, None),
-            Segment::new(1, 2, None),
+            Segment::new(3, 4, Individual::new(1, 1)),
+            Segment::new(2, 3, Individual::new(1, 2)),
+            Segment::new(1, 2, Individual::new(1, 3)),
         ];
         v.sort();
         assert!(v.windows(2).all(|w| w[0].left < w[1].left));
