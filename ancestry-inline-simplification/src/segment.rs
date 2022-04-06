@@ -4,9 +4,6 @@ use std::cmp::Ordering;
 
 /// A genomic segment, `[left, right)` inherited
 /// by a `child`.
-///
-/// See implementation of [Individual::add_child_segment]
-/// for how the `Option` is used.
 #[derive(Clone, Eq, PartialEq)]
 pub struct Segment {
     pub left: LargeSignedInteger,
