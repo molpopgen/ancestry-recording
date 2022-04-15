@@ -1,4 +1,4 @@
-use crate::ancestry_overlapper::{AncestryOverlapper, AncestryIntersection};
+use crate::ancestry_overlapper::{AncestryIntersection, AncestryOverlapper};
 use crate::{interval::Interval, segment::Segment, LargeSignedInteger, SignedInteger};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -269,7 +269,18 @@ impl Individual {
             bs.ancestry.sort();
         }
 
-        // TODO: prune children
+        {
+            // FIXME: untestable
+            let mut bs = self.borrow_mut();
+
+            for (c, s) in bs.children.iter_mut() {
+                s.truncate(input_child_details.get(c).unwrap().output_number_segs);
+                if s.is_empty() {
+                    c.borrow_mut().parents.remove(&self);
+                }
+            }
+            bs.children.retain(|_, v| !v.is_empty());
+        }
 
         return ancestry_change_detected || self.borrow().ancestry.is_empty();
     }
