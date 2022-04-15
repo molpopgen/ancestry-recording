@@ -266,7 +266,7 @@ impl Individual {
                 }
             }
             bs.ancestry.retain(|x| x.left != LargeSignedInteger::MIN);
-            // TODO: sort bs.ancestry
+            bs.ancestry.sort();
         }
 
         // TODO: prune children
