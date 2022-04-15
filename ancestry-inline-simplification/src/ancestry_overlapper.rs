@@ -4,14 +4,14 @@ use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
 
 #[derive(Clone, Eq, PartialEq)]
-pub(crate) struct Overlap {
+pub(crate) struct AncestryIntersection {
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
     pub child: Individual,
     pub mapped_individual: Individual,
 }
 
-impl Overlap {
+impl AncestryIntersection {
     pub fn new(
         left: LargeSignedInteger,
         right: LargeSignedInteger,
@@ -29,23 +29,22 @@ impl Overlap {
 }
 
 pub(crate) struct AncestryOverlapper {
-    segments: Vec<Overlap>,
-    overlaps: Rc<RefCell<Vec<Overlap>>>, // Prevents copying the segments over and over
+    intersections: Vec<AncestryIntersection>,
+    overlaps: Rc<RefCell<Vec<AncestryIntersection>>>, // Prevents copying the segments over and over
     j: usize,
     n: usize,
     right: LargeSignedInteger,
 }
 
 impl AncestryOverlapper {
-    // FIXME: should Err if input are not sorted.
-    pub(crate) fn new(segments: Vec<Overlap>) -> Self {
-        let mut segments = segments;
-        let n = segments.len();
+    pub(crate) fn new(intersections: Vec<AncestryIntersection>) -> Self {
+        let mut intersections = intersections;
+        let n = intersections.len();
         let overlaps = vec![];
 
-        segments.sort();
-        // Sentinel
-        segments.push(Overlap::new(
+        intersections.sort();
+        // Sentinel -- FIXME: get rid of the need for the dummy Individuals
+        intersections.push(AncestryIntersection::new(
             LargeSignedInteger::MAX - 1,
             LargeSignedInteger::MAX,
             // NOTE: dummy individual here to avoid using Option globally for
@@ -53,11 +52,11 @@ impl AncestryOverlapper {
             Individual::new(SignedInteger::MAX, LargeSignedInteger::MAX),
             Individual::new(SignedInteger::MAX, LargeSignedInteger::MAX),
         ));
-        let sorted = segments.windows(2).all(|w| w[0].left <= w[1].left);
+        let sorted = intersections.windows(2).all(|w| w[0].left <= w[1].left);
         assert!(sorted);
-        let right = segments[0].left;
+        let right = intersections[0].left;
         Self {
-            segments,
+            intersections,
             overlaps: Rc::new(RefCell::new(overlaps)),
             j: 0,
             n,
@@ -70,7 +69,7 @@ impl Iterator for AncestryOverlapper {
     type Item = (
         LargeSignedInteger,
         LargeSignedInteger,
-        Rc<RefCell<Vec<Overlap>>>,
+        Rc<RefCell<Vec<AncestryIntersection>>>,
     );
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -78,12 +77,12 @@ impl Iterator for AncestryOverlapper {
             let mut left = self.right;
             self.overlaps.borrow_mut().retain(|x| x.right > left);
             if self.overlaps.borrow().is_empty() {
-                left = self.segments[self.j].left;
+                left = self.intersections[self.j].left;
             }
-            while self.j < self.n && self.segments[self.j].left == left {
+            while self.j < self.n && self.intersections[self.j].left == left {
                 self.overlaps
                     .borrow_mut()
-                    .push(self.segments[self.j].clone());
+                    .push(self.intersections[self.j].clone());
                 self.j += 1;
             }
             self.j -= 1;
@@ -92,7 +91,7 @@ impl Iterator for AncestryOverlapper {
                 .borrow()
                 .iter()
                 .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right));
-            self.right = std::cmp::min(self.right, self.segments[self.j + 1].right);
+            self.right = std::cmp::min(self.right, self.intersections[self.j + 1].right);
             self.j += 1;
             return Some((left, self.right, self.overlaps.clone()));
         }
@@ -135,13 +134,13 @@ impl Iterator for AncestryOverlapper {
     }
 }
 
-impl Ord for Overlap {
+impl Ord for AncestryIntersection {
     fn cmp(&self, other: &Self) -> Ordering {
         self.left.cmp(&other.left)
     }
 }
 
-impl PartialOrd for Overlap {
+impl PartialOrd for AncestryIntersection {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
@@ -154,9 +153,9 @@ mod tests {
     #[test]
     fn test_sorting() {
         let mut v = vec![
-            Overlap::new(3, 4, Individual::new(1, 1), Individual::new(1, 2)),
-            Overlap::new(2, 3, Individual::new(1, 2), Individual::new(1, 2)),
-            Overlap::new(1, 2, Individual::new(1, 3), Individual::new(1, 2)),
+            AncestryIntersection::new(3, 4, Individual::new(1, 1), Individual::new(1, 2)),
+            AncestryIntersection::new(2, 3, Individual::new(1, 2), Individual::new(1, 2)),
+            AncestryIntersection::new(1, 2, Individual::new(1, 3), Individual::new(1, 2)),
         ];
         v.sort();
         assert!(v.windows(2).all(|w| w[0].left < w[1].left));

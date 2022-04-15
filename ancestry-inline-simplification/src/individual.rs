@@ -1,4 +1,4 @@
-use crate::ancestry_overlapper::{AncestryOverlapper, Overlap};
+use crate::ancestry_overlapper::{AncestryOverlapper, AncestryIntersection};
 use crate::{interval::Interval, segment::Segment, LargeSignedInteger, SignedInteger};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -274,14 +274,14 @@ impl Individual {
         return ancestry_change_detected || self.borrow().ancestry.is_empty();
     }
 
-    pub(crate) fn intersecting_ancestry(&self) -> Vec<Overlap> {
+    pub(crate) fn intersecting_ancestry(&self) -> Vec<AncestryIntersection> {
         let mut rv = vec![];
 
         for (child, segs) in self.borrow().children.iter() {
             for seg in segs.iter() {
                 for x in child.borrow().ancestry.iter() {
                     if x.right > seg.left && seg.right > x.left {
-                        rv.push(Overlap::new(
+                        rv.push(AncestryIntersection::new(
                             std::cmp::max(x.left, seg.left),
                             std::cmp::min(x.right, seg.right),
                             child.clone(),
