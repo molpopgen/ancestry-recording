@@ -13,8 +13,8 @@ use hashbrown::{HashMap, HashSet};
 ///
 /// Derefs to Rc<RefCell<Individual>>, giving interior mutability.
 /// Required so that we can hash Rc instances.
-/// Hashing is via the underlying [Individual](Individual)'s
-/// [index](Individual::index) value.
+/// Hashing and equality are implemented with respect to the
+/// underlying *pointers* and not the *data*.
 #[derive(Clone)]
 pub struct Individual(Rc<RefCell<IndividualData>>);
 
