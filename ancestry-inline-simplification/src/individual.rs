@@ -66,6 +66,10 @@ impl Individual {
         )))
     }
 
+    pub fn is_alive(&self) -> bool {
+        self.borrow().alive
+    }
+
     pub fn add_parent(&mut self, parent: Individual) {
         assert!(self.borrow_mut().birth_time > parent.borrow().birth_time);
         self.borrow_mut().parents.insert(parent);
@@ -135,14 +139,15 @@ impl Individual {
         }
     }
 
-    fn update_ancestry(&mut self) {
+    fn update_ancestry(&mut self) -> bool {
         let overlapper = AncestryOverlapper::new(self.intersecting_ancestry());
 
         let mut input_child_details: HashMap<Individual, ChildInputDetails> = HashMap::default();
-        let mut current_ancestry_seg = 0_usize;
+        let mut ancestry_change_detected = false;
         let input_ancestry_len: usize;
         let self_alive: bool;
 
+        // FIXME: the next block is untestable -- should be a separate fn.
         let mut input_unary_ancestry = vec![];
         let mut input_non_unary_ancestry = vec![];
 
@@ -150,6 +155,8 @@ impl Individual {
             let b = self.borrow();
             self_alive = b.alive;
             input_ancestry_len = b.ancestry.len();
+
+            // FIXME: untestable and mixed in w/other functionality.
             for (c, segs) in &b.children {
                 input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
             }
@@ -162,7 +169,7 @@ impl Individual {
             }
         }
 
-        let mut mapped_ind: Individual;
+        let mut mapped_ind: Option<Individual> = None;
 
         for (left, right, overlaps) in overlapper {
             let num_overlaps = overlaps.borrow().len();
@@ -182,20 +189,20 @@ impl Individual {
                     let mapped_ind_alive = temp_mapped_ind.borrow().alive;
 
                     if mapped_ind_alive {
-                        mapped_ind = temp_mapped_ind;
+                        mapped_ind = Some(temp_mapped_ind);
                         self.update_child_segments(
-                            &mapped_ind,
+                            mapped_ind.as_ref().unwrap(),
                             left,
                             right,
                             &mut input_child_details,
                         );
                     } else {
-                        mapped_ind = overlaps.borrow_mut()[0].mapped_individual.clone();
+                        mapped_ind = Some(overlaps.borrow_mut()[0].mapped_individual.clone());
 
-                        mapped_ind.add_parent(self.clone());
+                        mapped_ind.as_mut().unwrap().add_parent(self.clone());
 
                         self.update_child_segments(
-                            &mapped_ind,
+                            &mapped_ind.as_ref().unwrap(),
                             left,
                             right,
                             &mut input_child_details,
@@ -204,7 +211,7 @@ impl Individual {
                 }
             } else {
                 // overlap (coalescence) => ancestry segment maps to self (parent).
-                mapped_ind = self.clone();
+                mapped_ind = Some(self.clone());
                 for x in overlaps.borrow_mut().iter_mut() {
                     self.update_child_segments(
                         &x.mapped_individual,
@@ -215,7 +222,53 @@ impl Individual {
                     x.mapped_individual.add_parent(self.clone());
                 }
             }
+
+            assert!(mapped_ind.is_some());
+
+            // FIXME: untestable
+            if !self_alive {
+                let mut bs = self.borrow_mut();
+                if !input_non_unary_ancestry.is_empty() {
+                    let idx = input_non_unary_ancestry.pop().unwrap();
+                    if left != bs.ancestry[idx].left
+                        || right != bs.ancestry[idx].right
+                        || *mapped_ind.as_ref().unwrap() != bs.ancestry[idx].child
+                    {
+                        ancestry_change_detected = true;
+                    }
+                    bs.ancestry[idx] =
+                        Segment::new(left, right, mapped_ind.as_ref().unwrap().clone());
+                } else {
+                    ancestry_change_detected = true;
+                    bs.ancestry.push(Segment::new(
+                        left,
+                        right,
+                        mapped_ind.as_ref().unwrap().clone(),
+                    ));
+                }
+            }
         }
+
+        // FIXME: untestable
+        if !self_alive {
+            let mut bs = self.borrow_mut();
+            for idx in input_non_unary_ancestry {
+                ancestry_change_detected = true;
+                bs.ancestry[idx].left = LargeSignedInteger::MIN;
+            }
+            for idx in input_unary_ancestry {
+                if !bs.ancestry[idx].child.is_alive()
+                    || (!bs.ancestry[idx].child.borrow().children.is_empty()
+                        && bs.ancestry[idx].child.borrow().children.contains_key(&self))
+                {
+                    ancestry_change_detected = true;
+                    bs.ancestry[idx].left = LargeSignedInteger::MIN;
+                }
+            }
+            bs.ancestry.retain(|x| x.left != LargeSignedInteger::MIN);
+        }
+
+        return ancestry_change_detected || self.borrow().ancestry.is_empty();
     }
 
     pub(crate) fn intersecting_ancestry(&self) -> Vec<Overlap> {
