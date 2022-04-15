@@ -266,7 +266,10 @@ impl Individual {
                 }
             }
             bs.ancestry.retain(|x| x.left != LargeSignedInteger::MIN);
+            // TODO: sort bs.ancestry
         }
+
+        // TODO: prune children
 
         return ancestry_change_detected || self.borrow().ancestry.is_empty();
     }
