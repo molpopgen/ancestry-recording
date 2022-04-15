@@ -306,7 +306,10 @@ impl Individual {
         rv
     }
 
+    // FIXME: Should return a Result so that
+    // this is more useful than simply runtime assert.
     fn non_overlapping_segments(&self) -> bool {
+        // FIXME: hard to test, repetitive logic
         let sorted = self
             .borrow()
             .ancestry
