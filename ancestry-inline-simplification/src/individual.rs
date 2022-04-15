@@ -1,5 +1,6 @@
 use crate::ancestry_overlapper::{AncestryIntersection, AncestryOverlapper};
 use crate::{interval::Interval, segment::Segment, LargeSignedInteger, SignedInteger};
+use std::collections::BinaryHeap;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -56,6 +57,35 @@ impl Eq for Individual {}
 impl Hash for Individual {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_ptr().hash(state);
+    }
+}
+
+#[repr(transparent)]
+struct PrioritizedIndividual(Individual);
+
+impl PartialEq for PrioritizedIndividual {
+    fn eq(&self, other: &Self) -> bool {
+        std::ptr::eq(self.0.as_ptr(), other.0.as_ptr())
+    }
+}
+
+impl PartialOrd for PrioritizedIndividual {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.0.borrow().birth_time.cmp(&other.0.borrow().birth_time))
+    }
+}
+
+impl Eq for PrioritizedIndividual {}
+
+impl Ord for PrioritizedIndividual {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(&other).unwrap()
+    }
+}
+
+impl PrioritizedIndividual {
+    fn get(self) -> Individual {
+        self.0
     }
 }
 
@@ -123,18 +153,21 @@ impl Individual {
         }
     }
 
-    // FIXME: this is where things are going wrong,
-    // and may be the root cause of what we see in update_ancestry.
-    // FIXME: The stack should contain a transparent newtype of Individual
-    // that allows sorting based on birth time.
     pub fn propagate_upwards(&mut self) {
-        let mut stack = vec![self.clone()];
+        let mut stack = BinaryHeap::new();
+        stack.push(PrioritizedIndividual(self.clone()));
+        let mut in_stack = HashSet::new();
+        in_stack.insert(self.clone());
         while !stack.is_empty() {
-            let mut ind = stack.pop().unwrap();
+            let mut ind = stack.pop().unwrap().get();
+            in_stack.remove(&ind);
             ind.update_ancestry();
             assert!(ind.non_overlapping_segments());
             for parent in ind.borrow().parents.iter() {
-                stack.push(parent.clone());
+                if !in_stack.contains(&parent) {
+                    stack.push(PrioritizedIndividual(parent.clone()));
+                    in_stack.insert(parent.clone());
+                }
             }
         }
     }
@@ -349,6 +382,28 @@ impl ChildInputDetails {
             input_number_segs,
             output_number_segs: 0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_binary_heap() {
+        let a = PrioritizedIndividual(Individual::new(0, 1));
+        let b = PrioritizedIndividual(Individual::new(0, 2));
+
+        let mut heap = BinaryHeap::new();
+        heap.push(a);
+        heap.push(b);
+
+        let mut birth_times = vec![];
+        while !heap.is_empty() {
+            let x = heap.pop().unwrap();
+            birth_times.push(x.0.borrow().birth_time);
+        }
+        assert_eq!(birth_times, vec![2, 1]);
     }
 }
 
