@@ -167,13 +167,6 @@ impl Individual {
         for (left, right, overlaps) in overlapper {
             let num_overlaps = overlaps.borrow().len();
             if num_overlaps == 1 {
-                // unary edge transmission to child.
-                //if let Some(ref mut child) = overlaps.borrow_mut()[0].child {
-                //    mapped_ind = child.clone();
-                //} else {
-                //    panic!("cannot happen");
-                //}
-
                 let temp_mapped_ind = overlaps.borrow_mut()[0].child.clone();
 
                 {
