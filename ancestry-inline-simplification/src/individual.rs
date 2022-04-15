@@ -59,25 +59,6 @@ impl Hash for Individual {
     }
 }
 
-fn find_unary_ovarlap(
-    left: LargeSignedInteger,
-    right: LargeSignedInteger,
-    child: &Individual,
-    require_unary: bool,
-) -> Option<Segment> {
-    for a in child.borrow().ancestry.iter() {
-        if right > a.left && a.right > left {
-            if require_unary && a.child != *child {
-                return Some(Segment::new(left, right, a.child.clone()));
-            } else {
-                return Some(Segment::new(left, right, a.child.clone()));
-            }
-        }
-    }
-
-    None
-}
-
 impl Individual {
     pub fn new(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self(Rc::new(RefCell::<IndividualData>::new(
@@ -216,46 +197,29 @@ impl Individual {
                             &mut input_child_details,
                         );
                     } else {
-                        if let Some(overlap) =
-                            find_unary_ovarlap(left, right, &temp_mapped_ind, false)
-                        {
-                            mapped_ind = overlap.child.clone();
+                        mapped_ind = overlaps.borrow_mut()[0].mapped_individual.clone();
 
-                            mapped_ind.add_parent(self.clone());
+                        mapped_ind.add_parent(self.clone());
 
-                            self.update_child_segments(
-                                &mapped_ind,
-                                left,
-                                right,
-                                &mut input_child_details,
-                            );
-                        }
+                        self.update_child_segments(
+                            &mapped_ind,
+                            left,
+                            right,
+                            &mut input_child_details,
+                        );
                     }
                 }
             } else {
                 // overlap (coalescence) => ancestry segment maps to self (parent).
                 mapped_ind = self.clone();
                 for x in overlaps.borrow_mut().iter_mut() {
-                    match find_unary_ovarlap(left, right, &x.child, true) {
-                        Some(mut unary) => {
-                            self.update_child_segments(
-                                &unary.child,
-                                std::cmp::max(left, unary.left),
-                                std::cmp::min(right, unary.right),
-                                &mut input_child_details,
-                            );
-                            unary.child.add_parent(self.clone());
-                        }
-                        None => {
-                            self.update_child_segments(
-                                &x.child,
-                                left,
-                                right,
-                                &mut input_child_details,
-                            );
-                            x.child.add_parent(self.clone());
-                        }
-                    }
+                    self.update_child_segments(
+                        &x.mapped_individual,
+                        left,
+                        right,
+                        &mut input_child_details,
+                    );
+                    x.mapped_individual.add_parent(self.clone());
                 }
             }
         }
