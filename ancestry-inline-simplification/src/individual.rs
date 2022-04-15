@@ -23,9 +23,9 @@ pub type ParentSet = HashSet<Individual>;
 
 #[derive(Clone)] // NOTE: this does not have to be Clone b/c we work via pointers
 pub struct IndividualData {
-    pub index: SignedInteger,
+    pub index: SignedInteger, // TODO: remove this, as it is really only useful for debugging
     pub birth_time: LargeSignedInteger,
-    pub alive: bool,
+    pub alive: bool, // TODO: this should be one field in a u32 flags type.
     pub parents: ParentSet,
     pub ancestry: Vec<Segment>,
     pub children: ChildMap,
