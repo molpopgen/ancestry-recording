@@ -54,7 +54,7 @@ impl Deref for Individual {
 
 impl PartialEq for Individual {
     fn eq(&self, other: &Self) -> bool {
-        self.borrow().index == other.borrow().index
+        std::ptr::eq(self.as_ptr(), other.as_ptr())
     }
 }
 
@@ -62,7 +62,7 @@ impl Eq for Individual {}
 
 impl Hash for Individual {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.borrow().index.hash(state);
+        self.as_ptr().hash(state);
     }
 }
 
@@ -74,7 +74,7 @@ fn find_unary_ovarlap(
 ) -> Option<Segment> {
     for a in child.borrow().ancestry.iter() {
         if right > a.left && a.right > left {
-            if require_unary && a.child.borrow().index != child.borrow().index {
+            if require_unary && a.child != *child {
                 return Some(Segment::new(left, right, a.child.clone()));
             } else {
                 return Some(Segment::new(left, right, a.child.clone()));
@@ -180,8 +180,7 @@ impl Individual {
                 input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
             }
             for (i, a) in b.ancestry.iter().rev().enumerate() {
-                let ci = a.child.borrow().index;
-                if ci == b.index {
+                if a.child == *self {
                     input_non_unary_ancestry.push(input_ancestry_len - i - 1);
                 } else {
                     input_unary_ancestry.push(input_ancestry_len - i - 1);
