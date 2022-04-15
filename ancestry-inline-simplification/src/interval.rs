@@ -13,6 +13,9 @@ impl Interval {
     }
 }
 
+// NOTE: FIXME: a Trait called Interval would abstract out 
+// a bunch of stuff
+
 impl Ord for Interval {
     fn cmp(&self, other: &Self) -> Ordering {
         self.left.cmp(&other.left)

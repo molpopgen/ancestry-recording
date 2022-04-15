@@ -18,6 +18,9 @@ impl Segment {
     }
 }
 
+// NOTE: FIXME: a Trait called Interval would abstract out 
+// a bunch of stuff
+
 impl Ord for Segment {
     fn cmp(&self, other: &Self) -> Ordering {
         self.left.cmp(&other.left)

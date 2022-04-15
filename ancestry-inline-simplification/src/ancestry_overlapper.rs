@@ -134,6 +134,9 @@ impl Iterator for AncestryOverlapper {
     }
 }
 
+// NOTE: FIXME: a Trait called Interval would abstract out 
+// a bunch of stuff
+
 impl Ord for AncestryIntersection {
     fn cmp(&self, other: &Self) -> Ordering {
         self.left.cmp(&other.left)
