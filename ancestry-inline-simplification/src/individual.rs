@@ -60,6 +60,9 @@ impl Hash for Individual {
     }
 }
 
+// FIXME: all of this boiler plate below
+// can be abstracted out into an "IndividualQueue"
+// or somesuch thing.
 #[repr(transparent)]
 struct PrioritizedIndividual(Individual);
 
