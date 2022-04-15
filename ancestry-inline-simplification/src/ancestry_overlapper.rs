@@ -37,6 +37,7 @@ pub(crate) struct AncestryOverlapper {
 }
 
 impl AncestryOverlapper {
+    // FIXME: should Err if input are not sorted.
     pub(crate) fn new(segments: Vec<Overlap>) -> Self {
         let mut segments = segments;
         let n = segments.len();
