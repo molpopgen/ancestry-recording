@@ -1,7 +1,7 @@
 use crate::{individual::Individual, LargeSignedInteger, SignedInteger};
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
-use std::{cell::RefCell, ops::Deref};
 
 #[derive(Clone, Eq, PartialEq)]
 pub(crate) struct AncestryIntersection {
@@ -134,7 +134,7 @@ impl Iterator for AncestryOverlapper {
     }
 }
 
-// NOTE: FIXME: a Trait called Interval would abstract out 
+// NOTE: FIXME: a Trait called Interval would abstract out
 // a bunch of stuff
 
 impl Ord for AncestryIntersection {
