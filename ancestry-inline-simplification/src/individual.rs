@@ -350,28 +350,6 @@ impl ChildInputDetails {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_binary_heap() {
-        let a = PrioritizedIndividual(Individual::new(0, 1));
-        let b = PrioritizedIndividual(Individual::new(0, 2));
-
-        let mut heap = BinaryHeap::new();
-        heap.push(a);
-        heap.push(b);
-
-        let mut birth_times = vec![];
-        while !heap.is_empty() {
-            let x = heap.pop().unwrap();
-            birth_times.push(x.0.borrow().birth_time);
-        }
-        assert_eq!(birth_times, vec![2, 1]);
-    }
-}
-
 // This module is for experimenting with the Rc/RefCell pattern.
 #[cfg(test)]
 mod practice_tests {
