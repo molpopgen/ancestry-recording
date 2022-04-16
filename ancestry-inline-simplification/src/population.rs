@@ -38,6 +38,8 @@ impl Population {
         self.individuals.get_mut(who)
     }
 
+    // FIXME: should work in terms of "flags"
+    // and should also remove ancestry mapping onto self.
     pub fn kill(&mut self, who: usize) {
         if let Some(ind) = self.get_mut(who) {
             ind.borrow_mut().alive = false;
