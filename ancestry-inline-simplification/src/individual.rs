@@ -99,7 +99,7 @@ impl Individual {
         right: LargeSignedInteger,
         details: &mut HashMap<Self, ChildInputDetails>,
     ) {
-        if !details.contains_key(&child) {
+        if !details.contains_key(child) {
             details.insert(child.clone(), ChildInputDetails::new(0));
         }
 
@@ -107,12 +107,12 @@ impl Individual {
         let mut ind = self.borrow_mut();
 
         // Add child if it does not exist
-        if ind.children.get_mut(&child).is_none() {
+        if !ind.children.contains_key(child) {
             ind.children.insert(child.clone(), vec![]);
         }
 
-        if let Some(ref mut entry) = details.get_mut(&child) {
-            let child_ref = ind.children.get_mut(&child).unwrap();
+        if let Some(ref mut entry) = details.get_mut(child) {
+            let child_ref = ind.children.get_mut(child).unwrap();
             if entry.output_number_segs < entry.input_number_segs {
                 child_ref[entry.output_number_segs] = interval;
             } else {
@@ -180,7 +180,7 @@ impl Individual {
                     // ensure that self is not a parent of mapped_ind
                     let mut b = self.borrow_mut();
                     if b.children.get_mut(&temp_mapped_ind).is_none() {
-                        temp_mapped_ind.borrow_mut().parents.remove(&self);
+                        temp_mapped_ind.borrow_mut().parents.remove(self);
                     }
                 }
 
@@ -201,7 +201,7 @@ impl Individual {
                         mapped_ind.as_mut().unwrap().add_parent(self.clone());
 
                         self.update_child_segments(
-                            &mapped_ind.as_ref().unwrap(),
+                            mapped_ind.as_ref().unwrap(),
                             left,
                             right,
                             &mut input_child_details,
@@ -258,7 +258,7 @@ impl Individual {
             for idx in input_unary_ancestry {
                 if !bs.ancestry[idx].child.is_alive()
                     || (!bs.ancestry[idx].child.borrow().children.is_empty()
-                        && bs.ancestry[idx].child.borrow().children.contains_key(&self))
+                        && bs.ancestry[idx].child.borrow().children.contains_key(self))
                 {
                     ancestry_change_detected = true;
                     bs.ancestry[idx].left = LargeSignedInteger::MIN;
@@ -275,7 +275,7 @@ impl Individual {
             for (c, s) in bs.children.iter_mut() {
                 s.truncate(input_child_details.get(c).unwrap().output_number_segs);
                 if s.is_empty() {
-                    c.borrow_mut().parents.remove(&self);
+                    c.borrow_mut().parents.remove(self);
                 }
             }
             bs.children.retain(|_, v| !v.is_empty());

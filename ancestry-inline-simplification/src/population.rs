@@ -49,4 +49,8 @@ impl Population {
     pub fn len(&self) -> usize {
         self.individuals.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.individuals.is_empty()
+    }
 }

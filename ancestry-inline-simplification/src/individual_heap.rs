@@ -21,7 +21,7 @@ impl Eq for PrioritizedIndividual {}
 
 impl Ord for PrioritizedIndividual {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(&other).unwrap()
+        self.partial_cmp(other).unwrap()
     }
 }
 
