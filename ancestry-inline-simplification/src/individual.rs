@@ -1,6 +1,6 @@
 use crate::ancestry_overlapper::{AncestryIntersection, AncestryOverlapper};
 use crate::individual_heap::IndividualHeap;
-use crate::{interval::Interval, segment::Segment, LargeSignedInteger, SignedInteger};
+use crate::{interval::HalfOpenInterval, segment::Segment, LargeSignedInteger, SignedInteger};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -20,7 +20,7 @@ use hashbrown::{HashMap, HashSet};
 #[derive(Clone)]
 pub struct Individual(Rc<RefCell<IndividualData>>);
 
-pub type ChildMap = HashMap<Individual, Vec<Interval>>;
+pub type ChildMap = HashMap<Individual, Vec<HalfOpenInterval>>;
 pub type ParentSet = HashSet<Individual>;
 
 #[derive(Clone)] // NOTE: this does not have to be Clone b/c we work via pointers
@@ -84,7 +84,7 @@ impl Individual {
     ) {
         assert!(child.borrow().birth_time > self.borrow().birth_time);
         let mut b = self.borrow_mut();
-        let interval = Interval::new(left, right);
+        let interval = HalfOpenInterval::new(left, right);
         if let Some(v) = b.children.get_mut(&child) {
             v.push(interval);
         } else {
@@ -103,7 +103,7 @@ impl Individual {
             details.insert(child.clone(), ChildInputDetails::new(0));
         }
 
-        let interval = Interval::new(left, right);
+        let interval = HalfOpenInterval::new(left, right);
         let mut ind = self.borrow_mut();
 
         // Add child if it does not exist
