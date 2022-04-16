@@ -1,6 +1,6 @@
 use crate::individual::Individual;
+use hashbrown::HashSet;
 use std::collections::BinaryHeap;
-use std::collections::HashSet;
 
 #[repr(transparent)]
 struct PrioritizedIndividual(Individual);
