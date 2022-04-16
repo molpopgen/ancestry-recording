@@ -168,7 +168,7 @@ mod tests {
 #[cfg(test)]
 mod overlapper_tests {
     use super::*;
-    use crate::segment::Segment;
+    use crate::segment::AncestrySegment;
 
     #[test]
     fn test_single_overlap() {
@@ -181,11 +181,11 @@ mod overlapper_tests {
             child1
                 .borrow_mut()
                 .ancestry
-                .push(Segment::new(0, 5, child1.clone()));
+                .push(AncestrySegment::new(0, 5, child1.clone()));
             child2
                 .borrow_mut()
                 .ancestry
-                .push(Segment::new(1, 6, child2.clone()));
+                .push(AncestrySegment::new(1, 6, child2.clone()));
         }
 
         parent.add_child_segment(0, 5, child1.clone());

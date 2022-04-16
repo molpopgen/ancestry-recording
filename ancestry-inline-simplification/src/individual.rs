@@ -1,6 +1,6 @@
 use crate::ancestry_overlapper::{AncestryIntersection, AncestryOverlapper};
 use crate::individual_heap::IndividualHeap;
-use crate::{interval::HalfOpenInterval, segment::Segment, LargeSignedInteger, SignedInteger};
+use crate::{interval::HalfOpenInterval, segment::AncestrySegment, LargeSignedInteger, SignedInteger};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -29,7 +29,7 @@ pub struct IndividualData {
     pub birth_time: LargeSignedInteger,
     pub alive: bool, // TODO: this should be one field in a u32 flags type.
     pub parents: ParentSet,
-    pub ancestry: Vec<Segment>,
+    pub ancestry: Vec<AncestrySegment>,
     pub children: ChildMap,
 }
 
@@ -236,10 +236,10 @@ impl Individual {
                         ancestry_change_detected = true;
                     }
                     bs.ancestry[idx] =
-                        Segment::new(left, right, mapped_ind.as_ref().unwrap().clone());
+                        AncestrySegment::new(left, right, mapped_ind.as_ref().unwrap().clone());
                 } else {
                     ancestry_change_detected = true;
-                    bs.ancestry.push(Segment::new(
+                    bs.ancestry.push(AncestrySegment::new(
                         left,
                         right,
                         mapped_ind.as_ref().unwrap().clone(),
