@@ -9,6 +9,8 @@ pub struct HalfOpenInterval {
 
 impl HalfOpenInterval {
     pub fn new(left: LargeSignedInteger, right: LargeSignedInteger) -> Self {
+        assert!(left < right, "{} {}", left, right);
+        assert!(left >= 0);
         Self { left, right }
     }
 }
