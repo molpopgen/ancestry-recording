@@ -1,4 +1,5 @@
 use crate::ancestry_overlapper::{AncestryIntersection, AncestryOverlapper};
+use crate::individual_heap::IndividualHeap;
 use crate::{interval::Interval, segment::Segment, LargeSignedInteger, SignedInteger};
 use std::collections::BinaryHeap;
 use std::hash::{Hash, Hasher};
@@ -57,38 +58,6 @@ impl Eq for Individual {}
 impl Hash for Individual {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_ptr().hash(state);
-    }
-}
-
-// FIXME: all of this boiler plate below
-// can be abstracted out into an "IndividualQueue"
-// or somesuch thing.
-#[repr(transparent)]
-struct PrioritizedIndividual(Individual);
-
-impl PartialEq for PrioritizedIndividual {
-    fn eq(&self, other: &Self) -> bool {
-        std::ptr::eq(self.0.as_ptr(), other.0.as_ptr())
-    }
-}
-
-impl PartialOrd for PrioritizedIndividual {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.0.borrow().birth_time.cmp(&other.0.borrow().birth_time))
-    }
-}
-
-impl Eq for PrioritizedIndividual {}
-
-impl Ord for PrioritizedIndividual {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(&other).unwrap()
-    }
-}
-
-impl PrioritizedIndividual {
-    fn get(self) -> Individual {
-        self.0
     }
 }
 
@@ -157,20 +126,14 @@ impl Individual {
     }
 
     pub fn propagate_upwards(&mut self) {
-        let mut stack = BinaryHeap::new();
-        stack.push(PrioritizedIndividual(self.clone()));
-        let mut in_stack = HashSet::new();
-        in_stack.insert(self.clone());
-        while !stack.is_empty() {
-            let mut ind = stack.pop().unwrap().get();
-            in_stack.remove(&ind);
+        let mut heap = IndividualHeap::new();
+        heap.push(self.clone());
+        while !heap.is_empty() {
+            let mut ind = heap.pop().unwrap();
             ind.update_ancestry();
             assert!(ind.non_overlapping_segments());
             for parent in ind.borrow().parents.iter() {
-                if !in_stack.contains(&parent) {
-                    stack.push(PrioritizedIndividual(parent.clone()));
-                    in_stack.insert(parent.clone());
-                }
+                heap.push(parent.clone());
             }
         }
     }
