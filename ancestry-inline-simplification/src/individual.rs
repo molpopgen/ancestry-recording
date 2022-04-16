@@ -1,7 +1,6 @@
 use crate::ancestry_overlapper::{AncestryIntersection, AncestryOverlapper};
 use crate::individual_heap::IndividualHeap;
 use crate::{interval::Interval, segment::Segment, LargeSignedInteger, SignedInteger};
-use std::collections::BinaryHeap;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
