@@ -86,5 +86,6 @@ mod tests {
             birth_times.push(x.borrow().birth_time);
         }
         assert_eq!(birth_times, vec![2, 1]);
+        assert!(heap.is_empty());
     }
 }
