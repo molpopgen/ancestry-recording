@@ -1,32 +1,9 @@
-use crate::{individual::Individual, LargeSignedInteger, SignedInteger};
+use crate::{
+    individual::Individual, AncestryIntersection, HalfOpenInterval, LargeSignedInteger,
+    SignedInteger,
+};
 use std::cell::RefCell;
-use std::cmp::Ordering;
 use std::rc::Rc;
-
-#[derive(Clone, Eq, PartialEq)]
-pub(crate) struct AncestryIntersection {
-    pub left: LargeSignedInteger,
-    pub right: LargeSignedInteger,
-    pub child: Individual,
-    pub mapped_individual: Individual,
-}
-
-impl AncestryIntersection {
-    pub fn new(
-        left: LargeSignedInteger,
-        right: LargeSignedInteger,
-        child: Individual,
-        mapped_individual: Individual,
-    ) -> Self {
-        assert!(left < right, "{} {}", left, right);
-        Self {
-            left,
-            right,
-            child,
-            mapped_individual,
-        }
-    }
-}
 
 pub(crate) struct AncestryOverlapper {
     intersections: Vec<AncestryIntersection>,
@@ -52,9 +29,9 @@ impl AncestryOverlapper {
             Individual::new(SignedInteger::MAX, LargeSignedInteger::MAX),
             Individual::new(SignedInteger::MAX, LargeSignedInteger::MAX),
         ));
-        let sorted = intersections.windows(2).all(|w| w[0].left <= w[1].left);
+        let sorted = intersections.windows(2).all(|w| w[0].left() <= w[1].left());
         assert!(sorted);
-        let right = intersections[0].left;
+        let right = intersections[0].left();
         Self {
             intersections,
             overlaps: Rc::new(RefCell::new(overlaps)),
@@ -75,11 +52,11 @@ impl Iterator for AncestryOverlapper {
     fn next(&mut self) -> Option<Self::Item> {
         if self.j < self.n {
             let mut left = self.right;
-            self.overlaps.borrow_mut().retain(|x| x.right > left);
+            self.overlaps.borrow_mut().retain(|x| x.right() > left);
             if self.overlaps.borrow().is_empty() {
-                left = self.intersections[self.j].left;
+                left = self.intersections[self.j].left();
             }
-            while self.j < self.n && self.intersections[self.j].left == left {
+            while self.j < self.n && self.intersections[self.j].left() == left {
                 self.overlaps
                     .borrow_mut()
                     .push(self.intersections[self.j].clone());
@@ -90,21 +67,21 @@ impl Iterator for AncestryOverlapper {
                 .overlaps
                 .borrow()
                 .iter()
-                .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right));
-            self.right = std::cmp::min(self.right, self.intersections[self.j + 1].right);
+                .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right()));
+            self.right = std::cmp::min(self.right, self.intersections[self.j + 1].right());
             self.j += 1;
             return Some((left, self.right, self.overlaps.clone()));
         }
 
         if !self.overlaps.borrow().is_empty() {
             let left = self.right;
-            self.overlaps.borrow_mut().retain(|x| x.right > left);
+            self.overlaps.borrow_mut().retain(|x| x.right() > left);
             if !self.overlaps.borrow().is_empty() {
                 self.right = self
                     .overlaps
                     .borrow()
                     .iter()
-                    .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right));
+                    .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right()));
                 return Some((left, self.right, self.overlaps.clone()));
             }
         }
@@ -134,21 +111,6 @@ impl Iterator for AncestryOverlapper {
     }
 }
 
-// NOTE: FIXME: a Trait called Interval would abstract out
-// a bunch of stuff
-
-impl Ord for AncestryIntersection {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.left.cmp(&other.left)
-    }
-}
-
-impl PartialOrd for AncestryIntersection {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -161,14 +123,14 @@ mod tests {
             AncestryIntersection::new(1, 2, Individual::new(1, 3), Individual::new(1, 2)),
         ];
         v.sort();
-        assert!(v.windows(2).all(|w| w[0].left < w[1].left));
+        assert!(v.windows(2).all(|w| w[0].left() < w[1].left()));
     }
 }
 
 #[cfg(test)]
 mod overlapper_tests {
     use super::*;
-    use crate::segment::AncestrySegment;
+    use crate::AncestrySegment;
 
     #[test]
     fn test_single_overlap() {

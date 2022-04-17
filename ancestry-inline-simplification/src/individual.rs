@@ -1,7 +1,8 @@
-use crate::ancestry_overlapper::{AncestryIntersection, AncestryOverlapper};
 use crate::individual_heap::IndividualHeap;
+use crate::AncestryOverlapper;
 use crate::{
-    interval::HalfOpenInterval, segment::AncestrySegment, LargeSignedInteger, SignedInteger,
+    AncestryIntersection, AncestrySegment, HalfOpenInterval, LargeSignedInteger, Segment,
+    SignedInteger,
 };
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -22,7 +23,7 @@ use hashbrown::{HashMap, HashSet};
 #[derive(Clone)]
 pub struct Individual(Rc<RefCell<IndividualData>>);
 
-pub type ChildMap = HashMap<Individual, Vec<HalfOpenInterval>>;
+pub type ChildMap = HashMap<Individual, Vec<Segment>>;
 pub type ParentSet = HashSet<Individual>;
 
 #[derive(Clone)] // NOTE: this does not have to be Clone b/c we work via pointers
@@ -86,7 +87,7 @@ impl Individual {
     ) {
         assert!(child.borrow().birth_time > self.borrow().birth_time);
         let mut b = self.borrow_mut();
-        let interval = HalfOpenInterval::new(left, right);
+        let interval = Segment::new(left, right);
         if let Some(v) = b.children.get_mut(&child) {
             v.push(interval);
         } else {
@@ -105,7 +106,7 @@ impl Individual {
             details.insert(child.clone(), ChildInputDetails::new(0));
         }
 
-        let interval = HalfOpenInterval::new(left, right);
+        let interval = Segment::new(left, right);
         let mut ind = self.borrow_mut();
 
         // Add child if it does not exist
@@ -174,7 +175,7 @@ impl Individual {
         for (left, right, overlaps) in overlapper {
             let num_overlaps = overlaps.borrow().len();
             if num_overlaps == 1 {
-                let temp_mapped_ind = overlaps.borrow_mut()[0].child.clone();
+                let temp_mapped_ind = overlaps.borrow_mut()[0].ancestry_segment.child.clone();
 
                 {
                     // If mapped_ind is not a child of self,
@@ -230,8 +231,8 @@ impl Individual {
                 let mut bs = self.borrow_mut();
                 if !input_non_unary_ancestry.is_empty() {
                     let idx = input_non_unary_ancestry.pop().unwrap();
-                    if left != bs.ancestry[idx].left
-                        || right != bs.ancestry[idx].right
+                    if left != bs.ancestry[idx].left()
+                        || right != bs.ancestry[idx].right()
                         || *mapped_ind.as_ref().unwrap() != bs.ancestry[idx].child
                     {
                         ancestry_change_detected = true;
@@ -254,7 +255,7 @@ impl Individual {
             let mut bs = self.borrow_mut();
             for idx in input_non_unary_ancestry {
                 ancestry_change_detected = true;
-                bs.ancestry[idx].left = LargeSignedInteger::MIN;
+                bs.ancestry[idx].segment.left = LargeSignedInteger::MIN;
             }
             for idx in input_unary_ancestry {
                 if !bs.ancestry[idx].child.is_alive()
@@ -262,10 +263,10 @@ impl Individual {
                         && bs.ancestry[idx].child.borrow().children.contains_key(self))
                 {
                     ancestry_change_detected = true;
-                    bs.ancestry[idx].left = LargeSignedInteger::MIN;
+                    bs.ancestry[idx].segment.left = LargeSignedInteger::MIN;
                 }
             }
-            bs.ancestry.retain(|x| x.left != LargeSignedInteger::MIN);
+            bs.ancestry.retain(|x| x.left() != LargeSignedInteger::MIN);
             bs.ancestry.sort();
         }
 
@@ -291,10 +292,10 @@ impl Individual {
         for (child, segs) in self.borrow().children.iter() {
             for seg in segs.iter() {
                 for x in child.borrow().ancestry.iter() {
-                    if x.right > seg.left && seg.right > x.left {
+                    if x.overlaps(seg) {
                         rv.push(AncestryIntersection::new(
-                            std::cmp::max(x.left, seg.left),
-                            std::cmp::min(x.right, seg.right),
+                            std::cmp::max(x.left(), seg.left()),
+                            std::cmp::min(x.right(), seg.right()),
                             child.clone(),
                             x.child.clone(),
                         ));
@@ -314,13 +315,13 @@ impl Individual {
             .borrow()
             .ancestry
             .windows(2)
-            .all(|w| w[0].left <= w[1].left);
+            .all(|w| w[0].left() <= w[1].left());
         if !sorted {
             return false;
         }
 
         for (_child, segments) in self.borrow().children.iter() {
-            let sorted = segments.windows(2).all(|w| w[0].left <= w[1].left);
+            let sorted = segments.windows(2).all(|w| w[0].left() <= w[1].left());
             if !sorted {
                 return false;
             }
