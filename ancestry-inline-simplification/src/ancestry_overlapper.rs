@@ -112,22 +112,6 @@ impl Iterator for AncestryOverlapper {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_sorting() {
-        let mut v = vec![
-            AncestryIntersection::new(3, 4, Individual::new(1, 1), Individual::new(1, 2)),
-            AncestryIntersection::new(2, 3, Individual::new(1, 2), Individual::new(1, 2)),
-            AncestryIntersection::new(1, 2, Individual::new(1, 3), Individual::new(1, 2)),
-        ];
-        v.sort();
-        assert!(v.windows(2).all(|w| w[0].left() < w[1].left()));
-    }
-}
-
-#[cfg(test)]
 mod overlapper_tests {
     use super::*;
     use crate::AncestrySegment;
