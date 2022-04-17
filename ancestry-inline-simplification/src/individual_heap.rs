@@ -64,6 +64,7 @@ impl IndividualHeap {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         assert_eq!(self.heap.is_empty(), self.in_heap.is_empty());
         self.heap.is_empty()
