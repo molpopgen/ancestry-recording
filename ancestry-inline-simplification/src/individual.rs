@@ -1,6 +1,8 @@
 use crate::ancestry_overlapper::{AncestryIntersection, AncestryOverlapper};
 use crate::individual_heap::IndividualHeap;
-use crate::{interval::HalfOpenInterval, segment::AncestrySegment, LargeSignedInteger, SignedInteger};
+use crate::{
+    interval::HalfOpenInterval, segment::AncestrySegment, LargeSignedInteger, SignedInteger,
+};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -127,9 +129,8 @@ impl Individual {
     pub fn propagate_upwards(&mut self) {
         let mut heap = IndividualHeap::new();
         heap.push(self.clone());
-        while !heap.is_empty() {
-            let mut ind = heap.pop().unwrap();
-            ind.update_ancestry();
+        while let Some(mut ind) = heap.pop() {
+            let _ = ind.update_ancestry();
             assert!(ind.non_overlapping_segments());
             for parent in ind.borrow().parents.iter() {
                 heap.push(parent.clone());

@@ -44,11 +44,14 @@ impl IndividualHeap {
         }
     }
 
-    pub fn push(&mut self, individual: Individual) {
+    pub fn push(&mut self, individual: Individual) -> bool {
+        let mut inserted = false;
         if !self.in_heap.contains(&individual) {
             self.in_heap.insert(individual.clone());
             self.heap.push(PrioritizedIndividual(individual));
+            inserted = true;
         }
+        inserted
     }
 
     pub fn pop(&mut self) -> Option<Individual> {
@@ -77,12 +80,15 @@ mod tests {
         let b = Individual::new(0, 2);
 
         let mut heap = IndividualHeap::new();
-        heap.push(a);
-        heap.push(b);
+        let inserted = heap.push(a.clone());
+        assert!(inserted);
+        let inserted = heap.push(a);
+        assert!(!inserted);
+        let inserted = heap.push(b);
+        assert!(inserted);
 
         let mut birth_times = vec![];
-        while !heap.is_empty() {
-            let x = heap.pop().unwrap();
+        while let Some(x) = heap.pop() {
             birth_times.push(x.borrow().birth_time);
         }
         assert_eq!(birth_times, vec![2, 1]);
