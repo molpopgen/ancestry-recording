@@ -71,14 +71,14 @@ impl HalfOpenInterval for Segment {
 
 macro_rules! impl_half_open_interval {
     ($type: ty, $field: ident) => {
-       impl HalfOpenInterval for $ type {
-           fn left(&self) -> LargeSignedInteger {
-               self.$field.left()
-           }
-           fn right(&self) -> LargeSignedInteger {
-               self.$field.right()
-           }
-       }
+        impl HalfOpenInterval for $type {
+            fn left(&self) -> LargeSignedInteger {
+                self.$field.left()
+            }
+            fn right(&self) -> LargeSignedInteger {
+                self.$field.right()
+            }
+        }
     };
 }
 
@@ -104,3 +104,30 @@ impl_half_open_interval!(AncestryIntersection, ancestry_segment);
 impl_ord_partial_ord_for_half_open_interval!(Segment);
 impl_ord_partial_ord_for_half_open_interval!(AncestrySegment);
 impl_ord_partial_ord_for_half_open_interval!(AncestryIntersection);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sorting_ancestry_segment() {
+        let mut v = vec![
+            AncestrySegment::new(3, 4, Individual::new(1, 1)),
+            AncestrySegment::new(2, 3, Individual::new(1, 2)),
+            AncestrySegment::new(1, 2, Individual::new(1, 3)),
+        ];
+        v.sort();
+        assert!(v.windows(2).all(|w| w[0].left() < w[1].left()));
+    }
+
+    #[test]
+    fn test_sorting_ancestry_intersection() {
+        let mut v = vec![
+            AncestryIntersection::new(3, 4, Individual::new(1, 1), Individual::new(1, 2)),
+            AncestryIntersection::new(2, 3, Individual::new(1, 2), Individual::new(1, 2)),
+            AncestryIntersection::new(1, 2, Individual::new(1, 3), Individual::new(1, 2)),
+        ];
+        v.sort();
+        assert!(v.windows(2).all(|w| w[0].left() < w[1].left()));
+    }
+}
