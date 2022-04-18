@@ -215,6 +215,13 @@ mod tests {
         let mut transmissions = vec![];
 
         {
+            let crossovers = vec![0, genome_length];
+            let expected = vec![make_transmission(0, genome_length, p1)];
+            fill_transmissions(p1, p2, &crossovers, &mut transmissions);
+            validate_transmissions!(expected, transmissions);
+        }
+
+        {
             let crossovers = vec![0, 1, 3, genome_length];
             let expected = vec![
                 make_transmission(0, 1, p1),
