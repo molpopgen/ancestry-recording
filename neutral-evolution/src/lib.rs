@@ -72,34 +72,29 @@ fn fill_transmissions(
     crossovers: &[LargeSignedInteger],
     transmissions: &mut Vec<TransmittedSegment>,
 ) {
-    assert!(transmissions.is_empty());
+    transmissions.clear();
     let mut p1 = p1;
     let mut p2 = p2;
-    let mut wlast = (crossovers[0], crossovers[1]);
+    let mut last_crossover = crossovers[0];
     let mut pushed = false;
-    for w in crossovers.windows(2).skip(1) {
-        println!(
-            "window = {}, {},wlast = {}, {}",
-            w[0], w[1], wlast.0, wlast.1
-        );
-        if w[0] != wlast.1 {
+    for c in crossovers.iter().skip(1) {
+        if c != &last_crossover {
             transmissions.push(TransmittedSegment {
-                left: wlast.0,
-                right: wlast.1,
+                left: last_crossover,
+                right: *c,
                 parent: p1,
             });
             std::mem::swap(&mut p1, &mut p2);
-            wlast = (w[0], w[1]);
+            last_crossover = *c;
             pushed = true;
         } else {
-            wlast.1 = w[1];
             pushed = false;
         }
     }
     if !pushed {
         transmissions.push(TransmittedSegment {
-            left: wlast.0,
-            right: wlast.1,
+            left: last_crossover,
+            right: *crossovers.last().unwrap(),
             parent: p1,
         });
     }
@@ -208,9 +203,20 @@ mod tests {
 
         {
             let crossovers = vec![0, 1, 3, genome_length];
+            let expected_parents = vec![p1, p2, p1];
             fill_transmissions(p1, p2, &crossovers, &mut transmissions);
-            for t in &transmissions {
-                println!("{} {} {}", t.left, t.right, t.parent);
+            for (i, t) in transmissions.iter().enumerate() {
+                assert_eq!(t.parent, expected_parents[i]);
+            }
+            assert_eq!(transmissions.len(), 3);
+        }
+
+        {
+            let crossovers = vec![0, 1, 3, 3, genome_length];
+            let expected_parents = vec![p1, p2, p2];
+            fill_transmissions(p1, p2, &crossovers, &mut transmissions);
+            for (i, t) in transmissions.iter().enumerate() {
+                assert_eq!(t.parent, expected_parents[i]);
             }
             assert_eq!(transmissions.len(), 3);
         }
