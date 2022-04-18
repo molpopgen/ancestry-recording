@@ -3,6 +3,7 @@ use crate::AncestryOverlapper;
 use crate::{
     AncestryIntersection, AncestrySegment, HalfOpenInterval, LargeSignedInteger, Segment,
     SignedInteger,
+    NodeFlags,
 };
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -30,7 +31,7 @@ pub type ParentSet = HashSet<Individual>;
 pub struct IndividualData {
     pub index: SignedInteger, // TODO: remove this, as it is really only useful for debugging
     pub birth_time: LargeSignedInteger,
-    pub alive: bool, // TODO: this should be one field in a u32 flags type.
+    pub flags: NodeFlags,
     pub parents: ParentSet,
     pub ancestry: Vec<AncestrySegment>,
     pub children: ChildMap,
@@ -64,14 +65,14 @@ impl Hash for Individual {
 }
 
 impl Individual {
-    pub fn new(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
+    pub fn new_alive(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self(Rc::new(RefCell::<IndividualData>::new(
             IndividualData::new(index, birth_time),
         )))
     }
 
     pub fn is_alive(&self) -> bool {
-        self.borrow().alive
+        self.borrow().flags.is_alive()
     }
 
     pub fn add_parent(&mut self, parent: Individual) {
@@ -146,7 +147,7 @@ impl Individual {
         let mut input_child_details: HashMap<Individual, ChildInputDetails> = HashMap::default();
         let mut ancestry_change_detected = false;
         let input_ancestry_len: usize;
-        let self_alive: bool;
+        let self_alive = self.is_alive();
 
         // FIXME: the next block is untestable -- should be a separate fn.
         let mut input_unary_ancestry = vec![];
@@ -154,7 +155,6 @@ impl Individual {
 
         {
             let b = self.borrow();
-            self_alive = b.alive;
             input_ancestry_len = b.ancestry.len();
 
             // FIXME: untestable and mixed in w/other functionality.
@@ -187,7 +187,7 @@ impl Individual {
                 }
 
                 if self_alive {
-                    let mapped_ind_alive = temp_mapped_ind.borrow().alive;
+                    let mapped_ind_alive = temp_mapped_ind.is_alive();
 
                     if mapped_ind_alive {
                         mapped_ind = Some(temp_mapped_ind);
@@ -336,7 +336,7 @@ impl IndividualData {
         Self {
             index,
             birth_time,
-            alive: true,
+            flags: NodeFlags::new_alive(),
             parents: ParentSet::default(),
             ancestry: vec![],
             children: ChildMap::default(),
@@ -371,8 +371,8 @@ mod practice_tests {
     fn test_interior_mutability() {
         let mut pop: Vec<Individual> = vec![];
 
-        pop.push(Individual::new(0, 0));
-        pop.push(Individual::new(1, 1));
+        pop.push(Individual::new_alive(0, 0));
+        pop.push(Individual::new_alive(1, 1));
 
         {
             let c = pop[1].clone();
@@ -395,8 +395,8 @@ mod practice_tests {
     fn test_interior_mutability_via_ref() {
         let mut pop: Vec<Individual> = vec![];
 
-        pop.push(Individual::new(0, 0));
-        pop.push(Individual::new(1, 1));
+        pop.push(Individual::new_alive(0, 0));
+        pop.push(Individual::new_alive(1, 1));
 
         {
             let c = pop[1].clone();

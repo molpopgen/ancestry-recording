@@ -77,8 +77,8 @@ mod tests {
 
     #[test]
     fn test_binary_heap() {
-        let a = Individual::new(0, 1);
-        let b = Individual::new(0, 2);
+        let a = Individual::new_alive(0, 1);
+        let b = Individual::new_alive(0, 2);
 
         let mut heap = IndividualHeap::new();
         let inserted = heap.push(a.clone());

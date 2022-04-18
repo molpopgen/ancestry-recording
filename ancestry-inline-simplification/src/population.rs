@@ -14,7 +14,7 @@ impl Population {
         let mut individuals = vec![];
 
         for i in 0..next_individual_id {
-            individuals.push(Individual::new(i, 0));
+            individuals.push(Individual::new_alive(i, 0));
         }
 
         Self {
@@ -27,7 +27,7 @@ impl Population {
         assert!(birth_time >= 0);
         let index = self.next_individual_id;
         self.next_individual_id += 1;
-        Individual::new(index, birth_time);
+        Individual::new_alive(index, birth_time);
     }
 
     pub fn get(&self, who: usize) -> Option<&Individual> {
@@ -42,7 +42,7 @@ impl Population {
     // and should also remove ancestry mapping onto self.
     pub fn kill(&mut self, who: usize) {
         if let Some(ind) = self.get_mut(who) {
-            ind.borrow_mut().alive = false;
+            ind.borrow_mut().flags.clear_alive();
         } else {
             panic!("{who} out of range for kill");
         }

@@ -26,8 +26,8 @@ impl AncestryOverlapper {
             LargeSignedInteger::MAX,
             // NOTE: dummy individual here to avoid using Option globally for
             // child field of Overlap
-            Individual::new(SignedInteger::MAX, LargeSignedInteger::MAX),
-            Individual::new(SignedInteger::MAX, LargeSignedInteger::MAX),
+            Individual::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
+            Individual::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
         ));
         let sorted = intersections.windows(2).all(|w| w[0].left() <= w[1].left());
         assert!(sorted);
@@ -118,10 +118,10 @@ mod overlapper_tests {
 
     #[test]
     fn test_single_overlap() {
-        let mut parent = Individual::new(0, 0);
+        let mut parent = Individual::new_alive(0, 0);
 
-        let child1 = Individual::new(1, 1);
-        let child2 = Individual::new(2, 1);
+        let child1 = Individual::new_alive(1, 1);
+        let child2 = Individual::new_alive(2, 1);
 
         {
             child1
