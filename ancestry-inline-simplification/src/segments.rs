@@ -1,4 +1,5 @@
 use crate::individual::Individual;
+use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use std::cmp::Ordering;
 
@@ -17,6 +18,24 @@ pub struct Segment {
 }
 
 impl Segment {
+    pub fn new(
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
+    ) -> Result<Segment, InlineAncestryError> {
+        if left < 0 {
+            Err(InlineAncestryError::InvalidPosition { p: left })
+        } else if right < 0 {
+            Err(InlineAncestryError::InvalidPosition { p: right })
+        } else if right <= left {
+            Err(InlineAncestryError::InvalidSegment {
+                left: left,
+                right: right,
+            })
+        } else {
+            Ok(Self::new_unchecked(left, right))
+        }
+    }
+
     pub(crate) fn new_unchecked(left: LargeSignedInteger, right: LargeSignedInteger) -> Self {
         debug_assert!(left < right, "{} {}", left, right);
         debug_assert!(left >= 0);

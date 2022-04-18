@@ -84,15 +84,16 @@ impl Individual {
         left: LargeSignedInteger,
         right: LargeSignedInteger,
         child: Individual,
-    ) {
+    ) -> Result<(), InlineAncestryError> {
         assert!(child.borrow().birth_time > self.borrow().birth_time);
         let mut b = self.borrow_mut();
-        let interval = Segment::new_unchecked(left, right);
+        let interval = Segment::new(left, right)?;
         if let Some(v) = b.children.get_mut(&child) {
             v.push(interval);
         } else {
             b.children.insert(child, vec![interval]);
         }
+        Ok(())
     }
 
     fn update_child_segments(
