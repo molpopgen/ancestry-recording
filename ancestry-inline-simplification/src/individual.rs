@@ -307,8 +307,9 @@ impl Individual {
     }
 
     fn non_overlapping_segments(&self) -> Result<(), InlineAncestryError> {
-        crate::util::non_overlapping_segments(&self.borrow().ancestry)?;
-        for (_child, segments) in self.borrow().children.iter() {
+        let b = self.borrow();
+        crate::util::non_overlapping_segments(&b.ancestry)?;
+        for (_child, segments) in b.children.iter() {
             crate::util::non_overlapping_segments(&segments)?;
         }
         Ok(())
