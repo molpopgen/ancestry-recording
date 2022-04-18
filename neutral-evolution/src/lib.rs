@@ -180,12 +180,12 @@ mod tests {
         let mut rng = make_rng(101);
         let genome_length = 10_i64;
         let mut crossovers = vec![];
-        let crossover_position = &make_crossover_position_distribution(genome_length);
+        let crossover_position = make_crossover_position_distribution(genome_length);
         for n in 0..10_u64 {
             generate_crossover_positions(
                 genome_length,
                 n,
-                crossover_position,
+                &crossover_position,
                 &mut rng,
                 &mut crossovers,
             );
