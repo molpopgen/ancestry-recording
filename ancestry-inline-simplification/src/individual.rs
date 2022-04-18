@@ -1,10 +1,9 @@
 use crate::individual_heap::IndividualHeap;
-use crate::AncestryOverlapper;
 use crate::{
-    AncestryIntersection, AncestrySegment, HalfOpenInterval, LargeSignedInteger, Segment,
-    SignedInteger,
-    NodeFlags,
+    AncestryIntersection, AncestrySegment, HalfOpenInterval, LargeSignedInteger, NodeFlags,
+    Segment, SignedInteger,
 };
+use crate::{AncestryOverlapper, InlineAncestryError};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -128,20 +127,20 @@ impl Individual {
         }
     }
 
-    pub fn propagate_upwards(&mut self) {
+    pub fn propagate_upwards(&mut self) -> Result<(), InlineAncestryError> {
         let mut heap = IndividualHeap::new();
         heap.push(self.clone());
         while let Some(mut ind) = heap.pop() {
-            let _ = ind.update_ancestry();
+            let _ = ind.update_ancestry()?;
             assert!(ind.non_overlapping_segments());
             for parent in ind.borrow().parents.iter() {
                 heap.push(parent.clone());
             }
         }
+        Ok(())
     }
 
-    #[must_use]
-    fn update_ancestry(&mut self) -> bool {
+    fn update_ancestry(&mut self) -> Result<bool, InlineAncestryError> {
         let overlapper = AncestryOverlapper::new(self.intersecting_ancestry());
 
         let mut input_child_details: HashMap<Individual, ChildInputDetails> = HashMap::default();
@@ -283,7 +282,7 @@ impl Individual {
             bs.children.retain(|_, v| !v.is_empty());
         }
 
-        return ancestry_change_detected || self.borrow().ancestry.is_empty();
+        Ok(ancestry_change_detected || self.borrow().ancestry.is_empty())
     }
 
     pub(crate) fn intersecting_ancestry(&self) -> Vec<AncestryIntersection> {
