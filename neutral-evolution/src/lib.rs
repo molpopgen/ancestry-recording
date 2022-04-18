@@ -88,6 +88,7 @@ fn fill_transmissions(
             last_crossover = *c;
             pushed = true;
         } else {
+            std::mem::swap(&mut p1, &mut p2);
             pushed = false;
         }
     }
