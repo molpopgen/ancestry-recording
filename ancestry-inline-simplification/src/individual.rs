@@ -132,7 +132,7 @@ impl Individual {
         heap.push(self.clone());
         while let Some(mut ind) = heap.pop() {
             let _ = ind.update_ancestry()?;
-            assert!(ind.non_overlapping_segments());
+            ind.non_overlapping_segments()?;
             for parent in ind.borrow().parents.iter() {
                 heap.push(parent.clone());
             }
@@ -306,27 +306,12 @@ impl Individual {
         rv
     }
 
-    // FIXME: Should return a Result so that
-    // this is more useful than simply runtime assert.
-    fn non_overlapping_segments(&self) -> bool {
-        // FIXME: hard to test, repetitive logic
-        let sorted = self
-            .borrow()
-            .ancestry
-            .windows(2)
-            .all(|w| w[0].left() <= w[1].left());
-        if !sorted {
-            return false;
-        }
-
+    fn non_overlapping_segments(&self) -> Result<(), InlineAncestryError> {
+        crate::util::non_overlapping_segments(&self.borrow().ancestry)?;
         for (_child, segments) in self.borrow().children.iter() {
-            let sorted = segments.windows(2).all(|w| w[0].left() <= w[1].left());
-            if !sorted {
-                return false;
-            }
+            crate::util::non_overlapping_segments(&segments)?;
         }
-
-        true
+        Ok(())
     }
 }
 

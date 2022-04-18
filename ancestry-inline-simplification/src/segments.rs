@@ -122,9 +122,24 @@ mod tests {
     #[test]
     fn test_sorting_ancestry_intersection() {
         let mut v = vec![
-            AncestryIntersection::new(3, 4, Individual::new_alive(1, 1), Individual::new_alive(1, 2)),
-            AncestryIntersection::new(2, 3, Individual::new_alive(1, 2), Individual::new_alive(1, 2)),
-            AncestryIntersection::new(1, 2, Individual::new_alive(1, 3), Individual::new_alive(1, 2)),
+            AncestryIntersection::new(
+                3,
+                4,
+                Individual::new_alive(1, 1),
+                Individual::new_alive(1, 2),
+            ),
+            AncestryIntersection::new(
+                2,
+                3,
+                Individual::new_alive(1, 2),
+                Individual::new_alive(1, 2),
+            ),
+            AncestryIntersection::new(
+                1,
+                2,
+                Individual::new_alive(1, 3),
+                Individual::new_alive(1, 2),
+            ),
         ];
         v.sort();
         assert!(v.windows(2).all(|w| w[0].left() < w[1].left()));
