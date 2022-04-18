@@ -96,6 +96,7 @@ impl NeutralEvolution for Population {
         birth_time: LargeSignedInteger,
         breakpoints: &[neutral_evolution::TransmittedSegment],
     ) -> Result<(), Box<dyn std::error::Error>> {
+        // Give birth to a new Individual ("node")
         let mut birth = self.birth(birth_time);
 
         for b in breakpoints {
@@ -122,9 +123,8 @@ impl NeutralEvolution for Population {
         let ndeaths = self.replacements.len();
 
         for death in 0..ndeaths {
-            let mut dead_ind = self.get(death).unwrap().clone();
             self.kill(death);
-            dead_ind.propagate_upwards()?;
+            self.individuals[death].propagate_upwards()?;
             self.individuals[death] = self.births[death].clone();
         }
 
