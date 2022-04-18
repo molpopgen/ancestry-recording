@@ -2,6 +2,13 @@ pub use ancestry_common::LargeSignedInteger;
 use rand::prelude::Distribution;
 use rand::SeedableRng;
 use std::error::Error;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum ParameterError {
+    #[error("{0:?}")]
+    BadParameter(String),
+}
 
 pub trait NeutralEvolution {
     /// Generate how many deaths (replacements) will occur at this time step.
@@ -65,6 +72,52 @@ pub struct Parameters {
     mean_num_crossovers: f64,
     genome_length: LargeSignedInteger,
     nsteps: LargeSignedInteger,
+}
+
+impl Parameters {
+    pub fn new(
+        death_probability: f64,
+        mean_num_crossovers: f64,
+        genome_length: LargeSignedInteger,
+        nsteps: LargeSignedInteger,
+    ) -> Result<Self, ParameterError> {
+        if !death_probability.is_finite() {
+            return Err(ParameterError::BadParameter(
+                "death_probability must be finite".to_string(),
+            ));
+        }
+        if death_probability <= 0.0 && death_probability > 1.0 {
+            return Err(ParameterError::BadParameter(
+                "death_probability must be 0 < d <= 1.0".to_string(),
+            ));
+        }
+        if !mean_num_crossovers.is_finite() {
+            return Err(ParameterError::BadParameter(
+                "mean_num_crossovers must be finite".to_string(),
+            ));
+        }
+        if mean_num_crossovers < 0.0 {
+            return Err(ParameterError::BadParameter(
+                "mean_num_crossovers must be >= 0".to_string(),
+            ));
+        }
+        if genome_length < 1 {
+            return Err(ParameterError::BadParameter(
+                "genome_length must be >= 1".to_string(),
+            ));
+        }
+        if nsteps < 1 {
+            return Err(ParameterError::BadParameter(
+                "nsteps must be >= 1".to_string(),
+            ));
+        }
+        Ok(Self {
+            death_probability,
+            mean_num_crossovers,
+            genome_length,
+            nsteps,
+        })
+    }
 }
 
 fn fill_transmissions(
