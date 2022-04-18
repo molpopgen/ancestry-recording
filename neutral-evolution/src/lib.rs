@@ -68,40 +68,30 @@ pub struct Parameters {
 }
 
 fn fill_transmissions(
-    p1: usize,
-    p2: usize,
+    parent1: usize,
+    parent2: usize,
     crossovers: &[LargeSignedInteger],
     transmissions: &mut Vec<TransmittedSegment>,
 ) {
     transmissions.clear();
-    let mut p1 = p1;
-    let mut p2 = p2;
-    let mut last_crossover = crossovers[0];
-    let mut seen = 1_i32;
-    let mut pushed = false;
-    for c in crossovers.iter().skip(1) {
-        if c != &last_crossover && seen % 2 != 0 {
-            transmissions.push(TransmittedSegment {
-                left: last_crossover,
-                right: *c,
-                parent: p1,
-            });
+    let mut p1 = parent1;
+    let mut p2 = parent2;
+    let mut last_left = crossovers[0];
+    let mut start = 1_usize;
+
+    while start < crossovers.len() {
+        let right = crossovers[start];
+        let num = crossovers
+            .iter()
+            .skip(start)
+            .take_while(|c| **c == right)
+            .count();
+        if num % 2 != 0 {
+            transmissions.push(TransmittedSegment::new(last_left, right, p1));
+            last_left = right;
             std::mem::swap(&mut p1, &mut p2);
-            last_crossover = *c;
-            seen = 1;
-            pushed = true;
-        } else {
-            std::mem::swap(&mut p1, &mut p2);
-            seen += 1;
-            pushed = false;
         }
-    }
-    if !pushed {
-        transmissions.push(TransmittedSegment {
-            left: last_crossover,
-            right: *crossovers.last().unwrap(),
-            parent: p1,
-        });
+        start += num;
     }
 }
 
@@ -259,8 +249,19 @@ mod tests {
         {
             let crossovers = vec![0, 1, 1, 3, 3, 3, genome_length];
             let expected = vec![
-                make_transmission(0, 2, p1),
+                make_transmission(0, 3, p1),
                 make_transmission(3, genome_length, p2),
+            ];
+            fill_transmissions(p1, p2, &crossovers, &mut transmissions);
+            validate_transmissions!(expected, transmissions);
+        }
+
+        {
+            let crossovers = vec![0, 1, 1, 3, 3, 3, 7, genome_length];
+            let expected = vec![
+                make_transmission(0, 3, p1),
+                make_transmission(3, 7, p2),
+                make_transmission(7, genome_length, p1),
             ];
             fill_transmissions(p1, p2, &crossovers, &mut transmissions);
             validate_transmissions!(expected, transmissions);
