@@ -221,5 +221,25 @@ mod tests {
             }
             assert_eq!(transmissions.len(), 3);
         }
+
+        {
+            let crossovers = vec![0, 1, 3, 3, 3, genome_length];
+            let expected_parents = vec![p1, p2, p1];
+            fill_transmissions(p1, p2, &crossovers, &mut transmissions);
+            for (i, t) in transmissions.iter().enumerate() {
+                assert_eq!(t.parent, expected_parents[i]);
+            }
+            assert_eq!(transmissions.len(), 3);
+        }
+
+        {
+            let crossovers = vec![0, 1, 1, 3, 3, 3, genome_length];
+            let expected_parents = vec![p1, p1, p2];
+            fill_transmissions(p1, p2, &crossovers, &mut transmissions);
+            for (i, t) in transmissions.iter().enumerate() {
+                assert_eq!(t.parent, expected_parents[i]);
+            }
+            assert_eq!(transmissions.len(), 3);
+        }
     }
 }
