@@ -42,6 +42,7 @@ impl Death {
     }
 }
 
+#[derive(Eq, PartialEq, Debug)]
 pub struct TransmittedSegment {
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
@@ -76,9 +77,10 @@ fn fill_transmissions(
     let mut p1 = p1;
     let mut p2 = p2;
     let mut last_crossover = crossovers[0];
+    let mut seen = 1_i32;
     let mut pushed = false;
     for c in crossovers.iter().skip(1) {
-        if c != &last_crossover {
+        if c != &last_crossover && seen % 2 != 0 {
             transmissions.push(TransmittedSegment {
                 left: last_crossover,
                 right: *c,
@@ -86,9 +88,11 @@ fn fill_transmissions(
             });
             std::mem::swap(&mut p1, &mut p2);
             last_crossover = *c;
+            seen = 1;
             pushed = true;
         } else {
             std::mem::swap(&mut p1, &mut p2);
+            seen += 1;
             pushed = false;
         }
     }
@@ -175,6 +179,24 @@ mod tests {
         rand_pcg::Pcg64::seed_from_u64(seed)
     }
 
+    fn make_transmission(
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
+        parent: usize,
+    ) -> TransmittedSegment {
+        TransmittedSegment::new(left, right, parent)
+    }
+
+    macro_rules! validate_transmissions {
+        ($expected: ident, $got: ident) => {
+            assert_eq!($expected.len(), $got.len());
+
+            for (i, j) in $expected.iter().zip($got.iter()) {
+                assert_eq!(*i, *j);
+            }
+        };
+    }
+
     #[test]
     fn test_generate_crossover_positions() {
         let mut rng = make_rng(101);
@@ -204,42 +226,44 @@ mod tests {
 
         {
             let crossovers = vec![0, 1, 3, genome_length];
-            let expected_parents = vec![p1, p2, p1];
+            let expected = vec![
+                make_transmission(0, 1, p1),
+                make_transmission(1, 3, p2),
+                make_transmission(3, genome_length, p1),
+            ];
             fill_transmissions(p1, p2, &crossovers, &mut transmissions);
-            for (i, t) in transmissions.iter().enumerate() {
-                assert_eq!(t.parent, expected_parents[i]);
-            }
-            assert_eq!(transmissions.len(), 3);
+            validate_transmissions!(expected, transmissions);
         }
 
         {
             let crossovers = vec![0, 1, 3, 3, genome_length];
-            let expected_parents = vec![p1, p2, p2];
+            let expected = vec![
+                make_transmission(0, 1, p1),
+                make_transmission(1, genome_length, p2),
+            ];
             fill_transmissions(p1, p2, &crossovers, &mut transmissions);
-            for (i, t) in transmissions.iter().enumerate() {
-                assert_eq!(t.parent, expected_parents[i]);
-            }
-            assert_eq!(transmissions.len(), 3);
+            validate_transmissions!(expected, transmissions);
         }
 
         {
             let crossovers = vec![0, 1, 3, 3, 3, genome_length];
-            let expected_parents = vec![p1, p2, p1];
+            let expected = vec![
+                make_transmission(0, 1, p1),
+                make_transmission(1, 3, p2),
+                make_transmission(3, genome_length, p1),
+            ];
             fill_transmissions(p1, p2, &crossovers, &mut transmissions);
-            for (i, t) in transmissions.iter().enumerate() {
-                assert_eq!(t.parent, expected_parents[i]);
-            }
-            assert_eq!(transmissions.len(), 3);
+            validate_transmissions!(expected, transmissions);
         }
 
         {
             let crossovers = vec![0, 1, 1, 3, 3, 3, genome_length];
-            let expected_parents = vec![p1, p1, p2];
+            let expected = vec![
+                make_transmission(0, 2, p1),
+                make_transmission(3, genome_length, p2),
+            ];
             fill_transmissions(p1, p2, &crossovers, &mut transmissions);
-            for (i, t) in transmissions.iter().enumerate() {
-                assert_eq!(t.parent, expected_parents[i]);
-            }
-            assert_eq!(transmissions.len(), 3);
+            validate_transmissions!(expected, transmissions);
         }
     }
 }
