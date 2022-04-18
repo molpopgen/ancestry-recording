@@ -134,8 +134,8 @@ mod overlapper_tests {
                 .push(AncestrySegment::new(1, 6, child2.clone()));
         }
 
-        parent.add_child_segment(0, 5, child1.clone());
-        parent.add_child_segment(1, 6, child2.clone());
+        parent.add_child_segment(0, 5, child1.clone()).unwrap();
+        parent.add_child_segment(1, 6, child2.clone()).unwrap();
 
         let overlapper = AncestryOverlapper::new(parent.intersecting_ancestry());
 

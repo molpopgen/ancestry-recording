@@ -1,4 +1,3 @@
-use crate::HalfOpenInterval;
 use crate::LargeSignedInteger;
 use thiserror::Error;
 
@@ -12,5 +11,10 @@ pub enum InlineAncestryError {
     InvalidSegment {
         left: LargeSignedInteger,
         right: LargeSignedInteger,
+    },
+    #[error("child birth time must be > parent birth time, got {child:?}, {parent:?}")]
+    InvalidBirthTimeOrder {
+        parent: LargeSignedInteger,
+        child: LargeSignedInteger,
     },
 }

@@ -74,9 +74,17 @@ impl Individual {
         self.borrow().flags.is_alive()
     }
 
-    pub fn add_parent(&mut self, parent: Individual) {
-        assert!(self.borrow_mut().birth_time > parent.borrow().birth_time);
-        self.borrow_mut().parents.insert(parent);
+    pub fn add_parent(&mut self, parent: Individual) -> Result<(), InlineAncestryError> {
+        let mut sb = self.borrow_mut();
+        if sb.birth_time > parent.borrow().birth_time {
+            sb.parents.insert(parent);
+            Ok(())
+        } else {
+            Err(InlineAncestryError::InvalidBirthTimeOrder {
+                parent: parent.borrow().birth_time,
+                child: sb.birth_time,
+            })
+        }
     }
 
     pub fn add_child_segment(
@@ -200,7 +208,11 @@ impl Individual {
                     } else {
                         mapped_ind = Some(overlaps.borrow_mut()[0].mapped_individual.clone());
 
-                        mapped_ind.as_mut().unwrap().add_parent(self.clone());
+                        mapped_ind
+                            .as_mut()
+                            .unwrap()
+                            .add_parent(self.clone())
+                            .unwrap();
 
                         self.update_child_segments(
                             mapped_ind.as_ref().unwrap(),
@@ -220,7 +232,7 @@ impl Individual {
                         right,
                         &mut input_child_details,
                     );
-                    x.mapped_individual.add_parent(self.clone());
+                    x.mapped_individual.add_parent(self.clone()).unwrap();
                 }
             }
 
@@ -362,12 +374,12 @@ mod practice_tests {
 
         {
             let c = pop[1].clone();
-            pop[0].add_child_segment(0, 1, c);
+            pop[0].add_child_segment(0, 1, c).unwrap();
         }
 
         {
             let p = pop[0].clone();
-            pop[1].add_parent(p);
+            pop[1].add_parent(p).unwrap();
         }
         assert_eq!(Rc::strong_count(&pop[0]), 2);
         assert_eq!(Rc::strong_count(&pop[1]), 2);
@@ -386,12 +398,12 @@ mod practice_tests {
 
         {
             let c = pop[1].clone();
-            pop[0].add_child_segment(0, 1, c);
+            pop[0].add_child_segment(0, 1, c).unwrap();
         }
 
         {
             let p = pop[0].clone();
-            pop[1].add_parent(p);
+            pop[1].add_parent(p).unwrap();
         }
         assert_eq!(Rc::strong_count(&pop[0]), 2);
         assert_eq!(Rc::strong_count(&pop[1]), 2);
