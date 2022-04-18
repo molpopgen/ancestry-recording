@@ -4,4 +4,5 @@ members = [
     "ancestry-common",
     "ancestry-inline-simplification",
     "neutral-evolution",
+    "tskit-evolution",
 ]
