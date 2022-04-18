@@ -1,14 +1,16 @@
 use crate::individual::Individual;
+use crate::segments::HalfOpenInterval;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
 
 pub struct Population {
     next_individual_id: SignedInteger,
+    genome_length: LargeSignedInteger,
     pub individuals: Vec<Individual>,
 }
 
 impl Population {
-    pub fn new(popsize: SignedInteger) -> Self {
+    pub fn new(popsize: SignedInteger, genome_length: LargeSignedInteger) -> Self {
         let next_individual_id = popsize;
 
         let mut individuals = vec![];
@@ -19,6 +21,7 @@ impl Population {
 
         Self {
             next_individual_id,
+            genome_length,
             individuals,
         }
     }
@@ -38,11 +41,17 @@ impl Population {
         self.individuals.get_mut(who)
     }
 
-    // FIXME: should work in terms of "flags"
-    // and should also remove ancestry mapping onto self.
     pub fn kill(&mut self, who: usize) {
+        let genome_length = self.genome_length;
         if let Some(ind) = self.get_mut(who) {
             ind.borrow_mut().flags.clear_alive();
+            ind.borrow_mut().ancestry.retain(|a| {
+                if a.left() == 0 && a.right() == genome_length {
+                    false
+                } else {
+                    true
+                }
+            });
         } else {
             panic!("{who} out of range for kill");
         }
