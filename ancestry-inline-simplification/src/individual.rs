@@ -87,7 +87,7 @@ impl Individual {
     ) {
         assert!(child.borrow().birth_time > self.borrow().birth_time);
         let mut b = self.borrow_mut();
-        let interval = Segment::new(left, right);
+        let interval = Segment::new_unchecked(left, right);
         if let Some(v) = b.children.get_mut(&child) {
             v.push(interval);
         } else {
@@ -106,7 +106,7 @@ impl Individual {
             details.insert(child.clone(), ChildInputDetails::new(0));
         }
 
-        let interval = Segment::new(left, right);
+        let interval = Segment::new_unchecked(left, right);
         let mut ind = self.borrow_mut();
 
         // Add child if it does not exist

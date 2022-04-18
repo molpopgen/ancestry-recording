@@ -17,9 +17,9 @@ pub struct Segment {
 }
 
 impl Segment {
-    pub fn new(left: LargeSignedInteger, right: LargeSignedInteger) -> Self {
-        assert!(left < right, "{} {}", left, right);
-        assert!(left >= 0);
+    pub(crate) fn new_unchecked(left: LargeSignedInteger, right: LargeSignedInteger) -> Self {
+        debug_assert!(left < right, "{} {}", left, right);
+        debug_assert!(left >= 0);
         Self { left, right }
     }
 }
@@ -32,9 +32,8 @@ pub struct AncestrySegment {
 
 impl AncestrySegment {
     pub fn new(left: LargeSignedInteger, right: LargeSignedInteger, child: Individual) -> Self {
-        assert!(left < right, "{} {}", left, right);
         Self {
-            segment: Segment::new(left, right),
+            segment: Segment::new_unchecked(left, right),
             child,
         }
     }
