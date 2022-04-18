@@ -78,6 +78,10 @@ fn fill_transmissions(
     let mut wlast = (crossovers[0], crossovers[1]);
     let mut pushed = false;
     for w in crossovers.windows(2).skip(1) {
+        println!(
+            "window = {}, {},wlast = {}, {}",
+            w[0], w[1], wlast.0, wlast.1
+        );
         if w[0] != wlast.1 {
             transmissions.push(TransmittedSegment {
                 left: wlast.0,
@@ -192,6 +196,23 @@ mod tests {
             assert_eq!(crossovers.len() as u64, n + 2);
             let sorted = crossovers.windows(2).all(|w| w[0] <= w[1]);
             assert!(sorted);
+        }
+    }
+
+    #[test]
+    fn test_fill_transmissions() {
+        let p1 = 0_usize;
+        let p2 = p1 + 1;
+        let genome_length = 100_i64;
+        let mut transmissions = vec![];
+
+        {
+            let crossovers = vec![0, 1, 3, genome_length];
+            fill_transmissions(p1, p2, &crossovers, &mut transmissions);
+            for t in &transmissions {
+                println!("{} {} {}", t.left, t.right, t.parent);
+            }
+            assert_eq!(transmissions.len(), 3);
         }
     }
 }
