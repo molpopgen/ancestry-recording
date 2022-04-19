@@ -1,4 +1,5 @@
 use neutral_evolution::{evolve, Parameters};
+use tskit::TableAccess;
 use tskit_evolution::*;
 
 #[test]
@@ -12,7 +13,13 @@ fn test_simulation_round_trip() {
         .unwrap();
         let p = Parameters::new(1.0, 1e-3, 100, 100).unwrap();
         evolve([101, 202], p, &mut t).unwrap();
-        let _ = tskit::TreeSequence::try_from(t).unwrap();
+        let ts = tskit::TreeSequence::try_from(t).unwrap();
+        let tables = ts.dump_tables().unwrap();
+        println!(
+            "final {} {}",
+            tables.nodes().num_rows(),
+            tables.edges().num_rows()
+        );
     }
 }
 
@@ -28,7 +35,13 @@ fn test_simulation_round_trip_overlapping_gens() {
             .unwrap();
             let p = Parameters::new(pdeath, 1e-1, 100, 100).unwrap();
             evolve([101, 202], p, &mut t).unwrap();
-            let _ = tskit::TreeSequence::try_from(t).unwrap();
+            let ts = tskit::TreeSequence::try_from(t).unwrap();
+            let tables = ts.dump_tables().unwrap();
+            println!(
+                "final {} {}",
+                tables.nodes().num_rows(),
+                tables.edges().num_rows()
+            );
         }
     }
 }

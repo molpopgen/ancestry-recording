@@ -59,6 +59,85 @@ impl EvolvableTableCollection {
             *t *= -1.0;
         }
     }
+
+    fn enact_replacements(&mut self) {
+        assert_eq!(self.replacements.len(), self.births.len());
+        for (r,b) in self.replacements.iter().zip(self.births.iter()) {
+            self.alive_nodes[*r] = *b;
+        }
+        self.births.clear();
+    }
+
+    fn simplify_details(
+        &mut self,
+        current_time_point: LargeSignedInteger,
+        force: bool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if current_time_point > 0
+            && (force || current_time_point % self.simplification_interval == 0)
+        {
+            self.enact_replacements();
+            println!("input {} -> {} {}", current_time_point, self.tables.nodes().num_rows(), self.tables.edges().num_rows());
+            let delta = match self.last_time_simplified {
+                Some(d) => current_time_point - d,
+                None => current_time_point,
+            };
+            self.adjust_node_times(delta);
+            self.tables
+                .sort(&self.bookmark, tskit::TableSortOptions::default())?;
+
+            self.tables.check_integrity(tskit::TableIntegrityCheckFlags::CHECK_EDGE_ORDERING)?;
+
+            if self.bookmark.offsets.edges > 0 {
+                // To simplify, the edge table must
+                // have the newest edges at the front.
+                // Sorting using a bookmark defines where
+                // to start sorting FROM.  So, we need to rotate
+                // each column
+
+                let num_edges = usize::from(self.tables.edges().num_rows());
+
+                // Get the raw pointer to the tsk_table_collection_t
+                let table_ptr = self.tables.as_mut_ptr();
+
+                let offset = usize::try_from(self.bookmark.offsets.edges)?;
+
+                // SAFETY: the tskit::TableCollection does not
+                // allow the managed pointer to be NULL
+                unsafe {
+                    // For each column (that we are using), put the newest edges at the front.
+                    rotate_left((*table_ptr).edges.parent, num_edges, offset);
+                    rotate_left((*table_ptr).edges.child, num_edges, offset);
+                    rotate_left((*table_ptr).edges.left, num_edges, offset);
+                    rotate_left((*table_ptr).edges.right, num_edges, offset);
+                }
+            }
+            let idmap = match self.tables.simplify(
+                &self.alive_nodes,
+                tskit::SimplificationOptions::default(),
+                true,
+            ) {
+                Err(e) => return Err(Box::new(e)),
+                Ok(x) => x.unwrap(),
+            };
+            self.last_time_simplified = Some(current_time_point);
+
+            // next time, we will only sort the new edges
+            self.bookmark.offsets.edges = u64::from(self.tables.edges().num_rows());
+            // for adjusting time.
+            self.bookmark.offsets.nodes = u64::from(self.tables.nodes().num_rows());
+
+            println!("output {} -> {} {}", current_time_point, self.tables.nodes().num_rows(), self.tables.edges().num_rows());
+            // remap the alive nodes
+            for alive in self.alive_nodes.iter_mut() {
+                *alive = idmap[usize::from(*alive)];
+                assert!(!alive.is_null());
+            }
+            Ok(())
+        } else {
+            Ok(())
+        }
+    }
 }
 
 unsafe fn rotate_left<T>(data: *mut T, len: usize, mid: usize) {
@@ -69,7 +148,9 @@ unsafe fn rotate_left<T>(data: *mut T, len: usize, mid: usize) {
 impl TryFrom<EvolvableTableCollection> for tskit::TreeSequence {
     type Error = tskit::TskitError;
     fn try_from(value: EvolvableTableCollection) -> Result<Self, Self::Error> {
-       value.tables.tree_sequence(tskit::TreeSequenceFlags::BUILD_INDEXES) 
+        value
+            .tables
+            .tree_sequence(tskit::TreeSequenceFlags::BUILD_INDEXES)
     }
 }
 
@@ -116,77 +197,47 @@ impl EvolveAncestry for EvolvableTableCollection {
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        if current_time_point > 0 && current_time_point % self.simplification_interval == 0 {
-            let delta = match self.last_time_simplified {
-                Some(d) => current_time_point - d,
-                None => current_time_point,
-            };
-            self.adjust_node_times(delta);
-            self.tables
-                .sort(&self.bookmark, tskit::TableSortOptions::default())?;
-            if self.bookmark.offsets.edges > 0 {
-                // To simplify, the edge table must
-                // have the newest edges at the front.
-                // Sorting using a bookmark defines where
-                // to start sorting FROM.  So, we need to rotate
-                // each column
-
-                let num_edges = usize::from(self.tables.edges().num_rows());
-
-                // Get the raw pointer to the tsk_table_collection_t
-                let table_ptr = self.tables.as_mut_ptr();
-
-                let offset = usize::try_from(self.bookmark.offsets.edges)?;
-
-                // SAFETY: the tskit::TableCollection does not
-                // allow the managed pointer to be NULL
-                unsafe {
-                    // For each column (that we are using), put the newest edges at the front.
-                    rotate_left((*table_ptr).edges.parent, num_edges, offset);
-                    rotate_left((*table_ptr).edges.child, num_edges, offset);
-                    rotate_left((*table_ptr).edges.left, num_edges, offset);
-                    rotate_left((*table_ptr).edges.right, num_edges, offset);
-                }
-            }
-            let idmap = match self.tables.simplify(
-                &self.alive_nodes,
-                tskit::SimplificationOptions::default(),
-                true,
-            ) {
-                Err(e) => return Err(Box::new(e)),
-                Ok(x) => x.unwrap(),
-            };
-            self.last_time_simplified = Some(current_time_point);
-
-            // next time, we will only sort the new edges
-            self.bookmark.offsets.edges = u64::from(self.tables.edges().num_rows());
-            // for adjusting time.
-            self.bookmark.offsets.nodes = u64::from(self.tables.nodes().num_rows());
-
-            // remap the alive nodes
-            for (i, j) in self.alive_nodes.iter_mut().enumerate() {
-                *j = idmap[i];
-            }
-            Ok(())
-        } else {
-            Ok(())
-        }
+        self.simplify_details(current_time_point, false)
     }
 
     fn finish(
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        match self.last_time_simplified {
+        let mut doit = false;
+        let rv = match self.last_time_simplified {
             Some(x) => {
+                println!(
+                    "{} {} {}",
+                    x,
+                    current_time_point,
+                    self.tables.edges().num_rows()
+                );
                 if x != current_time_point {
-                    self.simplify(current_time_point)
+                    println!("doing it {} {}", x, current_time_point);
+                    doit = true;
+                    self.simplify_details(current_time_point, true)
                 } else {
                     Ok(())
                 }
             }
-            None => self.simplify(current_time_point),
+            None => self.simplify_details(current_time_point, true),
+        };
+
+        if doit {
+            println!("here {}", self.tables.edges().num_rows());
+            for e in self.tables.edges().iter() {
+                println!(
+                    "parent {}, child {}",
+                    self.tables.nodes().time(e.parent).unwrap(),
+                    self.tables.nodes().time(e.child).unwrap()
+                );
+            }
+        } else {
+            println!("other here {}", self.tables.edges().num_rows());
         }
+
+        rv
     }
 }
 
