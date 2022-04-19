@@ -74,9 +74,15 @@ impl Iterator for AncestryOverlapper {
             self.j += 1;
             assert!(
                 self.right > left,
-                "ancestry overlapper failure: left = {}, right = {}",
+                "ancestry overlapper failure: left = {}, right = {}, overlaps = {:?}, intersections = {:?}",
                 left,
-                self.right
+                self.right,
+                self.overlaps
+                    .borrow()
+                    .iter()
+                    .map(|a| (a.left(), a.right()))
+                    .collect::<Vec<(i64, i64)>>(),
+                self.intersections.iter().map(|a| (a.left(), a.right())).collect::<Vec<(i64, i64)>>()
             );
             return Some((left, self.right, self.overlaps.clone()));
         }
