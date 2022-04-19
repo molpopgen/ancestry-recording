@@ -27,10 +27,7 @@ impl Segment {
         } else if right < 0 {
             Err(InlineAncestryError::InvalidPosition { p: right })
         } else if right <= left {
-            Err(InlineAncestryError::InvalidSegment {
-                left: left,
-                right: right,
-            })
+            Err(InlineAncestryError::InvalidSegment { left, right })
         } else {
             Ok(Self::new_unchecked(left, right))
         }
