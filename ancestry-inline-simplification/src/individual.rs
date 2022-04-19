@@ -66,7 +66,7 @@ impl Hash for Individual {
 impl Individual {
     pub fn new_alive(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self(Rc::new(RefCell::<IndividualData>::new(
-            IndividualData::new(index, birth_time),
+            IndividualData::new_alive(index, birth_time),
         )))
     }
 
@@ -338,7 +338,7 @@ impl Individual {
 }
 
 impl IndividualData {
-    pub fn new(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
+    pub fn new_alive(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self {
             index,
             birth_time,
