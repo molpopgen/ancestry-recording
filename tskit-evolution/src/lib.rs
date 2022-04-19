@@ -41,6 +41,28 @@ impl EvolvableTableCollection {
             last_time_simplified: None,
         })
     }
+
+    fn adjust_node_times(&mut self, delta: LargeSignedInteger) {
+        let delta = delta as f64;
+        let tables = self.tables.as_mut_ptr();
+
+        unsafe {
+            let time = std::slice::from_raw_parts_mut(
+                (*tables).nodes.time,
+                usize::from(self.tables.nodes().num_rows()),
+            );
+            for t in time.iter_mut() {
+                let before = *t;
+                *t *= -1.0;
+                *t -= delta;
+                *t *= -1.0;
+                println!("convert {} -> {}",before, *t);
+            }
+            for t in time {
+                println!("converted {}", *t);
+            }
+        }
+    }
 }
 
 unsafe fn rotate_left<T>(data: *mut T, len: usize, mid: usize) {
@@ -96,7 +118,18 @@ impl EvolveAncestry for EvolvableTableCollection {
         // Also, need to deal with bookmarking the last time simplified so that we can be more
         // efficient than simply sorting the entire table collection.
 
-        if current_time_point % self.simplification_interval == 0 {
+        if current_time_point > 0 && current_time_point % self.simplification_interval == 0 {
+            for i in self.tables.nodes().iter() {
+                println!("{}",i.time);
+            }
+            let delta = match self.last_time_simplified {
+                Some(d) => current_time_point - d,
+                None => current_time_point,
+            };
+            self.adjust_node_times(delta);
+            for i in self.tables.nodes().iter() {
+                println!("after {} {}",i.time, delta);
+            }
             self.tables
                 .sort(&self.bookmark, tskit::TableSortOptions::default())?;
             if self.bookmark.offsets.edges > 0 {
