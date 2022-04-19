@@ -61,9 +61,11 @@ impl EvolvableTableCollection {
     }
 
     fn enact_replacements(&mut self) {
-        assert_eq!(self.replacements.len(), self.births.len());
-        for (r,b) in self.replacements.iter().zip(self.births.iter()) {
-            self.alive_nodes[*r] = *b;
+        if !self.births.is_empty() {
+            assert_eq!(self.replacements.len(), self.births.len());
+            for (r, b) in self.replacements.iter().zip(self.births.iter()) {
+                self.alive_nodes[*r] = *b;
+            }
         }
         self.births.clear();
     }
@@ -73,11 +75,16 @@ impl EvolvableTableCollection {
         current_time_point: LargeSignedInteger,
         force: bool,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        self.enact_replacements();
         if current_time_point > 0
             && (force || current_time_point % self.simplification_interval == 0)
         {
-            self.enact_replacements();
-            println!("input {} -> {} {}", current_time_point, self.tables.nodes().num_rows(), self.tables.edges().num_rows());
+            println!(
+                "input {} -> {} {}",
+                current_time_point,
+                self.tables.nodes().num_rows(),
+                self.tables.edges().num_rows()
+            );
             let delta = match self.last_time_simplified {
                 Some(d) => current_time_point - d,
                 None => current_time_point,
@@ -86,7 +93,8 @@ impl EvolvableTableCollection {
             self.tables
                 .sort(&self.bookmark, tskit::TableSortOptions::default())?;
 
-            self.tables.check_integrity(tskit::TableIntegrityCheckFlags::CHECK_EDGE_ORDERING)?;
+            self.tables
+                .check_integrity(tskit::TableIntegrityCheckFlags::CHECK_EDGE_ORDERING)?;
 
             if self.bookmark.offsets.edges > 0 {
                 // To simplify, the edge table must
@@ -123,11 +131,17 @@ impl EvolvableTableCollection {
             self.last_time_simplified = Some(current_time_point);
 
             // next time, we will only sort the new edges
-            self.bookmark.offsets.edges = u64::from(self.tables.edges().num_rows());
+            // TODO: try to restore this
+            // self.bookmark.offsets.edges = u64::from(self.tables.edges().num_rows());
             // for adjusting time.
             self.bookmark.offsets.nodes = u64::from(self.tables.nodes().num_rows());
 
-            println!("output {} -> {} {}", current_time_point, self.tables.nodes().num_rows(), self.tables.edges().num_rows());
+            println!(
+                "output {} -> {} {}",
+                current_time_point,
+                self.tables.nodes().num_rows(),
+                self.tables.edges().num_rows()
+            );
             // remap the alive nodes
             for alive in self.alive_nodes.iter_mut() {
                 *alive = idmap[usize::from(*alive)];
