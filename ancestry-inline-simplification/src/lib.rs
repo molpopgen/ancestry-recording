@@ -16,3 +16,4 @@ pub mod population;
 // Public API
 pub use error::InlineAncestryError;
 pub use flags::NodeFlags;
+pub use population::Population;
