@@ -204,23 +204,13 @@ impl Individual {
         for (left, right, overlaps) in overlapper {
             let num_overlaps = overlaps.borrow().len();
             if num_overlaps == 1 {
-                let temp_mapped_ind = overlaps.borrow_mut()[0].ancestry_segment.child.clone();
+                mapped_ind = Some(overlaps.borrow_mut()[0].ancestry_segment.child.clone());
 
-                {
-                    // If mapped_ind is not a child of self,
-                    // ensure that self is not a parent of mapped_ind
-                    let mut b = self.borrow_mut();
-                    if b.children.get_mut(&temp_mapped_ind).is_none() {
-                        temp_mapped_ind.borrow_mut().parents.remove(self);
-                    }
-                }
-
-                if temp_mapped_ind.borrow().parents.contains(self) {
+                if mapped_ind.as_ref().unwrap().borrow().parents.contains(self) {
                     if self_alive {
-                        let mapped_ind_alive = temp_mapped_ind.is_alive();
+                        let mapped_ind_alive = mapped_ind.as_ref().unwrap().is_alive();
 
                         if mapped_ind_alive {
-                            mapped_ind = Some(temp_mapped_ind);
                             self.update_child_segments(
                                 mapped_ind.as_ref().unwrap(),
                                 left,
