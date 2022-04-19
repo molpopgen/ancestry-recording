@@ -20,6 +20,8 @@ impl AncestryOverlapper {
         let overlaps = vec![];
 
         intersections.sort();
+        let sorted = intersections.windows(2).all(|w| w[0].left() <= w[1].left());
+        assert!(sorted);
         // Sentinel -- FIXME: get rid of the need for the dummy Individuals
         intersections.push(AncestryIntersection::new(
             LargeSignedInteger::MAX - 1,
@@ -29,8 +31,6 @@ impl AncestryOverlapper {
             Individual::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
             Individual::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
         ));
-        let sorted = intersections.windows(2).all(|w| w[0].left() <= w[1].left());
-        assert!(sorted);
         let right = intersections[0].left();
         Self {
             intersections,
