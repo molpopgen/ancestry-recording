@@ -10,7 +10,7 @@ pub enum ParameterError {
     BadParameter(String),
 }
 
-pub trait NeutralEvolution {
+pub trait EvolveAncestry {
     /// Generate how many deaths (replacements) will occur at this time step.
     fn generate_deaths(&mut self, death: &mut Death) -> usize;
 
@@ -173,7 +173,7 @@ fn make_crossover_position_distribution(
     rand_distr::Uniform::new(1, genome_length)
 }
 
-pub fn evolve<N: NeutralEvolution>(
+pub fn evolve<N: EvolveAncestry>(
     seeds: [u64; 2],
     parameters: Parameters,
     population: &mut N,

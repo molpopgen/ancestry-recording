@@ -2,7 +2,7 @@ use crate::individual::Individual;
 use crate::segments::HalfOpenInterval;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
-use neutral_evolution::NeutralEvolution;
+use neutral_evolution::EvolveAncestry;
 
 pub struct Population {
     next_individual_id: SignedInteger,
@@ -73,7 +73,7 @@ impl Population {
     }
 }
 
-impl NeutralEvolution for Population {
+impl EvolveAncestry for Population {
     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
         self.replacements.clear();
         self.next_replacement = 0;

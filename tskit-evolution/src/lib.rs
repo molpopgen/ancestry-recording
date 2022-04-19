@@ -1,5 +1,5 @@
 use ancestry_common::LargeSignedInteger;
-use neutral_evolution::NeutralEvolution;
+use neutral_evolution::EvolveAncestry;
 use tskit::prelude::*;
 use tskit::TableCollection;
 
@@ -48,7 +48,7 @@ unsafe fn rotate_left<T>(data: *mut T, len: usize, mid: usize) {
     s.rotate_left(mid);
 }
 
-impl NeutralEvolution for EvolvableTableCollection {
+impl EvolveAncestry for EvolvableTableCollection {
     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
         self.replacements.clear();
         for i in 0..self.alive_nodes.len() {
