@@ -130,6 +130,49 @@ mod overlapper_tests {
     use super::*;
     use crate::AncestrySegment;
 
+    struct FailingExamples {
+        data: Vec<Vec<(i64, i64)>>,
+    }
+
+    impl FailingExamples {
+        fn new() -> Self {
+            let data = vec![vec![
+                (0_i64, 69_i64),
+                (0, 100),
+                (60, 69),
+                (69, 100),
+                (69, 100),
+            ]];
+            Self { data }
+        }
+
+        fn convert_next(&mut self) -> Option<Vec<AncestryIntersection>> {
+            match self.data.pop() {
+                Some(pos) => Some(
+                    pos.into_iter()
+                        .map(|p| {
+                            AncestryIntersection::new(
+                                p.0,
+                                p.1,
+                                Individual::new_alive(0, 1),
+                                Individual::new_alive(0, 1),
+                            )
+                        })
+                        .collect::<Vec<AncestryIntersection>>(),
+                ),
+                None => None,
+            }
+        }
+    }
+
+    impl Iterator for FailingExamples {
+        type Item = Vec<AncestryIntersection>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            self.convert_next()
+        }
+    }
+
     #[test]
     fn test_single_overlap() {
         let mut parent = Individual::new_alive(0, 0);
@@ -158,6 +201,15 @@ mod overlapper_tests {
         for (i, (left, right, _overlaps)) in overlapper.enumerate() {
             assert_eq!(expected[i][0], left);
             assert_eq!(expected[i][1], right);
+        }
+    }
+
+    #[test]
+    fn test_failing_examples_discovered_during_development() {
+        let mut examples = FailingExamples::new();
+        for a in examples {
+            let overlapper = AncestryOverlapper::new(a);
+            for (_i, (_left, _right, _overlaps)) in overlapper.enumerate() {}
         }
     }
 }
