@@ -27,6 +27,10 @@ pub trait EvolveAncestry {
     ) -> Result<(), Box<dyn Error>>;
 
     fn simplify(&mut self, current_time_point: LargeSignedInteger) -> Result<(), Box<dyn Error>>;
+
+    // When simplifying periodically, it is possible to not be simplified when the last time step
+    // has finished. This fn lets the object clean up its ancestry.
+    fn finish(&mut self, current_time_point: LargeSignedInteger) -> Result<(), Box<dyn Error>>;
 }
 
 pub struct Death {
@@ -211,7 +215,7 @@ pub fn evolve<N: EvolveAncestry>(
         population.simplify(step)?;
     }
 
-    Ok(())
+    population.finish(parameters.nsteps)
 }
 
 #[cfg(test)]

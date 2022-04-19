@@ -66,6 +66,13 @@ unsafe fn rotate_left<T>(data: *mut T, len: usize, mid: usize) {
     s.rotate_left(mid);
 }
 
+impl TryFrom<EvolvableTableCollection> for tskit::TreeSequence {
+    type Error = tskit::TskitError;
+    fn try_from(value: EvolvableTableCollection) -> Result<Self, Self::Error> {
+       value.tables.tree_sequence(tskit::TreeSequenceFlags::BUILD_INDEXES) 
+    }
+}
+
 impl EvolveAncestry for EvolvableTableCollection {
     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
         self.replacements.clear();
@@ -163,6 +170,22 @@ impl EvolveAncestry for EvolvableTableCollection {
             Ok(())
         } else {
             Ok(())
+        }
+    }
+
+    fn finish(
+        &mut self,
+        current_time_point: LargeSignedInteger,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        match self.last_time_simplified {
+            Some(x) => {
+                if x != current_time_point {
+                    self.simplify(current_time_point)
+                } else {
+                    Ok(())
+                }
+            }
+            None => self.simplify(current_time_point),
         }
     }
 }

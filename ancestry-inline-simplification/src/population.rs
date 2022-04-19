@@ -136,4 +136,11 @@ impl EvolveAncestry for Population {
 
         Ok(())
     }
+
+    fn finish(
+        &mut self,
+        _current_time_point: LargeSignedInteger,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
 }
