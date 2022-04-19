@@ -206,11 +206,9 @@ impl EvolveAncestry for EvolvableTableCollection {
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let mut doit = false;
         let rv = match self.last_time_simplified {
             Some(x) => {
                 if x != current_time_point {
-                    doit = true;
                     self.simplify_details(current_time_point, true)
                 } else {
                     Ok(())
