@@ -46,21 +46,17 @@ impl EvolvableTableCollection {
         let delta = delta as f64;
         let tables = self.tables.as_mut_ptr();
 
-        unsafe {
-            let time = std::slice::from_raw_parts_mut(
-                (*tables).nodes.time,
-                usize::from(self.tables.nodes().num_rows()),
-            );
-            for t in time.iter_mut() {
-                let before = *t;
-                *t *= -1.0;
-                *t -= delta;
-                *t *= -1.0;
-                println!("convert {} -> {}",before, *t);
-            }
-            for t in time {
-                println!("converted {}", *t);
-            }
+        let num_nodes = usize::from(self.tables.nodes().num_rows());
+        let node_offset = self.bookmark.offsets.nodes as usize;
+        let time = unsafe { std::slice::from_raw_parts_mut((*tables).nodes.time, num_nodes) };
+        let max_time = *time.last().unwrap();
+
+        for t in time.iter_mut().take(node_offset) {
+            *t += delta;
+        }
+        for t in time.iter_mut().skip(node_offset) {
+            *t -= max_time;
+            *t *= -1.0;
         }
     }
 }
@@ -113,23 +109,12 @@ impl EvolveAncestry for EvolvableTableCollection {
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        // TODO: sort tables, update node id mappings, replace death nodes with birth in
-        // alive_nodes.
-        // Also, need to deal with bookmarking the last time simplified so that we can be more
-        // efficient than simply sorting the entire table collection.
-
         if current_time_point > 0 && current_time_point % self.simplification_interval == 0 {
-            for i in self.tables.nodes().iter() {
-                println!("{}",i.time);
-            }
             let delta = match self.last_time_simplified {
                 Some(d) => current_time_point - d,
                 None => current_time_point,
             };
             self.adjust_node_times(delta);
-            for i in self.tables.nodes().iter() {
-                println!("after {} {}",i.time, delta);
-            }
             self.tables
                 .sort(&self.bookmark, tskit::TableSortOptions::default())?;
             if self.bookmark.offsets.edges > 0 {
@@ -168,6 +153,8 @@ impl EvolveAncestry for EvolvableTableCollection {
 
             // next time, we will only sort the new edges
             self.bookmark.offsets.edges = u64::from(self.tables.edges().num_rows());
+            // for adjusting time.
+            self.bookmark.offsets.nodes = u64::from(self.tables.nodes().num_rows());
 
             // remap the alive nodes
             for (i, j) in self.alive_nodes.iter_mut().enumerate() {

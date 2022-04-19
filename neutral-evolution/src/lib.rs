@@ -189,7 +189,7 @@ pub fn evolve<N: EvolveAncestry>(
     let mendel = rand_distr::Bernoulli::new(0.5).unwrap();
     let mut transmissions: Vec<TransmittedSegment> = vec![];
     let mut crossovers: Vec<LargeSignedInteger> = vec![];
-    for step in 0..parameters.nsteps {
+    for step in 1..parameters.nsteps + 1 {
         let nreplacements = population.generate_deaths(&mut death);
         for _ in 0..nreplacements {
             let mut p1 = parent_picker.sample(&mut rng);
