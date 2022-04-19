@@ -162,8 +162,6 @@ impl Individual {
             let _ = ind.update_ancestry()?;
             ind.non_overlapping_segments()?;
             for parent in ind.borrow().parents.iter() {
-                // FIXME: poison pill
-                assert!(false);
                 heap.push(parent.clone());
             }
         }

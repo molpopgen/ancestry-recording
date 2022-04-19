@@ -145,12 +145,18 @@ impl EvolveAncestry for Population {
             self.kill(death);
             dead.propagate_upwards()?;
             assert_eq!(self.births[death].borrow().birth_time, current_time_point);
-            assert!(!self.births[death].borrow().parents.is_empty());
+
+            // NOTE: The following assertion is WRONG!
+            // A parent is likely to be unary w.r.to a given
+            // birth, and the previous call to propagate_upwards
+            // will remove that branch if the parent is dead.
+            // assert!(!self.births[death].borrow().parents.is_empty());
             self.individuals[death] = self.births[death].clone();
         }
 
         for b in self.births.iter_mut() {
-            assert!(!b.borrow().parents.is_empty());
+            // NOTE: see previous note
+            // assert!(!b.borrow().parents.is_empty());
             b.propagate_upwards()?;
         }
 
