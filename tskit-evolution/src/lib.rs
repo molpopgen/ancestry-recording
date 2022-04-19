@@ -43,6 +43,11 @@ impl EvolvableTableCollection {
     }
 }
 
+unsafe fn rotate_left<T>(data: *mut T, len: usize, mid: usize) {
+    let s = std::slice::from_raw_parts_mut(data, len);
+    s.rotate_left(mid);
+}
+
 impl NeutralEvolution for EvolvableTableCollection {
     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
         self.replacements.clear();
@@ -101,6 +106,8 @@ impl NeutralEvolution for EvolvableTableCollection {
                 // to start sorting FROM.  So, we need to rotate
                 // each column
 
+                let num_edges = usize::from(self.tables.edges().num_rows());
+
                 // Get the raw pointer to the tsk_table_collection_t
                 let table_ptr = self.tables.as_mut_ptr();
 
@@ -110,14 +117,10 @@ impl NeutralEvolution for EvolvableTableCollection {
                 // allow the managed pointer to be NULL
                 unsafe {
                     // For each column (that we are using), put the newest edges at the front.
-                    let s = std::slice::from_raw_parts_mut((*table_ptr).edges.parent, offset);
-                    s.rotate_left(offset);
-                    let s = std::slice::from_raw_parts_mut((*table_ptr).edges.child, offset);
-                    s.rotate_left(offset);
-                    let s = std::slice::from_raw_parts_mut((*table_ptr).edges.left, offset);
-                    s.rotate_left(offset);
-                    let s = std::slice::from_raw_parts_mut((*table_ptr).edges.right, offset);
-                    s.rotate_left(offset);
+                    rotate_left((*table_ptr).edges.parent, num_edges, offset);
+                    rotate_left((*table_ptr).edges.child, num_edges, offset);
+                    rotate_left((*table_ptr).edges.left, num_edges, offset);
+                    rotate_left((*table_ptr).edges.right, num_edges, offset);
                 }
             }
             let idmap = match self.tables.simplify(
