@@ -421,3 +421,15 @@ mod practice_tests {
         assert_eq!(Rc::strong_count(&pop[1]), 2);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_alive_individual_has_ancestry_to_self() {
+        let ind = Individual::new_alive(0, 0);
+        assert_eq!(ind.borrow().ancestry.len(), 1);
+        assert!(ind.borrow().ancestry[0].child == ind);
+    }
+}
