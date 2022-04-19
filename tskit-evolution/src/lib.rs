@@ -9,6 +9,7 @@ pub struct EvolvableTableCollection {
     popsize: usize,
     replacements: Vec<usize>,
     births: Vec<NodeId>,
+    bookmark: tskit::types::Bookmark,
     simplification_interval: LargeSignedInteger,
     last_time_simplified: Option<LargeSignedInteger>,
 }
@@ -33,6 +34,7 @@ impl EvolvableTableCollection {
             popsize,
             replacements: vec![],
             births: vec![],
+            bookmark: tskit::types::Bookmark::new(),
             simplification_interval,
             last_time_simplified: None,
         })
