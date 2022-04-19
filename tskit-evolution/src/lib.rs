@@ -79,12 +79,6 @@ impl EvolvableTableCollection {
         if current_time_point > 0
             && (force || current_time_point % self.simplification_interval == 0)
         {
-            println!(
-                "input {} -> {} {}",
-                current_time_point,
-                self.tables.nodes().num_rows(),
-                self.tables.edges().num_rows()
-            );
             let delta = match self.last_time_simplified {
                 Some(d) => current_time_point - d,
                 None => current_time_point,
@@ -136,12 +130,6 @@ impl EvolvableTableCollection {
             // for adjusting time.
             self.bookmark.offsets.nodes = u64::from(self.tables.nodes().num_rows());
 
-            println!(
-                "output {} -> {} {}",
-                current_time_point,
-                self.tables.nodes().num_rows(),
-                self.tables.edges().num_rows()
-            );
             // remap the alive nodes
             for alive in self.alive_nodes.iter_mut() {
                 *alive = idmap[usize::from(*alive)];
@@ -221,14 +209,7 @@ impl EvolveAncestry for EvolvableTableCollection {
         let mut doit = false;
         let rv = match self.last_time_simplified {
             Some(x) => {
-                println!(
-                    "{} {} {}",
-                    x,
-                    current_time_point,
-                    self.tables.edges().num_rows()
-                );
                 if x != current_time_point {
-                    println!("doing it {} {}", x, current_time_point);
                     doit = true;
                     self.simplify_details(current_time_point, true)
                 } else {
@@ -237,20 +218,6 @@ impl EvolveAncestry for EvolvableTableCollection {
             }
             None => self.simplify_details(current_time_point, true),
         };
-
-        if doit {
-            println!("here {}", self.tables.edges().num_rows());
-            for e in self.tables.edges().iter() {
-                println!(
-                    "parent {}, child {}",
-                    self.tables.nodes().time(e.parent).unwrap(),
-                    self.tables.nodes().time(e.child).unwrap()
-                );
-            }
-        } else {
-            println!("other here {}", self.tables.edges().num_rows());
-        }
-
         rv
     }
 }
