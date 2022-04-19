@@ -132,6 +132,11 @@ impl NeutralEvolution for EvolvableTableCollection {
 
             // next time, we will only sort the new edges
             self.bookmark.offsets.edges = u64::from(self.tables.edges().num_rows());
+
+            // remap the alive nodes
+            for (i, j) in self.alive_nodes.iter_mut().enumerate() {
+                *j = idmap[i];
+            }
             Ok(())
         } else {
             Ok(())
@@ -140,6 +145,4 @@ impl NeutralEvolution for EvolvableTableCollection {
 }
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}
