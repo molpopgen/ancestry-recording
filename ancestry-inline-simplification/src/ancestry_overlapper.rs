@@ -70,6 +70,12 @@ impl Iterator for AncestryOverlapper {
                 .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right()));
             self.right = std::cmp::min(self.right, self.intersections[self.j + 1].right());
             self.j += 1;
+            assert!(
+                self.right > left,
+                "ancestry overlapper failure: left = {}, right = {}",
+                left,
+                self.right
+            );
             return Some((left, self.right, self.overlaps.clone()));
         }
 
