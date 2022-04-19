@@ -7,6 +7,8 @@ pub enum InlineAncestryError {
     IntervalsError, // NOTE: this is a bad name
     #[error("invalid position: {p:?}")]
     InvalidPosition { p: LargeSignedInteger },
+    #[error("invalid genome length: {l:?}")]
+    InvalidGenomeLength { l: LargeSignedInteger },
     #[error("invalid segment: [{left:?}, {right:?})")]
     InvalidSegment {
         left: LargeSignedInteger,

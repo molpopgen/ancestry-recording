@@ -70,6 +70,21 @@ impl Individual {
         )))
     }
 
+    /// # Panics
+    ///
+    /// If `genome_length` < 1
+    pub fn new_alive_with_ancestry_mapping_to_self(
+        index: SignedInteger,
+        birth_time: LargeSignedInteger,
+        genome_length: LargeSignedInteger,
+    ) -> Self {
+        let rv = Self::new_alive(index, birth_time);
+        rv.borrow_mut()
+            .ancestry
+            .push(AncestrySegment::new(0, genome_length, rv.clone()));
+        rv
+    }
+
     pub fn is_alive(&self) -> bool {
         self.borrow().flags.is_alive()
     }
@@ -428,7 +443,7 @@ mod tests {
 
     #[test]
     fn test_alive_individual_has_ancestry_to_self() {
-        let ind = Individual::new_alive(0, 0);
+        let ind = Individual::new_alive_with_ancestry_mapping_to_self(0, 0, 10);
         assert_eq!(ind.borrow().ancestry.len(), 1);
         assert!(ind.borrow().ancestry[0].child == ind);
     }

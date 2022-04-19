@@ -1,5 +1,6 @@
 use crate::individual::Individual;
 use crate::segments::HalfOpenInterval;
+use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
 use neutral_evolution::EvolveAncestry;
@@ -14,22 +15,30 @@ pub struct Population {
 }
 
 impl Population {
-    pub fn new(popsize: SignedInteger, genome_length: LargeSignedInteger) -> Self {
-        let next_individual_id = popsize;
+    pub fn new(
+        popsize: SignedInteger,
+        genome_length: LargeSignedInteger,
+    ) -> Result<Self, InlineAncestryError> {
+        if genome_length > 0 {
+            let next_individual_id = popsize;
 
-        let mut individuals = vec![];
+            let mut individuals = vec![];
 
-        for i in 0..next_individual_id {
-            individuals.push(Individual::new_alive(i, 0));
-        }
+            for i in 0..next_individual_id {
+                let ind = Individual::new_alive_with_ancestry_mapping_to_self(i, 0, genome_length);
+                individuals.push(ind);
+            }
 
-        Self {
-            next_individual_id,
-            genome_length,
-            replacements: vec![],
-            births: vec![],
-            next_replacement: 0,
-            individuals,
+            Ok(Self {
+                next_individual_id,
+                genome_length,
+                replacements: vec![],
+                births: vec![],
+                next_replacement: 0,
+                individuals,
+            })
+        } else {
+            Err(InlineAncestryError::InvalidGenomeLength { l: genome_length })
         }
     }
 
@@ -37,7 +46,7 @@ impl Population {
         assert!(birth_time >= 0);
         let index = self.next_individual_id;
         self.next_individual_id += 1;
-        Individual::new_alive(index, birth_time)
+        Individual::new_alive_with_ancestry_mapping_to_self(index, birth_time, self.genome_length)
     }
 
     pub fn get(&self, who: usize) -> Option<&Individual> {
@@ -133,7 +142,7 @@ impl EvolveAncestry for Population {
             let mut dead = self.individuals[death].clone();
             // FIXME: this should be an Individual fn
             // FIXME: the name kill should be changed
-            self.kill(death); 
+            self.kill(death);
             dead.propagate_upwards()?;
             assert_eq!(self.births[death].borrow().birth_time, current_time_point);
             assert!(!self.births[death].borrow().parents.is_empty());
