@@ -20,7 +20,9 @@ impl AncestryOverlapper {
         let overlaps = vec![];
 
         intersections.sort();
-        let sorted = intersections.windows(2).all(|w| w[0].left() <= w[1].left());
+        let sorted = intersections.windows(2).all(|w| {
+            w[0].left() <= w[1].left() && w[0].left() < w[0].right() && w[1].left() < w[1].right()
+        });
         assert!(sorted);
         // Sentinel -- FIXME: get rid of the need for the dummy Individuals
         intersections.push(AncestryIntersection::new(
