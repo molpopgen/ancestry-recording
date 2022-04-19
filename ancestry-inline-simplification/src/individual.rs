@@ -74,6 +74,10 @@ impl Individual {
         self.borrow().flags.is_alive()
     }
 
+    // FIXME: this is not a great fn to error from.
+    // We should instead be checking that the right thing
+    // happens at birth and then, during simplification,
+    // rely on assert to find unexpected errors.
     pub fn add_parent(&mut self, parent: Individual) -> Result<(), InlineAncestryError> {
         let mut sb = self.borrow_mut();
         if sb.birth_time > parent.borrow().birth_time {
@@ -196,32 +200,34 @@ impl Individual {
                     }
                 }
 
-                if self_alive {
-                    let mapped_ind_alive = temp_mapped_ind.is_alive();
+                if temp_mapped_ind.borrow().parents.contains(self) {
+                    if self_alive {
+                        let mapped_ind_alive = temp_mapped_ind.is_alive();
 
-                    if mapped_ind_alive {
-                        mapped_ind = Some(temp_mapped_ind);
-                        self.update_child_segments(
-                            mapped_ind.as_ref().unwrap(),
-                            left,
-                            right,
-                            &mut input_child_details,
-                        );
-                    } else {
-                        mapped_ind = Some(overlaps.borrow_mut()[0].mapped_individual.clone());
+                        if mapped_ind_alive {
+                            mapped_ind = Some(temp_mapped_ind);
+                            self.update_child_segments(
+                                mapped_ind.as_ref().unwrap(),
+                                left,
+                                right,
+                                &mut input_child_details,
+                            );
+                        } else {
+                            mapped_ind = Some(overlaps.borrow_mut()[0].mapped_individual.clone());
 
-                        mapped_ind
-                            .as_mut()
-                            .unwrap()
-                            .add_parent(self.clone())
-                            .unwrap();
+                            mapped_ind
+                                .as_mut()
+                                .unwrap()
+                                .add_parent(self.clone())
+                                .unwrap();
 
-                        self.update_child_segments(
-                            mapped_ind.as_ref().unwrap(),
-                            left,
-                            right,
-                            &mut input_child_details,
-                        );
+                            self.update_child_segments(
+                                mapped_ind.as_ref().unwrap(),
+                                left,
+                                right,
+                                &mut input_child_details,
+                            );
+                        }
                     }
                 }
             } else {
