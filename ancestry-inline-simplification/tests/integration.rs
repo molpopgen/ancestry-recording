@@ -8,8 +8,15 @@ fn test_simulation_round_trip() {
     // death rate, mean no. crossovers, no. steps to sim
     let p = Parameters::new(1.0, 1e-3, 100).unwrap();
     evolve([101, 202], p, &mut pop).unwrap();
+    assert!(pop.individuals.iter().any(|i| i.borrow().parents.len() > 0));
     for i in pop.individuals.iter() {
         assert_eq!(i.borrow().birth_time, 100);
+        let mut stack = vec![i.clone()];
+        while let Some(ind) = stack.pop() {
+            for p in &ind.borrow().parents {
+                stack.push(p.clone());
+            }
+        }
     }
 }
 
@@ -19,5 +26,6 @@ fn test_simulation_round_trip_overlapping_gens() {
         let mut pop = Population::new(10, 100);
         let p = Parameters::new(pdeath, 1e-1, 100).unwrap();
         evolve([101, 202], p, &mut pop).unwrap();
+        assert!(pop.individuals.iter().any(|i| i.borrow().parents.len() > 0));
     }
 }
