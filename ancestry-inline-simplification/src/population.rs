@@ -74,6 +74,10 @@ impl Population {
 }
 
 impl EvolveAncestry for Population {
+    fn genome_length(&self) -> LargeSignedInteger {
+        self.genome_length
+    }
+
     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
         self.replacements.clear();
         self.next_replacement = 0;

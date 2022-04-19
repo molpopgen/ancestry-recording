@@ -11,6 +11,8 @@ pub enum ParameterError {
 }
 
 pub trait EvolveAncestry {
+    fn genome_length(&self) -> LargeSignedInteger;
+
     /// Generate how many deaths (replacements) will occur at this time step.
     fn generate_deaths(&mut self, death: &mut Death) -> usize;
 
@@ -74,7 +76,6 @@ impl TransmittedSegment {
 pub struct Parameters {
     death_probability: f64,
     mean_num_crossovers: f64,
-    genome_length: LargeSignedInteger,
     nsteps: LargeSignedInteger,
 }
 
@@ -82,7 +83,6 @@ impl Parameters {
     pub fn new(
         death_probability: f64,
         mean_num_crossovers: f64,
-        genome_length: LargeSignedInteger,
         nsteps: LargeSignedInteger,
     ) -> Result<Self, ParameterError> {
         if !death_probability.is_finite() {
@@ -105,11 +105,6 @@ impl Parameters {
                 "mean_num_crossovers must be >= 0".to_string(),
             ));
         }
-        if genome_length < 1 {
-            return Err(ParameterError::BadParameter(
-                "genome_length must be >= 1".to_string(),
-            ));
-        }
         if nsteps < 1 {
             return Err(ParameterError::BadParameter(
                 "nsteps must be >= 1".to_string(),
@@ -118,7 +113,6 @@ impl Parameters {
         Ok(Self {
             death_probability,
             mean_num_crossovers,
-            genome_length,
             nsteps,
         })
     }
@@ -189,7 +183,7 @@ pub fn evolve<N: EvolveAncestry>(
 
     let parent_picker = rand_distr::Uniform::new(0, popsize);
     let num_crossovers = rand_distr::Poisson::new(parameters.mean_num_crossovers)?;
-    let crossover_position = make_crossover_position_distribution(parameters.genome_length);
+    let crossover_position = make_crossover_position_distribution(population.genome_length());
     let mendel = rand_distr::Bernoulli::new(0.5).unwrap();
     let mut transmissions: Vec<TransmittedSegment> = vec![];
     let mut crossovers: Vec<LargeSignedInteger> = vec![];
@@ -203,7 +197,7 @@ pub fn evolve<N: EvolveAncestry>(
             }
             let n = num_crossovers.sample(&mut rng) as u64;
             generate_crossover_positions(
-                parameters.genome_length,
+                population.genome_length(),
                 n,
                 &crossover_position,
                 &mut rng,

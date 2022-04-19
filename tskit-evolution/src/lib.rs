@@ -157,6 +157,10 @@ impl TryFrom<EvolvableTableCollection> for tskit::TreeSequence {
 }
 
 impl EvolveAncestry for EvolvableTableCollection {
+    fn genome_length(&self) -> LargeSignedInteger {
+        f64::from(self.tables.sequence_length()) as LargeSignedInteger
+    }
+
     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
         self.replacements.clear();
         for i in 0..self.alive_nodes.len() {
