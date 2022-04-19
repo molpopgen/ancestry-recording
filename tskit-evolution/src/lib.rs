@@ -6,12 +6,13 @@ use tskit::TableCollection;
 pub struct EvolvableTableCollection {
     tables: TableCollection,
     alive_nodes: Vec<NodeId>,
+    idmap: Vec<NodeId>,
     popsize: usize,
     replacements: Vec<usize>,
     births: Vec<NodeId>,
     bookmark: tskit::types::Bookmark,
     simplification_interval: LargeSignedInteger,
-    last_time_simplified: Option<LargeSignedInteger>,
+    last_time_simplified: Option<LargeSignedInteger>, // TODO: do we really need this?
 }
 
 impl EvolvableTableCollection {
@@ -31,6 +32,7 @@ impl EvolvableTableCollection {
         Ok(Self {
             tables,
             alive_nodes,
+            idmap: vec![],
             popsize,
             replacements: vec![],
             births: vec![],
@@ -89,6 +91,55 @@ impl NeutralEvolution for EvolvableTableCollection {
         // Also, need to deal with bookmarking the last time simplified so that we can be more
         // efficient than simply sorting the entire table collection.
 
-        Ok(())
+        if current_time_point % self.simplification_interval == 0 {
+            self.tables
+                .sort(&self.bookmark, tskit::TableSortOptions::default())?;
+            if self.bookmark.offsets.edges > 0 {
+                // To simplify, the edge table must
+                // have the newest edges at the front.
+                // Sorting using a bookmark defines where
+                // to start sorting FROM.  So, we need to rotate
+                // each column
+
+                // Get the raw pointer to the tsk_table_collection_t
+                let table_ptr = self.tables.as_mut_ptr();
+
+                let offset = usize::try_from(self.bookmark.offsets.edges)?;
+
+                // SAFETY: the tskit::TableCollection does not
+                // allow the managed pointer to be NULL
+                unsafe {
+                    // For each column (that we are using), put the newest edges at the front.
+                    let s = std::slice::from_raw_parts_mut((*table_ptr).edges.parent, offset);
+                    s.rotate_left(offset);
+                    let s = std::slice::from_raw_parts_mut((*table_ptr).edges.child, offset);
+                    s.rotate_left(offset);
+                    let s = std::slice::from_raw_parts_mut((*table_ptr).edges.left, offset);
+                    s.rotate_left(offset);
+                    let s = std::slice::from_raw_parts_mut((*table_ptr).edges.right, offset);
+                    s.rotate_left(offset);
+                }
+            }
+            let idmap = match self.tables.simplify(
+                &self.alive_nodes,
+                tskit::SimplificationOptions::default(),
+                true,
+            ) {
+                Err(e) => return Err(Box::new(e)),
+                Ok(x) => x.unwrap(),
+            };
+            self.last_time_simplified = Some(current_time_point);
+
+            // next time, we will only sort the new edges
+            self.bookmark.offsets.edges = u64::from(self.tables.edges().num_rows());
+            Ok(())
+        } else {
+            Ok(())
+        }
     }
+}
+
+#[cfg(test)]
+mod tests {
+
 }
