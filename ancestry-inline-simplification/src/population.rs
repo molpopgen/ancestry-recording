@@ -100,6 +100,7 @@ impl EvolveAncestry for Population {
         birth_time: LargeSignedInteger,
         breakpoints: &[neutral_evolution::TransmittedSegment],
     ) -> Result<(), Box<dyn std::error::Error>> {
+        assert!(!breakpoints.is_empty());
         // Give birth to a new Individual ("node")
         let mut birth = self.birth(birth_time);
 
@@ -113,6 +114,8 @@ impl EvolveAncestry for Population {
             birth.add_parent(parent)?;
         }
 
+        assert!(!birth.borrow().parents.is_empty());
+
         // MOVE the birth w/o increasing ref count
         self.births.push(birth);
         Ok(())
@@ -120,15 +123,20 @@ impl EvolveAncestry for Population {
 
     fn simplify(
         &mut self,
-        _current_time_point: LargeSignedInteger,
+        current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(self.replacements.len(), self.births.len());
 
         let ndeaths = self.replacements.len();
 
         for death in 0..ndeaths {
-            self.kill(death);
-            self.individuals[death].propagate_upwards()?;
+            let mut dead = self.individuals[death].clone();
+            // FIXME: this should be an Individual fn
+            // FIXME: the name kill should be changed
+            self.kill(death); 
+            dead.propagate_upwards()?;
+            assert_eq!(self.births[death].borrow().birth_time, current_time_point);
+            assert!(!self.births[death].borrow().parents.is_empty());
             self.individuals[death] = self.births[death].clone();
         }
 
