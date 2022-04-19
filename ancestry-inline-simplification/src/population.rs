@@ -141,6 +141,7 @@ impl EvolveAncestry for Population {
         }
 
         for b in self.births.iter_mut() {
+            assert!(!b.borrow().parents.is_empty());
             b.propagate_upwards()?;
         }
 
