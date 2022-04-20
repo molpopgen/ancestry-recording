@@ -84,7 +84,7 @@ impl Iterator for AncestryOverlapper {
             }
             self.j -= 1;
             self.right = self.min_right_in_overlaps().unwrap();
-            self.right = std::cmp::min(self.right, self.intersections[self.j + 1].right());
+            self.right = std::cmp::min(self.right, self.intersections[self.j + 1].left());
             self.j += 1;
             assert!(
                 self.right > left,
@@ -206,11 +206,11 @@ mod overlapper_tests {
 
         let overlapper = AncestryOverlapper::new(parent.intersecting_ancestry());
 
-        let expected = vec![vec![0, 5], vec![1, 6]];
+        let expected = vec![vec![0, 1], vec![1, 5], vec![5, 6]];
 
         for (i, (left, right, _overlaps)) in overlapper.enumerate() {
-            assert_eq!(expected[i][0], left);
-            assert_eq!(expected[i][1], right);
+            assert_eq!(expected[i][0], left, "i: {}, left: {}", i, left);
+            assert_eq!(expected[i][1], right, "i: {}, right: {}", i, right);
         }
     }
 
