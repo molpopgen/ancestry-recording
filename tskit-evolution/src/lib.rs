@@ -156,6 +156,12 @@ impl TryFrom<EvolvableTableCollection> for tskit::TreeSequence {
     }
 }
 
+impl From<EvolvableTableCollection> for tskit::TableCollection {
+    fn from(v: EvolvableTableCollection) -> Self {
+        v.tables
+    }
+}
+
 impl EvolveAncestry for EvolvableTableCollection {
     fn genome_length(&self) -> LargeSignedInteger {
         f64::from(self.tables.sequence_length()) as LargeSignedInteger
