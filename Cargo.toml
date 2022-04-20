@@ -5,4 +5,5 @@ members = [
     "ancestry-inline-simplification",
     "neutral-evolution",
     "tskit-evolution",
+    "benchmark",
 ]

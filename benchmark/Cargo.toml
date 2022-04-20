@@ -1,0 +1,12 @@
+[package]
+name = "benchmark"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tskit-evolution = { version = "~0.1.0", path = "../tskit-evolution" }
+ancestry-inline-simplification = { version = "~0.1.0", path = "../ancestry-inline-simplification" }
+neutral-evolution = { version = "~0.1.0", path = "../neutral-evolution" }
+clap = "~3.1.10"
