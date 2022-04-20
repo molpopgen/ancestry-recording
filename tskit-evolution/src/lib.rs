@@ -1,4 +1,4 @@
-use ancestry_common::LargeSignedInteger;
+use ancestry_common::{LargeSignedInteger, SignedInteger};
 use neutral_evolution::EvolveAncestry;
 use tskit::prelude::*;
 use tskit::TableCollection;
@@ -7,7 +7,7 @@ pub struct EvolvableTableCollection {
     tables: TableCollection,
     alive_nodes: Vec<NodeId>,
     idmap: Vec<NodeId>,
-    popsize: usize,
+    popsize: SignedInteger,
     replacements: Vec<usize>,
     births: Vec<NodeId>,
     bookmark: tskit::types::Bookmark,
@@ -17,11 +17,11 @@ pub struct EvolvableTableCollection {
 
 impl EvolvableTableCollection {
     pub fn new(
-        sequence_length: tskit::Position,
-        popsize: usize,
+        sequence_length: LargeSignedInteger,
+        popsize: SignedInteger,
         simplification_interval: LargeSignedInteger,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let mut tables = TableCollection::new(sequence_length)?;
+        let mut tables = TableCollection::new(tskit::Position::from(sequence_length as f64))?;
         let mut alive_nodes = vec![];
 
         for i in 0..popsize {
@@ -172,7 +172,7 @@ impl EvolveAncestry for EvolvableTableCollection {
     }
 
     fn current_population_size(&self) -> usize {
-        self.popsize
+        self.popsize as usize
     }
 
     fn record_birth(
