@@ -159,10 +159,12 @@ impl Individual {
         let mut heap = IndividualHeap::new();
         heap.push(self.clone());
         while let Some(mut ind) = heap.pop() {
-            let _ = ind.update_ancestry()?;
+            let changed = ind.update_ancestry()?;
             ind.non_overlapping_segments()?;
-            for parent in ind.borrow().parents.iter() {
-                heap.push(parent.clone());
+            if changed || ind.is_alive() {
+                for parent in ind.borrow().parents.iter() {
+                    heap.push(parent.clone());
+                }
             }
         }
         Ok(())
