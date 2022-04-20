@@ -161,6 +161,7 @@ impl EvolveAncestry for Population {
             // FIXME: this should be an Individual fn
             // FIXME: the name kill should be changed
             self.kill(death);
+            assert!(!dead.is_alive());
             dead.propagate_upwards()?;
             assert_eq!(self.births[death].borrow().birth_time, current_time_point);
 
@@ -170,6 +171,7 @@ impl EvolveAncestry for Population {
             // will remove that branch if the parent is dead.
             // assert!(!self.births[death].borrow().parents.is_empty());
             self.individuals[death] = self.births[death].clone();
+            assert!(self.individuals[death].is_alive());
         }
 
         for b in self.births.iter_mut() {
