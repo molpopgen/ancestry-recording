@@ -439,4 +439,54 @@ mod tests {
         assert_eq!(ind.borrow().ancestry.len(), 1);
         assert!(ind.borrow().ancestry[0].child == ind);
     }
+
+    #[test]
+    fn test_equality() {
+        let ind = Individual::new_alive(0, 1);
+        let clone = ind.clone();
+        assert!(ind == clone);
+    }
+
+    #[test]
+    fn test_equality_after_interior_mutation() {
+        let ind = Individual::new_alive(0, 1);
+        let clone = ind.clone();
+
+        assert!(ind.borrow().ancestry.is_empty());
+
+        let another_ind = Individual::new_alive(0, 1);
+        ind.borrow_mut()
+            .ancestry
+            .push(AncestrySegment::new(0, 1, another_ind.clone()));
+        assert!(!ind.borrow().ancestry.is_empty());
+        assert!(!clone.borrow().ancestry.is_empty());
+        assert!(ind == clone);
+    }
+
+    #[test]
+    fn test_inequality() {
+        let ind = Individual::new_alive(0, 1);
+        let another_ind = Individual::new_alive(0, 1);
+        assert!(ind != another_ind);
+    }
+
+    #[test]
+    fn test_hashing() {
+        let mut hash = hashbrown::HashSet::new();
+        let ind = Individual::new_alive(0, 1);
+        let clone = ind.clone();
+        let another_ind = Individual::new_alive(0, 1);
+
+        hash.insert(ind.clone());
+        assert!(hash.contains(&ind));
+        assert!(hash.contains(&clone));
+        assert!(!hash.contains(&another_ind));
+
+        ind.borrow_mut()
+            .ancestry
+            .push(AncestrySegment::new(0, 1, another_ind.clone()));
+        assert!(hash.contains(&ind));
+        assert!(hash.contains(&clone));
+        assert!(!hash.contains(&another_ind));
+    }
 }
