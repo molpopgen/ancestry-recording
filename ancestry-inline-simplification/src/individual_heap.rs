@@ -45,13 +45,13 @@ impl IndividualHeap {
     }
 
     pub fn push(&mut self, individual: Individual) -> bool {
-        let mut inserted = false;
         if !self.in_heap.contains(&individual) {
             self.in_heap.insert(individual.clone());
             self.heap.push(PrioritizedIndividual(individual));
-            inserted = true;
+            true
+        } else {
+            false
         }
-        inserted
     }
 
     pub fn pop(&mut self) -> Option<Individual> {
