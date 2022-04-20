@@ -161,6 +161,8 @@ impl Individual {
         while let Some(mut ind) = heap.pop() {
             let changed = ind.update_ancestry()?;
             ind.non_overlapping_segments()?;
+            // TODO: there is another flag needed here --
+            // we don't need to do this for all alive individuals.
             if changed || ind.is_alive() {
                 for parent in ind.borrow().parents.iter() {
                     heap.push(parent.clone());
