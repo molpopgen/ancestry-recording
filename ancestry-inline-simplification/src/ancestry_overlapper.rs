@@ -5,6 +5,11 @@ use crate::{
 use std::cell::RefCell;
 use std::rc::Rc;
 
+///
+/// # Panics
+///
+/// During iteration, unexpected internal errors will cause panic.
+/// Such cases are definitely bugs that should be reported.
 pub(crate) struct AncestryOverlapper {
     intersections: Vec<AncestryIntersection>,
     overlaps: Rc<RefCell<Vec<AncestryIntersection>>>, // Prevents copying the segments over and over
@@ -42,6 +47,19 @@ impl AncestryOverlapper {
             right,
         }
     }
+
+    fn min_right_in_overlaps(&self) -> Option<LargeSignedInteger> {
+        if !self.overlaps.borrow().is_empty() {
+            Some(
+                self.overlaps
+                    .borrow()
+                    .iter()
+                    .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right())),
+            )
+        } else {
+            None
+        }
+    }
 }
 
 impl Iterator for AncestryOverlapper {
@@ -65,11 +83,7 @@ impl Iterator for AncestryOverlapper {
                 self.j += 1;
             }
             self.j -= 1;
-            self.right = self
-                .overlaps
-                .borrow()
-                .iter()
-                .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right()));
+            self.right = self.min_right_in_overlaps().unwrap();
             self.right = std::cmp::min(self.right, self.intersections[self.j + 1].right());
             self.j += 1;
             assert!(
@@ -91,11 +105,7 @@ impl Iterator for AncestryOverlapper {
             let left = self.right;
             self.overlaps.borrow_mut().retain(|x| x.right() > left);
             if !self.overlaps.borrow().is_empty() {
-                self.right = self
-                    .overlaps
-                    .borrow()
-                    .iter()
-                    .fold(LargeSignedInteger::MAX, |a, b| std::cmp::min(a, b.right()));
+                self.right = self.min_right_in_overlaps().unwrap();
                 return Some((left, self.right, self.overlaps.clone()));
             }
         }
