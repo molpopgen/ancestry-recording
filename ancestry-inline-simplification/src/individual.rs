@@ -461,6 +461,11 @@ mod tests {
         assert!(!ind.borrow().ancestry.is_empty());
         assert!(!clone.borrow().ancestry.is_empty());
         assert!(ind == clone);
+
+        assert!(ind.is_alive());
+        ind.borrow_mut().flags.remove(NodeFlags::IS_ALIVE);
+        assert!(!ind.is_alive());
+        assert!(!clone.is_alive());
     }
 
     #[test]
