@@ -2,6 +2,7 @@ use ancestry_common::{LargeSignedInteger, SignedInteger};
 use ancestry_inline_simplification::Population;
 use clap::Parser;
 use neutral_evolution::{evolve, Parameters};
+use tskit::TableAccess;
 use tskit_evolution::EvolvableTableCollection;
 
 #[derive(clap::Parser, Copy, Clone)]
@@ -60,10 +61,17 @@ fn main() {
             )
             .unwrap();
             evolve_wrapper(parameters, args, &mut population);
+            let tables = tskit::TableCollection::from(population);
+            println!(
+                "nodes: {}, edges: {}",
+                tables.nodes().num_rows(),
+                tables.edges().num_rows()
+            );
         }
         Simulator::Dynamic => {
             let mut population = Population::new(args.popsize, args.sequence_length).unwrap();
             evolve_wrapper(parameters, args, &mut population);
+            println!("num still reachable = {}", population.num_still_reachable());
         }
     }
 }

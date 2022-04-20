@@ -80,6 +80,24 @@ impl Population {
     pub fn is_empty(&self) -> bool {
         self.individuals.is_empty()
     }
+
+    pub fn num_still_reachable(&self) -> usize {
+        let mut reachable = hashbrown::HashSet::new();
+
+        for ind in &self.individuals {
+            let mut stack = vec![ind.clone()];
+            while let Some(popped) = stack.pop() {
+                reachable.insert(popped.clone());
+                for parent in &popped.borrow().parents {
+                    if !reachable.contains(parent) {
+                        stack.push(parent.clone());
+                    }
+                }
+            }
+        }
+
+        reachable.len()
+    }
 }
 
 impl EvolveAncestry for Population {
