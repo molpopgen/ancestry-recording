@@ -5,10 +5,7 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]
-debug = 1
-
-[rust]
-debuginfo-level = 1
+debug = 2
 
 [dependencies]
 ancestry-common = { version = "~0.1.0", path = "../ancestry-common" }
