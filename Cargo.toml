@@ -1,5 +1,9 @@
 [workspace]
 
 members = [
-    "ancestry-prototype"
+    "ancestry-common",
+    "ancestry-inline-simplification",
+    "neutral-evolution",
+    "tskit-evolution",
+    "benchmark",
 ]
