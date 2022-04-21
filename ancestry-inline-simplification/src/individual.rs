@@ -174,7 +174,7 @@ impl Individual {
 
     #[inline(never)]
     // TODO: to dig more into the performance issues,
-    // we need to move this into a separate module and 
+    // we need to move this into a separate module and
     // break it up into multiple functions, each of which is not inlined.
     fn update_ancestry(&mut self) -> Result<bool, InlineAncestryError> {
         let overlapper = AncestryOverlapper::new(self.intersecting_ancestry());
