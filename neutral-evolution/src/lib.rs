@@ -1,7 +1,10 @@
 pub use ancestry_common::LargeSignedInteger;
 use rand::prelude::Distribution;
 use rand::SeedableRng;
+use std::cell::RefCell;
 use std::error::Error;
+use std::ops::DerefMut;
+use std::rc::Rc;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -35,23 +38,25 @@ pub trait EvolveAncestry {
     fn finish(&mut self, current_time_point: LargeSignedInteger) -> Result<(), Box<dyn Error>>;
 }
 
+type Rng = Rc<RefCell<rand_pcg::Pcg64>>;
+
 pub struct Death {
-    rng: rand_pcg::Pcg64,
+    rng: Rng,
     death_probability: f64,
     uniform: rand::distributions::Uniform<f64>,
 }
 
 impl Death {
-    fn new(seed: u64, death_probability: f64) -> Self {
+    fn new(death_probability: f64, rng: Rng) -> Self {
         Self {
-            rng: rand_pcg::Pcg64::seed_from_u64(seed),
+            rng,
             death_probability,
             uniform: rand::distributions::Uniform::new(0., 1.),
         }
     }
 
     pub fn dies(&mut self) -> bool {
-        self.uniform.sample(&mut self.rng) <= self.death_probability
+        self.uniform.sample(&mut self.rng.borrow_mut().deref_mut()) <= self.death_probability
     }
 }
 
@@ -172,12 +177,14 @@ fn make_crossover_position_distribution(
 }
 
 pub fn evolve<N: EvolveAncestry>(
-    seeds: [u64; 2],
+    seed: u64,
     parameters: Parameters,
     population: &mut N,
 ) -> Result<(), Box<dyn Error>> {
-    let mut death = Death::new(seeds[0], parameters.death_probability);
-    let mut rng = rand_pcg::Pcg64::seed_from_u64(seeds[1]);
+    let rng = Rc::new(RefCell::<rand_pcg::Pcg64>::new(
+        rand_pcg::Pcg64::seed_from_u64(seed),
+    ));
+    let mut death = Death::new(parameters.death_probability, rng.clone());
 
     let popsize = population.current_population_size();
 
@@ -189,18 +196,19 @@ pub fn evolve<N: EvolveAncestry>(
     let mut crossovers: Vec<LargeSignedInteger> = vec![];
     for step in 1..parameters.nsteps + 1 {
         let nreplacements = population.generate_deaths(&mut death);
+        let mut mut_borrowed_rng = rng.borrow_mut();
         for _ in 0..nreplacements {
-            let mut p1 = parent_picker.sample(&mut rng);
-            let mut p2 = parent_picker.sample(&mut rng);
-            if mendel.sample(&mut rng) {
+            let mut p1 = parent_picker.sample(mut_borrowed_rng.deref_mut());
+            let mut p2 = parent_picker.sample(mut_borrowed_rng.deref_mut());
+            if mendel.sample(mut_borrowed_rng.deref_mut()) {
                 std::mem::swap(&mut p1, &mut p2);
             }
-            let n = num_crossovers.sample(&mut rng) as u64;
+            let n = num_crossovers.sample(mut_borrowed_rng.deref_mut()) as u64;
             generate_crossover_positions(
                 population.genome_length(),
                 n,
                 &crossover_position,
-                &mut rng,
+                mut_borrowed_rng.deref_mut(),
                 &mut crossovers,
             );
             fill_transmissions(p1, p2, &crossovers, &mut transmissions);

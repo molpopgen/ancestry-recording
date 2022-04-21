@@ -20,9 +20,7 @@ struct Args {
     #[clap(long, short)]
     death_probability: f64,
     #[clap(long)]
-    seed1: u64,
-    #[clap(long)]
-    seed2: u64,
+    seed: u64,
 }
 
 #[derive(clap::Subcommand, Clone, Copy)]
@@ -42,7 +40,7 @@ fn evolve_wrapper<T: neutral_evolution::EvolveAncestry>(
     args: Args,
     population: &mut T,
 ) {
-    evolve([args.seed1, args.seed2], parameters, population).unwrap();
+    evolve(args.seed, parameters, population).unwrap();
 }
 
 fn main() {
