@@ -5,6 +5,7 @@ mod error;
 mod flags;
 mod individual_heap;
 mod segments;
+mod update_ancestry;
 mod util;
 
 pub(crate) use ancestry_overlapper::AncestryOverlapper;
