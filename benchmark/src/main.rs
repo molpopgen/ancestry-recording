@@ -9,17 +9,22 @@ use tskit_evolution::EvolvableTableCollection;
 struct Args {
     #[clap(subcommand)]
     simulator: Simulator,
-    #[clap(long, short)]
+    #[clap(long, short = 'N', help = "Number of haploids")]
     popsize: SignedInteger,
-    #[clap(long, short)]
+    #[clap(long, short, help = "Scaled crossover rate, 4Nc")]
     rho: f64,
-    #[clap(long, short)]
+    #[clap(
+        long,
+        short = 'L',
+        help = "Sequence length (discrete)",
+        default_value_t = 10000
+    )]
     sequence_length: LargeSignedInteger,
-    #[clap(long, short)]
+    #[clap(long, short, help = "Number of death/birth steps to simulate")]
     nsteps: LargeSignedInteger,
-    #[clap(long, short)]
+    #[clap(long, short, default_value_t = 1.0)]
     death_probability: f64,
-    #[clap(long)]
+    #[clap(long, short = 'S', default_value_t = 101)]
     seed: u64,
 }
 
@@ -31,7 +36,11 @@ enum Simulator {
 
 #[derive(clap::Parser, Clone, Copy)]
 struct Tskit {
-    #[clap(long, short)]
+    #[clap(
+        long,
+        short,
+        help = "Number of death/birth steps between table simplifications"
+    )]
     simplification_interval: LargeSignedInteger,
 }
 
