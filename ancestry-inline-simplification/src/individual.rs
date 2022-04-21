@@ -172,6 +172,7 @@ impl Individual {
         Ok(())
     }
 
+    #[inline(never)]
     fn update_ancestry(&mut self) -> Result<bool, InlineAncestryError> {
         let overlapper = AncestryOverlapper::new(self.intersecting_ancestry());
 
