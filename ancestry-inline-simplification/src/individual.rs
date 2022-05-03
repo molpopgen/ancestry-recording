@@ -1,9 +1,6 @@
 use crate::individual_heap::IndividualHeap;
-use crate::{
-    AncestryIntersection, AncestrySegment, HalfOpenInterval, LargeSignedInteger, NodeFlags,
-    Segment, SignedInteger,
-};
-use crate::{AncestryOverlapper, InlineAncestryError};
+use crate::InlineAncestryError;
+use crate::{AncestrySegment, LargeSignedInteger, NodeFlags, Segment, SignedInteger};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -34,11 +31,6 @@ pub struct IndividualData {
     pub parents: ParentSet,
     pub ancestry: Vec<AncestrySegment>,
     pub children: ChildMap,
-}
-
-struct ChildInputDetails {
-    input_number_segs: usize,
-    output_number_segs: usize,
 }
 
 impl Deref for Individual {
@@ -123,38 +115,6 @@ impl Individual {
         Ok(())
     }
 
-    fn update_child_segments(
-        &mut self,
-        child: &Individual,
-        left: LargeSignedInteger,
-        right: LargeSignedInteger,
-        details: &mut HashMap<Self, ChildInputDetails>,
-    ) {
-        if !details.contains_key(child) {
-            details.insert(child.clone(), ChildInputDetails::new(0));
-        }
-
-        let interval = Segment::new_unchecked(left, right);
-        let mut ind = self.borrow_mut();
-
-        // Add child if it does not exist
-        if !ind.children.contains_key(child) {
-            ind.children.insert(child.clone(), vec![]);
-        }
-
-        if let Some(ref mut entry) = details.get_mut(child) {
-            let child_ref = ind.children.get_mut(child).unwrap();
-            if entry.output_number_segs < entry.input_number_segs {
-                child_ref[entry.output_number_segs] = interval;
-            } else {
-                child_ref.push(interval);
-            }
-            entry.output_number_segs += 1;
-        } else {
-            panic!("this cannot happen");
-        }
-    }
-
     pub fn propagate_upwards(&mut self) -> Result<(), InlineAncestryError> {
         let mut heap = IndividualHeap::new();
         heap.push(self.clone());
@@ -177,165 +137,8 @@ impl Individual {
     // we need to move this into a separate module and
     // break it up into multiple functions, each of which is not inlined.
     fn update_ancestry(&mut self) -> Result<bool, InlineAncestryError> {
-        let overlapper = AncestryOverlapper::new(self.intersecting_ancestry());
-
-        let mut input_child_details: HashMap<Individual, ChildInputDetails> = HashMap::default();
-        let mut ancestry_change_detected = false;
-        let input_ancestry_len: usize;
-        let self_alive = self.is_alive();
-
-        // FIXME: the next block is untestable -- should be a separate fn.
-        let mut input_unary_ancestry = vec![];
-        let mut input_non_unary_ancestry = vec![];
-
-        {
-            let b = self.borrow();
-            input_ancestry_len = b.ancestry.len();
-
-            // FIXME: untestable and mixed in w/other functionality.
-            for (c, segs) in &b.children {
-                input_child_details.insert(c.clone(), ChildInputDetails::new(segs.len()));
-            }
-            for (i, a) in b.ancestry.iter().rev().enumerate() {
-                if a.child == *self {
-                    input_non_unary_ancestry.push(input_ancestry_len - i - 1);
-                } else {
-                    input_unary_ancestry.push(input_ancestry_len - i - 1);
-                }
-            }
-        }
-
-        let mut mapped_ind: Option<Individual> = None;
-
-        for (left, right, overlaps) in overlapper {
-            let num_overlaps = overlaps.borrow().len();
-            if num_overlaps == 1 {
-                mapped_ind = Some(overlaps.borrow_mut()[0].ancestry_segment.child.clone());
-
-                if mapped_ind.as_ref().unwrap().borrow().parents.contains(self) {
-                    if self_alive {
-                        let mapped_ind_alive = mapped_ind.as_ref().unwrap().is_alive();
-
-                        if mapped_ind_alive {
-                            self.update_child_segments(
-                                mapped_ind.as_ref().unwrap(),
-                                left,
-                                right,
-                                &mut input_child_details,
-                            );
-                        } else {
-                            mapped_ind = Some(overlaps.borrow_mut()[0].mapped_individual.clone());
-
-                            mapped_ind
-                                .as_mut()
-                                .unwrap()
-                                .add_parent(self.clone())
-                                .unwrap();
-
-                            self.update_child_segments(
-                                mapped_ind.as_ref().unwrap(),
-                                left,
-                                right,
-                                &mut input_child_details,
-                            );
-                        }
-                    }
-                }
-            } else {
-                // overlap (coalescence) => ancestry segment maps to self (parent).
-                mapped_ind = Some(self.clone());
-                for x in overlaps.borrow_mut().iter_mut() {
-                    self.update_child_segments(
-                        &x.mapped_individual,
-                        left,
-                        right,
-                        &mut input_child_details,
-                    );
-                    x.mapped_individual.add_parent(self.clone()).unwrap();
-                }
-            }
-
-            assert!(mapped_ind.is_some());
-
-            // FIXME: untestable
-            if !self_alive {
-                let mut bs = self.borrow_mut();
-                if !input_non_unary_ancestry.is_empty() {
-                    let idx = input_non_unary_ancestry.pop().unwrap();
-                    if left != bs.ancestry[idx].left()
-                        || right != bs.ancestry[idx].right()
-                        || *mapped_ind.as_ref().unwrap() != bs.ancestry[idx].child
-                    {
-                        ancestry_change_detected = true;
-                    }
-                    bs.ancestry[idx] =
-                        AncestrySegment::new(left, right, mapped_ind.as_ref().unwrap().clone());
-                } else {
-                    ancestry_change_detected = true;
-                    bs.ancestry.push(AncestrySegment::new(
-                        left,
-                        right,
-                        mapped_ind.as_ref().unwrap().clone(),
-                    ));
-                }
-            }
-        }
-
-        // FIXME: untestable
-        if !self_alive {
-            let mut bs = self.borrow_mut();
-            for idx in input_non_unary_ancestry {
-                ancestry_change_detected = true;
-                bs.ancestry[idx].segment.left = LargeSignedInteger::MIN;
-            }
-            for idx in input_unary_ancestry {
-                if !bs.ancestry[idx].child.is_alive()
-                    || (!bs.ancestry[idx].child.borrow().children.is_empty()
-                        && bs.ancestry[idx].child.borrow().children.contains_key(self))
-                {
-                    ancestry_change_detected = true;
-                    bs.ancestry[idx].segment.left = LargeSignedInteger::MIN;
-                }
-            }
-            bs.ancestry.retain(|x| x.left() != LargeSignedInteger::MIN);
-            bs.ancestry.sort();
-        }
-
-        {
-            // FIXME: untestable
-            let mut bs = self.borrow_mut();
-
-            for (c, s) in bs.children.iter_mut() {
-                s.truncate(input_child_details.get(c).unwrap().output_number_segs);
-                if s.is_empty() {
-                    c.borrow_mut().parents.remove(self);
-                }
-            }
-            bs.children.retain(|_, v| !v.is_empty());
-        }
-
-        Ok(ancestry_change_detected || self.borrow().ancestry.is_empty())
-    }
-
-    pub(crate) fn intersecting_ancestry(&self) -> Vec<AncestryIntersection> {
-        let mut rv = vec![];
-
-        for (child, segs) in self.borrow().children.iter() {
-            for seg in segs.iter() {
-                for x in child.borrow().ancestry.iter() {
-                    if x.overlaps(seg) {
-                        rv.push(AncestryIntersection::new(
-                            std::cmp::max(x.left(), seg.left()),
-                            std::cmp::min(x.right(), seg.right()),
-                            child.clone(),
-                            x.child.clone(),
-                        ));
-                    }
-                }
-            }
-        }
-
-        rv
+        let rv = crate::update_ancestry::update_ancestry(self);
+        Ok(rv)
     }
 
     fn non_overlapping_segments(&self) -> Result<(), InlineAncestryError> {
@@ -357,15 +160,6 @@ impl IndividualData {
             parents: ParentSet::default(),
             ancestry: vec![],
             children: ChildMap::default(),
-        }
-    }
-}
-
-impl ChildInputDetails {
-    fn new(input_number_segs: usize) -> Self {
-        Self {
-            input_number_segs,
-            output_number_segs: 0,
         }
     }
 }

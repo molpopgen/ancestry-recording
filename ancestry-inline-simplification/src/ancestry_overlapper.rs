@@ -184,37 +184,6 @@ mod overlapper_tests {
     }
 
     #[test]
-    fn test_single_overlap() {
-        let mut parent = Individual::new_alive(0, 0);
-
-        let child1 = Individual::new_alive(1, 1);
-        let child2 = Individual::new_alive(2, 1);
-
-        {
-            child1
-                .borrow_mut()
-                .ancestry
-                .push(AncestrySegment::new(0, 5, child1.clone()));
-            child2
-                .borrow_mut()
-                .ancestry
-                .push(AncestrySegment::new(1, 6, child2.clone()));
-        }
-
-        parent.add_child_segment(0, 5, child1.clone()).unwrap();
-        parent.add_child_segment(1, 6, child2.clone()).unwrap();
-
-        let overlapper = AncestryOverlapper::new(parent.intersecting_ancestry());
-
-        let expected = vec![vec![0, 1], vec![1, 5], vec![5, 6]];
-
-        for (i, (left, right, _overlaps)) in overlapper.enumerate() {
-            assert_eq!(expected[i][0], left, "i: {}, left: {}", i, left);
-            assert_eq!(expected[i][1], right, "i: {}, right: {}", i, right);
-        }
-    }
-
-    #[test]
     fn test_failing_examples_discovered_during_development() {
         let mut examples = FailingExamples::new();
         for a in examples {
