@@ -1,6 +1,7 @@
-use crate::node_heap::NodeHeap;
 use crate::InlineAncestryError;
-use crate::{AncestrySegment, LargeSignedInteger, NodeFlags, Segment, SignedInteger};
+use crate::{
+    AncestrySegment, HalfOpenInterval, LargeSignedInteger, NodeFlags, Segment, SignedInteger,
+};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -115,33 +116,15 @@ impl Node {
         Ok(())
     }
 
-    pub fn propagate_upwards(&mut self) -> Result<(), InlineAncestryError> {
-        let mut heap = NodeHeap::new();
-        heap.push(self.clone());
-        while let Some(mut node) = heap.pop() {
-            let changed = node.update_ancestry()?;
-            node.non_overlapping_segments()?;
-            // TODO: there is another flag needed here --
-            // we don't need to do this for all alive nodes.
-            if changed || node.is_alive() {
-                for parent in node.borrow().parents.iter() {
-                    heap.push(parent.clone());
-                }
-            }
-        }
-        Ok(())
-    }
-
     #[inline(never)]
-    // TODO: to dig more into the performance issues,
-    // we need to move this into a separate module and
-    // break it up into multiple functions, each of which is not inlined.
-    fn update_ancestry(&mut self) -> Result<bool, InlineAncestryError> {
+    // TODO: instead of pup(crate), this should perhaps be standalone?
+    pub(crate) fn update_ancestry(&mut self) -> Result<bool, InlineAncestryError> {
         let rv = crate::update_ancestry::update_ancestry(self);
         Ok(rv)
     }
 
-    fn non_overlapping_segments(&self) -> Result<(), InlineAncestryError> {
+    // TODO: instead of pup(crate), this should perhaps be standalone?
+    pub(crate) fn non_overlapping_segments(&self) -> Result<(), InlineAncestryError> {
         let b = self.borrow();
         crate::util::non_overlapping_segments(&b.ancestry)?;
         for (_child, segments) in b.children.iter() {
@@ -161,6 +144,17 @@ impl NodeData {
             ancestry: vec![],
             children: ChildMap::default(),
         }
+    }
+
+    pub(crate) fn kill(&mut self, genome_length: crate::LargeSignedInteger) {
+        self.flags.clear_alive();
+        self.ancestry.retain(|a| {
+            if a.left() == 0 && a.right() == genome_length {
+                false
+            } else {
+                true
+            }
+        });
     }
 }
 

@@ -19,4 +19,6 @@ pub enum InlineAncestryError {
         parent: LargeSignedInteger,
         child: LargeSignedInteger,
     },
+    #[error("unexpected dead node")]
+    DeadNode,
 }
