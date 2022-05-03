@@ -1,42 +1,42 @@
-use crate::individual::Individual;
+use crate::node::Node;
 use hashbrown::HashSet;
 use std::collections::BinaryHeap;
 
 #[repr(transparent)]
-struct PrioritizedIndividual(Individual);
+struct PrioritizedNode(Node);
 
-impl PartialEq for PrioritizedIndividual {
+impl PartialEq for PrioritizedNode {
     fn eq(&self, other: &Self) -> bool {
         std::ptr::eq(self.0.as_ptr(), other.0.as_ptr())
     }
 }
 
-impl PartialOrd for PrioritizedIndividual {
+impl PartialOrd for PrioritizedNode {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.0.borrow().birth_time.cmp(&other.0.borrow().birth_time))
     }
 }
 
-impl Eq for PrioritizedIndividual {}
+impl Eq for PrioritizedNode {}
 
-impl Ord for PrioritizedIndividual {
+impl Ord for PrioritizedNode {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
     }
 }
 
-impl PrioritizedIndividual {
-    fn get(self) -> Individual {
+impl PrioritizedNode {
+    fn get(self) -> Node {
         self.0
     }
 }
 
-pub(crate) struct IndividualHeap {
-    heap: BinaryHeap<PrioritizedIndividual>,
-    in_heap: HashSet<Individual>,
+pub(crate) struct NodeHeap {
+    heap: BinaryHeap<PrioritizedNode>,
+    in_heap: HashSet<Node>,
 }
 
-impl IndividualHeap {
+impl NodeHeap {
     pub(crate) fn new() -> Self {
         Self {
             heap: BinaryHeap::new(),
@@ -44,17 +44,17 @@ impl IndividualHeap {
         }
     }
 
-    pub fn push(&mut self, individual: Individual) -> bool {
-        if !self.in_heap.contains(&individual) {
-            self.in_heap.insert(individual.clone());
-            self.heap.push(PrioritizedIndividual(individual));
+    pub fn push(&mut self, node: Node) -> bool {
+        if !self.in_heap.contains(&node) {
+            self.in_heap.insert(node.clone());
+            self.heap.push(PrioritizedNode(node));
             true
         } else {
             false
         }
     }
 
-    pub fn pop(&mut self) -> Option<Individual> {
+    pub fn pop(&mut self) -> Option<Node> {
         match self.heap.pop() {
             Some(x) => {
                 self.in_heap.remove(&x.0);
@@ -77,10 +77,10 @@ mod tests {
 
     #[test]
     fn test_binary_heap() {
-        let a = Individual::new_alive(0, 1);
-        let b = Individual::new_alive(0, 2);
+        let a = Node::new_alive(0, 1);
+        let b = Node::new_alive(0, 2);
 
-        let mut heap = IndividualHeap::new();
+        let mut heap = NodeHeap::new();
         let inserted = heap.push(a.clone());
         assert!(inserted);
         let inserted = heap.push(a);

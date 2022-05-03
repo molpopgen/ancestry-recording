@@ -1,4 +1,4 @@
-use crate::individual::Individual;
+use crate::node::Node;
 use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use std::cmp::Ordering;
@@ -43,11 +43,11 @@ impl Segment {
 #[derive(Clone, Eq, PartialEq)]
 pub struct AncestrySegment {
     pub segment: Segment,
-    pub child: Individual,
+    pub child: Node,
 }
 
 impl AncestrySegment {
-    pub fn new(left: LargeSignedInteger, right: LargeSignedInteger, child: Individual) -> Self {
+    pub fn new(left: LargeSignedInteger, right: LargeSignedInteger, child: Node) -> Self {
         Self {
             segment: Segment::new_unchecked(left, right),
             child,
@@ -58,19 +58,19 @@ impl AncestrySegment {
 #[derive(Clone, Eq, PartialEq)]
 pub(crate) struct AncestryIntersection {
     pub ancestry_segment: AncestrySegment,
-    pub mapped_individual: Individual,
+    pub mapped_node: Node,
 }
 
 impl AncestryIntersection {
     pub fn new(
         left: LargeSignedInteger,
         right: LargeSignedInteger,
-        child: Individual,
-        mapped_individual: Individual,
+        child: Node,
+        mapped_node: Node,
     ) -> Self {
         Self {
             ancestry_segment: AncestrySegment::new(left, right, child),
-            mapped_individual,
+            mapped_node,
         }
     }
 }
@@ -127,9 +127,9 @@ mod tests {
     #[test]
     fn test_sorting_ancestry_segment() {
         let mut v = vec![
-            AncestrySegment::new(3, 4, Individual::new_alive(1, 1)),
-            AncestrySegment::new(2, 3, Individual::new_alive(1, 2)),
-            AncestrySegment::new(1, 2, Individual::new_alive(1, 3)),
+            AncestrySegment::new(3, 4, Node::new_alive(1, 1)),
+            AncestrySegment::new(2, 3, Node::new_alive(1, 2)),
+            AncestrySegment::new(1, 2, Node::new_alive(1, 3)),
         ];
         v.sort();
         assert!(v.windows(2).all(|w| w[0].left() < w[1].left()));
@@ -138,24 +138,9 @@ mod tests {
     #[test]
     fn test_sorting_ancestry_intersection() {
         let mut v = vec![
-            AncestryIntersection::new(
-                3,
-                4,
-                Individual::new_alive(1, 1),
-                Individual::new_alive(1, 2),
-            ),
-            AncestryIntersection::new(
-                2,
-                3,
-                Individual::new_alive(1, 2),
-                Individual::new_alive(1, 2),
-            ),
-            AncestryIntersection::new(
-                1,
-                2,
-                Individual::new_alive(1, 3),
-                Individual::new_alive(1, 2),
-            ),
+            AncestryIntersection::new(3, 4, Node::new_alive(1, 1), Node::new_alive(1, 2)),
+            AncestryIntersection::new(2, 3, Node::new_alive(1, 2), Node::new_alive(1, 2)),
+            AncestryIntersection::new(1, 2, Node::new_alive(1, 3), Node::new_alive(1, 2)),
         ];
         v.sort();
         assert!(v.windows(2).all(|w| w[0].left() < w[1].left()));
