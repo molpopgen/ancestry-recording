@@ -1,4 +1,4 @@
-use crate::individual::Individual;
+use crate::node::Node;
 use crate::segments::HalfOpenInterval;
 use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
@@ -6,12 +6,12 @@ use crate::SignedInteger;
 use neutral_evolution::EvolveAncestry;
 
 pub struct Population {
-    next_individual_id: SignedInteger,
+    next_node_id: SignedInteger,
     genome_length: LargeSignedInteger,
     replacements: Vec<usize>,
-    births: Vec<Individual>,
+    births: Vec<Node>,
     next_replacement: usize,
-    pub individuals: Vec<Individual>,
+    pub nodes: Vec<Node>,
 }
 
 impl Population {
@@ -20,48 +20,48 @@ impl Population {
         genome_length: LargeSignedInteger,
     ) -> Result<Self, InlineAncestryError> {
         if genome_length > 0 {
-            let next_individual_id = popsize;
+            let next_node_id = popsize;
 
-            let mut individuals = vec![];
+            let mut nodes = vec![];
 
-            for i in 0..next_individual_id {
-                let ind = Individual::new_alive_with_ancestry_mapping_to_self(i, 0, genome_length);
-                individuals.push(ind);
+            for i in 0..next_node_id {
+                let node = Node::new_alive_with_ancestry_mapping_to_self(i, 0, genome_length);
+                nodes.push(node);
             }
 
             Ok(Self {
-                next_individual_id,
+                next_node_id,
                 genome_length,
                 replacements: vec![],
                 births: vec![],
                 next_replacement: 0,
-                individuals,
+                nodes,
             })
         } else {
             Err(InlineAncestryError::InvalidGenomeLength { l: genome_length })
         }
     }
 
-    pub fn birth(&mut self, birth_time: LargeSignedInteger) -> Individual {
+    pub fn birth(&mut self, birth_time: LargeSignedInteger) -> Node {
         assert!(birth_time >= 0);
-        let index = self.next_individual_id;
-        self.next_individual_id += 1;
-        Individual::new_alive_with_ancestry_mapping_to_self(index, birth_time, self.genome_length)
+        let index = self.next_node_id;
+        self.next_node_id += 1;
+        Node::new_alive_with_ancestry_mapping_to_self(index, birth_time, self.genome_length)
     }
 
-    pub fn get(&self, who: usize) -> Option<&Individual> {
-        self.individuals.get(who)
+    pub fn get(&self, who: usize) -> Option<&Node> {
+        self.nodes.get(who)
     }
 
-    pub fn get_mut(&mut self, who: usize) -> Option<&mut Individual> {
-        self.individuals.get_mut(who)
+    pub fn get_mut(&mut self, who: usize) -> Option<&mut Node> {
+        self.nodes.get_mut(who)
     }
 
     pub fn kill(&mut self, who: usize) {
         let genome_length = self.genome_length;
-        if let Some(ind) = self.get_mut(who) {
-            ind.borrow_mut().flags.clear_alive();
-            ind.borrow_mut().ancestry.retain(|a| {
+        if let Some(node) = self.get_mut(who) {
+            node.borrow_mut().flags.clear_alive();
+            node.borrow_mut().ancestry.retain(|a| {
                 if a.left() == 0 && a.right() == genome_length {
                     false
                 } else {
@@ -74,18 +74,18 @@ impl Population {
     }
 
     pub fn len(&self) -> usize {
-        self.individuals.len()
+        self.nodes.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.individuals.is_empty()
+        self.nodes.is_empty()
     }
 
     pub fn num_still_reachable(&self) -> usize {
         let mut reachable = hashbrown::HashSet::new();
 
-        for ind in &self.individuals {
-            let mut stack = vec![ind.clone()];
+        for node in &self.nodes {
+            let mut stack = vec![node.clone()];
             while let Some(popped) = stack.pop() {
                 reachable.insert(popped.clone());
                 for parent in &popped.borrow().parents {
@@ -109,7 +109,7 @@ impl EvolveAncestry for Population {
         self.replacements.clear();
         self.next_replacement = 0;
 
-        for i in 0..self.individuals.len() {
+        for i in 0..self.nodes.len() {
             if death.dies() {
                 self.replacements.push(i);
             }
@@ -119,7 +119,7 @@ impl EvolveAncestry for Population {
     }
 
     fn current_population_size(&self) -> usize {
-        self.individuals.len()
+        self.nodes.len()
     }
 
     fn record_birth(
@@ -157,7 +157,7 @@ impl EvolveAncestry for Population {
         let ndeaths = self.replacements.len();
 
         for death in 0..ndeaths {
-            let mut dead = self.individuals[death].clone();
+            let mut dead = self.nodes[death].clone();
             // FIXME: this should be an Individual fn
             // FIXME: the name kill should be changed
             self.kill(death);
@@ -170,8 +170,8 @@ impl EvolveAncestry for Population {
             // birth, and the previous call to propagate_upwards
             // will remove that branch if the parent is dead.
             // assert!(!self.births[death].borrow().parents.is_empty());
-            self.individuals[death] = self.births[death].clone();
-            assert!(self.individuals[death].is_alive());
+            self.nodes[death] = self.births[death].clone();
+            assert!(self.nodes[death].is_alive());
         }
 
         for b in self.births.iter_mut() {

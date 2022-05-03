@@ -1,4 +1,4 @@
-use crate::individual_heap::IndividualHeap;
+use crate::node_heap::NodeHeap;
 use crate::InlineAncestryError;
 use crate::{AncestrySegment, LargeSignedInteger, NodeFlags, Segment, SignedInteger};
 use std::hash::{Hash, Hasher};
@@ -11,20 +11,20 @@ use std::{cell::RefCell, ops::Deref};
 // they recommend here.
 use hashbrown::{HashMap, HashSet};
 
-/// An individual is a pointer to [IndividualData](IndividualData).
+/// An `Node` is a pointer to [NodeData](NodeData).
 ///
-/// Derefs to Rc<RefCell<Individual>>, giving interior mutability.
+/// Derefs to Rc<RefCell<Node>>, giving interior mutability.
 /// Required so that we can hash Rc instances.
 /// Hashing and equality are implemented with respect to the
 /// underlying *pointers* and not the *data*.
 #[derive(Clone)]
-pub struct Individual(Rc<RefCell<IndividualData>>);
+pub struct Node(Rc<RefCell<NodeData>>);
 
-pub type ChildMap = HashMap<Individual, Vec<Segment>>;
-pub type ParentSet = HashSet<Individual>;
+pub type ChildMap = HashMap<Node, Vec<Segment>>;
+pub type ParentSet = HashSet<Node>;
 
 #[derive(Clone)] // NOTE: this does not have to be Clone b/c we work via pointers
-pub struct IndividualData {
+pub struct NodeData {
     pub index: SignedInteger, // TODO: remove this, as it is really only useful for debugging
     pub birth_time: LargeSignedInteger,
     pub flags: NodeFlags,
@@ -33,33 +33,33 @@ pub struct IndividualData {
     pub children: ChildMap,
 }
 
-impl Deref for Individual {
-    type Target = Rc<RefCell<IndividualData>>;
+impl Deref for Node {
+    type Target = Rc<RefCell<NodeData>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl PartialEq for Individual {
+impl PartialEq for Node {
     fn eq(&self, other: &Self) -> bool {
         std::ptr::eq(self.as_ptr(), other.as_ptr())
     }
 }
 
-impl Eq for Individual {}
+impl Eq for Node {}
 
-impl Hash for Individual {
+impl Hash for Node {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_ptr().hash(state);
     }
 }
 
-impl Individual {
+impl Node {
     pub fn new_alive(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
-        Self(Rc::new(RefCell::<IndividualData>::new(
-            IndividualData::new_alive(index, birth_time),
-        )))
+        Self(Rc::new(RefCell::<NodeData>::new(NodeData::new_alive(
+            index, birth_time,
+        ))))
     }
 
     /// # Panics
@@ -85,7 +85,7 @@ impl Individual {
     // We should instead be checking that the right thing
     // happens at birth and then, during simplification,
     // rely on assert to find unexpected errors.
-    pub fn add_parent(&mut self, parent: Individual) -> Result<(), InlineAncestryError> {
+    pub fn add_parent(&mut self, parent: Node) -> Result<(), InlineAncestryError> {
         let mut sb = self.borrow_mut();
         if sb.birth_time > parent.borrow().birth_time {
             sb.parents.insert(parent);
@@ -102,7 +102,7 @@ impl Individual {
         &mut self,
         left: LargeSignedInteger,
         right: LargeSignedInteger,
-        child: Individual,
+        child: Node,
     ) -> Result<(), InlineAncestryError> {
         assert!(child.borrow().birth_time > self.borrow().birth_time);
         let mut b = self.borrow_mut();
@@ -116,15 +116,15 @@ impl Individual {
     }
 
     pub fn propagate_upwards(&mut self) -> Result<(), InlineAncestryError> {
-        let mut heap = IndividualHeap::new();
+        let mut heap = NodeHeap::new();
         heap.push(self.clone());
-        while let Some(mut ind) = heap.pop() {
-            let changed = ind.update_ancestry()?;
-            ind.non_overlapping_segments()?;
+        while let Some(mut node) = heap.pop() {
+            let changed = node.update_ancestry()?;
+            node.non_overlapping_segments()?;
             // TODO: there is another flag needed here --
-            // we don't need to do this for all alive individuals.
-            if changed || ind.is_alive() {
-                for parent in ind.borrow().parents.iter() {
+            // we don't need to do this for all alive nodes.
+            if changed || node.is_alive() {
+                for parent in node.borrow().parents.iter() {
                     heap.push(parent.clone());
                 }
             }
@@ -151,7 +151,7 @@ impl Individual {
     }
 }
 
-impl IndividualData {
+impl NodeData {
     pub fn new_alive(index: SignedInteger, birth_time: LargeSignedInteger) -> Self {
         Self {
             index,
@@ -169,21 +169,21 @@ impl IndividualData {
 mod practice_tests {
     use super::*;
 
-    fn remove_parent(parent: Individual, child: Individual) {
+    fn remove_parent(parent: Node, child: Node) {
         child.borrow_mut().parents.remove(&parent);
     }
 
     // Better -- does not increase ref counts just for fn call.
-    fn remove_parent_via_ref(parent: &Individual, child: &Individual) {
+    fn remove_parent_via_ref(parent: &Node, child: &Node) {
         child.borrow_mut().parents.remove(&parent);
     }
 
     #[test]
     fn test_interior_mutability() {
-        let mut pop: Vec<Individual> = vec![];
+        let mut pop: Vec<Node> = vec![];
 
-        pop.push(Individual::new_alive(0, 0));
-        pop.push(Individual::new_alive(1, 1));
+        pop.push(Node::new_alive(0, 0));
+        pop.push(Node::new_alive(1, 1));
 
         {
             let c = pop[1].clone();
@@ -204,10 +204,10 @@ mod practice_tests {
 
     #[test]
     fn test_interior_mutability_via_ref() {
-        let mut pop: Vec<Individual> = vec![];
+        let mut pop: Vec<Node> = vec![];
 
-        pop.push(Individual::new_alive(0, 0));
-        pop.push(Individual::new_alive(1, 1));
+        pop.push(Node::new_alive(0, 0));
+        pop.push(Node::new_alive(1, 1));
 
         {
             let c = pop[1].clone();
@@ -232,64 +232,64 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_alive_individual_has_ancestry_to_self() {
-        let ind = Individual::new_alive_with_ancestry_mapping_to_self(0, 0, 10);
-        assert_eq!(ind.borrow().ancestry.len(), 1);
-        assert!(ind.borrow().ancestry[0].child == ind);
+    fn test_alive_node_has_ancestry_to_self() {
+        let node = Node::new_alive_with_ancestry_mapping_to_self(0, 0, 10);
+        assert_eq!(node.borrow().ancestry.len(), 1);
+        assert!(node.borrow().ancestry[0].child == node);
     }
 
     #[test]
     fn test_equality() {
-        let ind = Individual::new_alive(0, 1);
-        let clone = ind.clone();
-        assert!(ind == clone);
+        let node = Node::new_alive(0, 1);
+        let clone = node.clone();
+        assert!(node == clone);
     }
 
     #[test]
     fn test_equality_after_interior_mutation() {
-        let ind = Individual::new_alive(0, 1);
-        let clone = ind.clone();
+        let node = Node::new_alive(0, 1);
+        let clone = node.clone();
 
-        assert!(ind.borrow().ancestry.is_empty());
+        assert!(node.borrow().ancestry.is_empty());
 
-        let another_ind = Individual::new_alive(0, 1);
-        ind.borrow_mut()
+        let another_node = Node::new_alive(0, 1);
+        node.borrow_mut()
             .ancestry
-            .push(AncestrySegment::new(0, 1, another_ind.clone()));
-        assert!(!ind.borrow().ancestry.is_empty());
+            .push(AncestrySegment::new(0, 1, another_node.clone()));
+        assert!(!node.borrow().ancestry.is_empty());
         assert!(!clone.borrow().ancestry.is_empty());
-        assert!(ind == clone);
+        assert!(node == clone);
 
-        assert!(ind.is_alive());
-        ind.borrow_mut().flags.remove(NodeFlags::IS_ALIVE);
-        assert!(!ind.is_alive());
+        assert!(node.is_alive());
+        node.borrow_mut().flags.remove(NodeFlags::IS_ALIVE);
+        assert!(!node.is_alive());
         assert!(!clone.is_alive());
     }
 
     #[test]
     fn test_inequality() {
-        let ind = Individual::new_alive(0, 1);
-        let another_ind = Individual::new_alive(0, 1);
-        assert!(ind != another_ind);
+        let node = Node::new_alive(0, 1);
+        let another_node = Node::new_alive(0, 1);
+        assert!(node != another_node);
     }
 
     #[test]
     fn test_hashing() {
         let mut hash = hashbrown::HashSet::new();
-        let ind = Individual::new_alive(0, 1);
-        let clone = ind.clone();
-        let another_ind = Individual::new_alive(0, 1);
+        let node = Node::new_alive(0, 1);
+        let clone = node.clone();
+        let another_node = Node::new_alive(0, 1);
 
-        hash.insert(ind.clone());
-        assert!(hash.contains(&ind));
+        hash.insert(node.clone());
+        assert!(hash.contains(&node));
         assert!(hash.contains(&clone));
-        assert!(!hash.contains(&another_ind));
+        assert!(!hash.contains(&another_node));
 
-        ind.borrow_mut()
+        node.borrow_mut()
             .ancestry
-            .push(AncestrySegment::new(0, 1, another_ind.clone()));
-        assert!(hash.contains(&ind));
+            .push(AncestrySegment::new(0, 1, another_node.clone()));
+        assert!(hash.contains(&node));
         assert!(hash.contains(&clone));
-        assert!(!hash.contains(&another_ind));
+        assert!(!hash.contains(&another_node));
     }
 }

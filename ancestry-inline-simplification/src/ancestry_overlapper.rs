@@ -1,6 +1,5 @@
 use crate::{
-    individual::Individual, AncestryIntersection, HalfOpenInterval, LargeSignedInteger,
-    SignedInteger,
+    node::Node, AncestryIntersection, HalfOpenInterval, LargeSignedInteger, SignedInteger,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -29,14 +28,14 @@ impl AncestryOverlapper {
             w[0].left() <= w[1].left() && w[0].left() < w[0].right() && w[1].left() < w[1].right()
         });
         assert!(sorted);
-        // Sentinel -- FIXME: get rid of the need for the dummy Individuals
+        // Sentinel -- FIXME: get rid of the need for the dummy Nodes
         intersections.push(AncestryIntersection::new(
             LargeSignedInteger::MAX - 1,
             LargeSignedInteger::MAX,
-            // NOTE: dummy individual here to avoid using Option globally for
+            // NOTE: dummy node here to avoid using Option globally for
             // child field of Overlap
-            Individual::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
-            Individual::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
+            Node::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
+            Node::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
         ));
         let right = intersections[0].left();
         Self {
@@ -164,8 +163,8 @@ mod overlapper_tests {
                             AncestryIntersection::new(
                                 p.0,
                                 p.1,
-                                Individual::new_alive(0, 1),
-                                Individual::new_alive(0, 1),
+                                Node::new_alive(0, 1),
+                                Node::new_alive(0, 1),
                             )
                         })
                         .collect::<Vec<AncestryIntersection>>(),
