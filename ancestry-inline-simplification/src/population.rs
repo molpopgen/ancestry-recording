@@ -1,5 +1,5 @@
 use crate::node::Node;
-use crate::segments::HalfOpenInterval;
+use crate::node_heap::NodeHeap;
 use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
@@ -11,6 +11,7 @@ pub struct Population {
     replacements: Vec<usize>,
     births: Vec<Node>,
     next_replacement: usize,
+    node_heap: NodeHeap,
     pub nodes: Vec<Node>,
 }
 
@@ -35,6 +36,7 @@ impl Population {
                 replacements: vec![],
                 births: vec![],
                 next_replacement: 0,
+                node_heap: NodeHeap::default(),
                 nodes,
             })
         } else {
@@ -55,22 +57,6 @@ impl Population {
 
     pub fn get_mut(&mut self, who: usize) -> Option<&mut Node> {
         self.nodes.get_mut(who)
-    }
-
-    pub fn kill(&mut self, who: usize) {
-        let genome_length = self.genome_length;
-        if let Some(node) = self.get_mut(who) {
-            node.borrow_mut().flags.clear_alive();
-            node.borrow_mut().ancestry.retain(|a| {
-                if a.left() == 0 && a.right() == genome_length {
-                    false
-                } else {
-                    true
-                }
-            });
-        } else {
-            panic!("{who} out of range for kill");
-        }
     }
 
     pub fn len(&self) -> usize {
@@ -153,35 +139,29 @@ impl EvolveAncestry for Population {
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(self.replacements.len(), self.births.len());
+        assert!(self.node_heap.is_empty());
 
         let ndeaths = self.replacements.len();
 
         for death in 0..ndeaths {
-            let mut dead = self.nodes[death].clone();
-            // FIXME: this should be an Individual fn
-            // FIXME: the name kill should be changed
-            self.kill(death);
-            assert!(!dead.is_alive());
-            dead.propagate_upwards()?;
+            let dead = self.nodes[death].clone();
+            let birth = self.births[death].clone();
             assert_eq!(self.births[death].borrow().birth_time, current_time_point);
-
-            // NOTE: The following assertion is WRONG!
-            // A parent is likely to be unary w.r.to a given
-            // birth, and the previous call to propagate_upwards
-            // will remove that branch if the parent is dead.
-            // assert!(!self.births[death].borrow().parents.is_empty());
-            self.nodes[death] = self.births[death].clone();
             assert!(self.nodes[death].is_alive());
-        }
+            self.node_heap.push_death(dead)?;
+            self.node_heap.push_birth(birth.clone())?;
 
-        for b in self.births.iter_mut() {
-            // NOTE: see previous note
-            // assert!(!b.borrow().parents.is_empty());
-            b.propagate_upwards()?;
+            self.nodes[death] = birth;
         }
 
         self.births.clear();
 
+        crate::propagate_ancestry_changes::propagate_ancestry_changes(
+            self.genome_length,
+            &mut self.node_heap,
+        )?;
+
+        assert!(self.node_heap.is_empty());
         Ok(())
     }
 
