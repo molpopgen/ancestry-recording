@@ -1,5 +1,4 @@
 use crate::ancestry_overlapper::AncestryOverlapper;
-use crate::flags::NodeFlags;
 use crate::node::{Node, NodeData};
 use crate::segments::HalfOpenInterval;
 use crate::segments::Segment;
@@ -74,46 +73,6 @@ fn update_child_segments(
 }
 
 #[inline(never)]
-fn process_unary_overlap(
-    left: LargeSignedInteger,
-    right: LargeSignedInteger,
-    overlap: &AncestryIntersection,
-    node: &Node,
-) -> Node {
-    let mut mapped_node = overlap.ancestry_segment.child.clone();
-    let in_parents = mapped_node.borrow().parents.contains(node);
-    let mut node_data = node.borrow_mut();
-    if in_parents && node_data.flags.contains(NodeFlags::IS_ALIVE) {
-        if overlap.ancestry_segment.child.is_alive() {
-            update_child_segments(&mut node_data, &overlap.mapped_node, left, right);
-        } else {
-            mapped_node = overlap.mapped_node.clone();
-            mapped_node.borrow_mut().parents.insert(node.clone());
-            update_child_segments(&mut node_data, &mapped_node, left, right);
-        }
-    }
-    mapped_node
-}
-
-#[inline(never)]
-fn get_mapped_node(
-    left: LargeSignedInteger,
-    right: LargeSignedInteger,
-    overlaps: &[AncestryIntersection],
-    node: &mut Node,
-) -> Node {
-    if overlaps.len() == 1 {
-        process_unary_overlap(left, right, &overlaps[0], node)
-    } else {
-        // coalescence
-        for overlap in overlaps.iter() {
-            update_child_segments(&mut node.borrow_mut(), &overlap.mapped_node, left, right);
-        }
-        node.clone()
-    }
-}
-
-#[inline(never)]
 fn process_overlaps(
     overlapper: &mut AncestryOverlapper,
     input_ancestry_len: usize,
@@ -121,11 +80,23 @@ fn process_overlaps(
     ancestry_change_detected: &mut bool,
     node: &mut Node,
 ) {
+    let mut borrowed_node = node.borrow_mut();
     for (left, right, overlaps) in overlapper {
+        let mut mapped_node: Node = node.clone();
         let borrowed_overlaps = overlaps.borrow();
-        if !node.is_alive() {
-            let mapped_node = get_mapped_node(left, right, &borrowed_overlaps, node);
-            let mut borrowed_node = node.borrow_mut();
+
+        if borrowed_overlaps.len() == 1 {
+            mapped_node = borrowed_overlaps[0].mapped_node.clone();
+            if borrowed_node.is_alive() {
+                update_child_segments(&mut borrowed_node, &mapped_node, left, right);
+            }
+        } else {
+            for overlap in borrowed_overlaps.iter() {
+                update_child_segments(&mut borrowed_node, &overlap.mapped_node, left, right);
+            }
+        }
+        if !borrowed_node.is_alive() {
+            assert!(left < right);
             if *output_ancestry_index < input_ancestry_len {
                 // SAFETY: we checked bounds in the if statement
                 let input_ancestry_seg = unsafe {
@@ -139,18 +110,15 @@ fn process_overlaps(
                 {
                     input_ancestry_seg.segment.left = left;
                     input_ancestry_seg.segment.right = right;
-                    input_ancestry_seg.child = mapped_node;
+                    input_ancestry_seg.child = mapped_node.clone();
                     *output_ancestry_index += 1;
                     *ancestry_change_detected = true;
                 }
             } else {
-                borrowed_node
-                    .ancestry
-                    .push(AncestrySegment::new(left, right, mapped_node));
+                let seg = AncestrySegment::new(left, right, mapped_node.clone());
+                borrowed_node.ancestry.push(seg);
                 *ancestry_change_detected = true;
             }
-        } else {
-            get_mapped_node(left, right, &borrowed_overlaps, node);
         }
     }
 }

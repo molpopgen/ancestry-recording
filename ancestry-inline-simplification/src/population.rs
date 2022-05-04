@@ -3,6 +3,7 @@ use crate::node_heap::NodeHeap;
 use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
+use hashbrown::HashSet;
 use neutral_evolution::EvolveAncestry;
 
 pub struct Population {
@@ -67,22 +68,16 @@ impl Population {
         self.nodes.is_empty()
     }
 
+    pub fn all_reachable_nodes(&self) -> HashSet<Node> {
+        crate::util::all_reachable_nodes(&self.nodes)
+    }
+
     pub fn num_still_reachable(&self) -> usize {
-        let mut reachable = hashbrown::HashSet::new();
+        self.all_reachable_nodes().len()
+    }
 
-        for node in &self.nodes {
-            let mut stack = vec![node.clone()];
-            while let Some(popped) = stack.pop() {
-                reachable.insert(popped.clone());
-                for parent in &popped.borrow().parents {
-                    if !reachable.contains(parent) {
-                        stack.push(parent.clone());
-                    }
-                }
-            }
-        }
-
-        reachable.len()
+    pub fn validate_graph(&self) -> Result<(), InlineAncestryError> {
+        crate::util::validate_graph(&self.nodes)
     }
 }
 
@@ -160,6 +155,11 @@ impl EvolveAncestry for Population {
             self.genome_length,
             &mut self.node_heap,
         )?;
+
+        #[cfg(debug_assertions)]
+        {
+            self.validate_graph()?;
+        }
 
         assert!(self.node_heap.is_empty());
         Ok(())

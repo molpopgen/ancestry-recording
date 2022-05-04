@@ -79,7 +79,7 @@ impl Node {
     }
 
     pub fn is_alive(&self) -> bool {
-        self.borrow().flags.is_alive()
+        self.borrow().is_alive()
     }
 
     // FIXME: this is not a great fn to error from.
@@ -155,6 +155,10 @@ impl NodeData {
                 true
             }
         });
+    }
+
+    pub fn is_alive(&self) -> bool {
+        self.flags.is_alive()
     }
 }
 

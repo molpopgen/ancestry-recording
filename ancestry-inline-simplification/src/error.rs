@@ -21,4 +21,6 @@ pub enum InlineAncestryError {
     },
     #[error("unexpected dead node")]
     DeadNode,
+    #[error("unreachable child in graph")]
+    UnreachableChild,
 }
