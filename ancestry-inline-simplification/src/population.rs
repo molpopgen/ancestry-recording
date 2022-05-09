@@ -77,7 +77,7 @@ impl Population {
     }
 
     pub fn validate_graph(&self) -> Result<(), InlineAncestryError> {
-        crate::util::validate_graph(&self.nodes)
+        crate::util::validate_graph(&self.nodes, self.genome_length)
     }
 }
 
@@ -85,6 +85,8 @@ impl EvolveAncestry for Population {
     fn genome_length(&self) -> LargeSignedInteger {
         self.genome_length
     }
+
+    fn setup(&mut self, _final_time: LargeSignedInteger) {}
 
     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
         self.replacements.clear();
@@ -106,6 +108,7 @@ impl EvolveAncestry for Population {
     fn record_birth(
         &mut self,
         birth_time: LargeSignedInteger,
+        _final_timepoint: LargeSignedInteger,
         breakpoints: &[neutral_evolution::TransmittedSegment],
     ) -> Result<(), Box<dyn std::error::Error>> {
         assert!(!breakpoints.is_empty());
@@ -136,17 +139,15 @@ impl EvolveAncestry for Population {
         assert_eq!(self.replacements.len(), self.births.len());
         assert!(self.node_heap.is_empty());
 
-        let ndeaths = self.replacements.len();
-
-        for death in 0..ndeaths {
-            let dead = self.nodes[death].clone();
-            let birth = self.births[death].clone();
-            assert_eq!(self.births[death].borrow().birth_time, current_time_point);
-            assert!(self.nodes[death].is_alive());
+        for (i, death) in self.replacements.iter().enumerate() {
+            let dead = self.nodes[*death].clone();
+            let birth = self.births[i].clone();
+            assert_eq!(self.births[i].borrow().birth_time, current_time_point);
+            assert!(self.nodes[*death].is_alive());
             self.node_heap.push_death(dead)?;
             self.node_heap.push_birth(birth.clone())?;
 
-            self.nodes[death] = birth;
+            self.nodes[*death] = birth;
         }
 
         self.births.clear();
