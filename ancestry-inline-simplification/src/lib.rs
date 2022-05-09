@@ -20,5 +20,7 @@ pub mod population;
 // be exported via a pub mod.
 pub use error::InlineAncestryError;
 pub use flags::NodeFlags;
+pub use node::Node;
+pub use node::NodeData;
 pub use node_heap::NodeHeap;
 pub use population::Population;
