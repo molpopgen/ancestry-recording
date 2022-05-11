@@ -123,7 +123,7 @@ impl Node {
         Ok(rv)
     }
 
-    // TODO: instead of pup(crate), this should perhaps be standalone?
+    // TODO: instead of pub(crate), this should perhaps be standalone?
     pub(crate) fn non_overlapping_segments(&self) -> Result<(), InlineAncestryError> {
         let b = self.borrow();
         crate::util::non_overlapping_segments(&b.ancestry)?;

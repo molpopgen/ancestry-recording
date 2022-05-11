@@ -16,6 +16,8 @@ pub enum ParameterError {
 pub trait EvolveAncestry {
     fn genome_length(&self) -> LargeSignedInteger;
 
+    fn setup(&mut self, final_time: LargeSignedInteger);
+
     /// Generate how many deaths (replacements) will occur at this time step.
     fn generate_deaths(&mut self, death: &mut Death) -> usize;
 
@@ -28,6 +30,7 @@ pub trait EvolveAncestry {
     fn record_birth(
         &mut self,
         birth_time: LargeSignedInteger,
+        final_time: LargeSignedInteger,
         breakpoints: &[TransmittedSegment],
     ) -> Result<(), Box<dyn Error>>;
 
@@ -186,6 +189,8 @@ pub fn evolve<N: EvolveAncestry>(
     ));
     let mut death = Death::new(parameters.death_probability, rng.clone());
 
+    population.setup(parameters.nsteps);
+
     let popsize = population.current_population_size();
 
     let parent_picker = rand_distr::Uniform::new(0, popsize);
@@ -203,7 +208,8 @@ pub fn evolve<N: EvolveAncestry>(
             if mendel.sample(mut_borrowed_rng.deref_mut()) {
                 std::mem::swap(&mut p1, &mut p2);
             }
-            let n = num_crossovers.sample(mut_borrowed_rng.deref_mut()) as u64;
+            // let n = num_crossovers.sample(mut_borrowed_rng.deref_mut()) as u64;
+            let n = 1;
             generate_crossover_positions(
                 population.genome_length(),
                 n,
@@ -212,7 +218,7 @@ pub fn evolve<N: EvolveAncestry>(
                 &mut crossovers,
             );
             fill_transmissions(p1, p2, &crossovers, &mut transmissions);
-            population.record_birth(step, &transmissions)?;
+            population.record_birth(step, parameters.nsteps, &transmissions)?;
         }
         population.simplify(step)?;
     }

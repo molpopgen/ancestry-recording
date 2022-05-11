@@ -82,6 +82,7 @@ fn process_overlaps(
 ) {
     let mut borrowed_node = node.borrow_mut();
     for (left, right, overlaps) in overlapper {
+        assert!(left < right);
         let mut mapped_node: Node = node.clone();
         let borrowed_overlaps = overlaps.borrow();
 
@@ -91,12 +92,12 @@ fn process_overlaps(
                 update_child_segments(&mut borrowed_node, &mapped_node, left, right);
             }
         } else {
+            debug_assert!(*node == mapped_node);
             for overlap in borrowed_overlaps.iter() {
                 update_child_segments(&mut borrowed_node, &overlap.mapped_node, left, right);
             }
         }
         if !borrowed_node.is_alive() {
-            assert!(left < right);
             if *output_ancestry_index < input_ancestry_len {
                 // SAFETY: we checked bounds in the if statement
                 let input_ancestry_seg = unsafe {
@@ -110,15 +111,15 @@ fn process_overlaps(
                 {
                     input_ancestry_seg.segment.left = left;
                     input_ancestry_seg.segment.right = right;
-                    input_ancestry_seg.child = mapped_node.clone();
-                    *output_ancestry_index += 1;
+                    input_ancestry_seg.child = mapped_node;
                     *ancestry_change_detected = true;
                 }
             } else {
-                let seg = AncestrySegment::new(left, right, mapped_node.clone());
+                let seg = AncestrySegment::new(left, right, mapped_node);
                 borrowed_node.ancestry.push(seg);
                 *ancestry_change_detected = true;
             }
+            *output_ancestry_index += 1;
         }
     }
 }
@@ -138,6 +139,7 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
 
         for child in borrowed_node.children.keys() {
             let mut mut_borrowed_child = child.borrow_mut();
+            assert!(mut_borrowed_child.parents.contains(node));
             mut_borrowed_child.parents.remove(node);
         }
 
@@ -159,6 +161,8 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
             ancestry_change_detected = true;
         }
     }
+
+    debug_assert!(!node.borrow().parents.contains(node));
 
     for child in node.borrow_mut().children.keys() {
         child.borrow_mut().parents.insert(node.clone());
