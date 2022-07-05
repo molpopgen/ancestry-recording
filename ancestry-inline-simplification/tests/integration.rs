@@ -26,7 +26,7 @@ fn test_simulation_round_trip_nonoverlapping_gens() {
         }
         let r = pop.all_reachable_nodes();
         let tables = tskit::TableCollection::from(evolveable_tables);
-        assert_eq!(r.len(), usize::from(tables.nodes().num_rows()));
+        assert_eq!(r.len(), usize::try_from(tables.nodes().num_rows()).unwrap());
     }
 }
 
@@ -43,7 +43,7 @@ fn test_simulation_round_trip_overlapping_gens() {
             assert!(pop.nodes.iter().any(|i| i.borrow().parents.len() > 0));
             let r = pop.all_reachable_nodes();
             let tables = tskit::TableCollection::from(evolveable_tables);
-            assert_eq!(r.len(), usize::from(tables.nodes().num_rows()));
+            assert_eq!(r.len(), usize::try_from(tables.nodes().num_rows()).unwrap());
         }
     }
 }
