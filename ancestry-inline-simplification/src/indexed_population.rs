@@ -9,29 +9,29 @@ pub struct IndexedPopulation {
 
 impl IndexedPopulation {
     fn add_node(&mut self, birth_time: LargeSignedInteger, parent_indexes: &[usize]) {
-        // FIXME: Should just deal DIRECTLY with the option
-        // We want to re-use stuff that is extinct.
-        let index = self.get_next_node_index();
-
+        //FIXME: parents must exist...
+        //FIXME: increase parent count by 1
         let mut parents = crate::indexed_node::ParentSet::default();
-
         for parent in parent_indexes {
             //FIXME: parents must exist...
             //FIXME: increase parent count by 1
             parents.insert(*parent);
         }
-
-        // FIXME: should be a constructor call
-        let node = crate::indexed_node::Node {
-            index,
-            birth_time,
-            flags: crate::NodeFlags::IS_ALIVE,
-            parents,
-            ancestry: vec![], // FIXME: must map to self
-            children: crate::indexed_node::ChildMap::default(),
-        };
-        self.nodes.push(node);
+        match self.queue.pop() {
+            Some(index) => {
+                // FIXME: this should pass on a set!
+                self.nodes[index].recycle(birth_time, parents);
+                self.counts[index] += 1;
+            }
+            None => {
+                let index = self.nodes.len();
+                self.nodes.push(crate::indexed_node::Node::new_birth(
+                    index, birth_time, parents,
+                ));
+            }
+        }
         self.counts.push(1);
+        debug_assert_eq!(self.nodes.len(), self.counts.len());
     }
 
     fn get_next_node_index(&mut self) -> usize {
