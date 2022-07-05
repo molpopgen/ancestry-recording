@@ -109,7 +109,7 @@ impl EvolvableTableCollection {
             let num_samples = self
                 .tables
                 .nodes_iter()
-                .filter(|n| (n.flags & (tskit::TSK_NODE_IS_SAMPLE as u32)) != 0)
+                .filter(|n| n.flags.contains(tskit::NodeFlags::IS_SAMPLE))
                 .count();
             assert_eq!(num_samples as i32, self.popsize);
             Ok(())
