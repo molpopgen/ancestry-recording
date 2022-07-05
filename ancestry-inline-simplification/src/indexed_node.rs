@@ -1,15 +1,14 @@
 use crate::LargeSignedInteger;
 use crate::NodeFlags;
 use crate::Segment;
-use hashbrown::{HashMap, HashSet};
 
 pub struct AncestrySegment {
     pub segment: Segment,
     pub child: usize,
 }
 
-pub type ChildMap = HashMap<usize, Vec<Segment>>;
-pub type ParentSet = HashSet<usize>;
+pub type ChildMap = nohash_hasher::IntMap<usize, Vec<Segment>>;
+pub type ParentSet = nohash_hasher::IntSet<usize>;
 
 #[derive(Default)]
 pub struct Node {
