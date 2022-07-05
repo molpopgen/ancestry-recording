@@ -27,6 +27,7 @@ impl Node {
         birth_time: LargeSignedInteger,
         parents: ParentSet,
     ) -> Self {
+        unimplemented!("have to have a mapping onto Self here, dawg...");
         Self {
             index,
             birth_time,
