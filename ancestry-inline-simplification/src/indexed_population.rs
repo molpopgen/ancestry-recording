@@ -52,8 +52,7 @@ mod test_indexed_population {
 
     #[test]
     fn test_add_node() {
-        let mut pop = IndexedPopulation::default();
-        pop.genome_length = 10; // FIXME
+        let mut pop = IndexedPopulation::new(2, 10);
         let birth_time: crate::LargeSignedInteger = 1;
         let parent_0 = 0_usize;
         let parent_1 = 1_usize;
