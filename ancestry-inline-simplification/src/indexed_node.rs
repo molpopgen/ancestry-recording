@@ -22,6 +22,7 @@ pub struct Node {
 }
 
 impl Node {
+    // FIXME: fallible b/c of Segment::new
     pub(crate) fn new_birth(
         index: usize,
         birth_time: LargeSignedInteger,
@@ -41,6 +42,7 @@ impl Node {
         }
     }
 
+    // FIXME: fallible b/c of Segment::new
     pub(crate) fn recycle(
         &mut self,
         birth_time: LargeSignedInteger,
