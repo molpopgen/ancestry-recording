@@ -39,8 +39,6 @@ impl IndexedPopulation {
     }
 
     fn add_node(&mut self, birth_time: LargeSignedInteger, parent_indexes: &[usize]) -> usize {
-        //FIXME: parents must exist...
-        //FIXME: increase parent count by 1
         let mut parents = crate::indexed_node::ParentSet::default();
         for parent in parent_indexes {
             //FIXME: parents must exist...
