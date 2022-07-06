@@ -38,7 +38,7 @@ impl IndexedPopulation {
         }
     }
 
-    fn add_node(&mut self, birth_time: LargeSignedInteger, parent_indexes: &[usize]) {
+    fn add_node(&mut self, birth_time: LargeSignedInteger, parent_indexes: &[usize]) -> usize {
         //FIXME: parents must exist...
         //FIXME: increase parent count by 1
         let mut parents = crate::indexed_node::ParentSet::default();
@@ -47,11 +47,12 @@ impl IndexedPopulation {
             //FIXME: increase parent count by 1
             parents.insert(*parent);
         }
-        match self.queue.pop() {
+        let rv = match self.queue.pop() {
             Some(index) => {
                 // FIXME: this should pass on a set!
                 self.nodes[index].recycle(birth_time, self.genome_length, parents);
                 self.counts[index] += 1;
+                index
             }
             None => {
                 let index = self.nodes.len();
@@ -62,9 +63,11 @@ impl IndexedPopulation {
                     parents,
                 ));
                 self.counts.push(1);
+                index
             }
-        }
+        };
         debug_assert_eq!(self.nodes.len(), self.counts.len());
+        rv
     }
 
     fn get_next_node_index(&mut self) -> usize {
@@ -85,7 +88,8 @@ mod test_indexed_population {
         let birth_time: crate::LargeSignedInteger = 1;
         let parent_0 = 0_usize;
         let parent_1 = 1_usize;
-        pop.add_node(birth_time, &[parent_0, parent_1]);
+        let b = pop.add_node(birth_time, &[parent_0, parent_1]);
+        assert_eq!(b, 2);
     }
 
     #[test]
