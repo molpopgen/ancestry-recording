@@ -25,15 +25,18 @@ impl Node {
     pub(crate) fn new_birth(
         index: usize,
         birth_time: LargeSignedInteger,
+        genome_length: LargeSignedInteger,
         parents: ParentSet,
     ) -> Self {
-        unimplemented!("have to have a mapping onto Self here, dawg...");
         Self {
             index,
             birth_time,
             flags: NodeFlags::new_alive(),
             parents,
-            ancestry: vec![], // FIXME: should be a mapping to self, which needs genome length!
+            ancestry: vec![AncestrySegment {
+                segment: Segment::new(0, genome_length).unwrap(),
+                child: index,
+            }], // FIXME: should be a mapping to self, which needs genome length!
             children: ChildMap::default(),
         }
     }

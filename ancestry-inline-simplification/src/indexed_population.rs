@@ -5,6 +5,7 @@ pub struct IndexedPopulation {
     counts: Vec<i32>,
     // FIFO queue to recycle indexes of extinct (zero) counts
     queue: Vec<usize>,
+    genome_length: LargeSignedInteger,
 }
 
 impl IndexedPopulation {
@@ -26,7 +27,10 @@ impl IndexedPopulation {
             None => {
                 let index = self.nodes.len();
                 self.nodes.push(crate::indexed_node::Node::new_birth(
-                    index, birth_time, parents,
+                    index,
+                    birth_time,
+                    self.genome_length,
+                    parents,
                 ));
             }
         }
@@ -49,6 +53,7 @@ mod test_indexed_population {
     #[test]
     fn test_add_node() {
         let mut pop = IndexedPopulation::default();
+        pop.genome_length = 10; // FIXME
         let birth_time: crate::LargeSignedInteger = 1;
         let parent_0 = 0_usize;
         let parent_1 = 1_usize;
