@@ -87,4 +87,14 @@ mod test_indexed_population {
         let parent_1 = 1_usize;
         pop.add_node(birth_time, &[parent_0, parent_1]);
     }
+
+    #[test]
+    fn test_forced_recycling() {
+        let mut pop = IndexedPopulation::new(2, 10).unwrap();
+        let birth_time: crate::LargeSignedInteger = 1;
+        let parent_0 = 0_usize;
+        let parent_1 = 1_usize;
+        pop.queue.push(0); // FIXME: not working via public interface
+        pop.add_node(birth_time, &[parent_0, parent_1]);
+    }
 }
