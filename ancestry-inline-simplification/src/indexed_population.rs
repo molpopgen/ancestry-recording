@@ -101,4 +101,12 @@ mod test_indexed_population {
         pop.queue.push(0); // FIXME: not working via public interface
         pop.add_node(birth_time, &[parent_0, parent_1]);
     }
+
+    #[test]
+    fn test_bad_parents() {
+        let mut pop = IndexedPopulation::new(2, 10).unwrap();
+        let birth_time: crate::LargeSignedInteger = 1;
+        let parent_0 = 0_usize;
+        assert!(pop.add_node(birth_time, &[parent_0]).is_err());
+    }
 }
