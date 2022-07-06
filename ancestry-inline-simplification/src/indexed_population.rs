@@ -1,4 +1,8 @@
+use crate::indexed_node::{Node, ParentSet};
+use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
+use crate::SignedInteger;
+
 #[derive(Default)]
 pub struct IndexedPopulation {
     nodes: Vec<crate::indexed_node::Node>,
@@ -9,6 +13,31 @@ pub struct IndexedPopulation {
 }
 
 impl IndexedPopulation {
+    pub fn new(
+        popsize: SignedInteger,
+        genome_length: LargeSignedInteger,
+    ) -> Result<Self, InlineAncestryError> {
+        if genome_length > 0 {
+            let mut nodes = vec![];
+            let mut counts = vec![];
+
+            for i in 0..popsize {
+                let node = Node::new_birth(i as usize, 0, genome_length, ParentSet::default());
+                nodes.push(node);
+                counts.push(1);
+            }
+
+            Ok(Self {
+                nodes,
+                counts,
+                queue: vec![],
+                genome_length,
+            })
+        } else {
+            Err(InlineAncestryError::InvalidGenomeLength { l: genome_length })
+        }
+    }
+
     fn add_node(&mut self, birth_time: LargeSignedInteger, parent_indexes: &[usize]) {
         //FIXME: parents must exist...
         //FIXME: increase parent count by 1
@@ -52,7 +81,7 @@ mod test_indexed_population {
 
     #[test]
     fn test_add_node() {
-        let mut pop = IndexedPopulation::new(2, 10);
+        let mut pop = IndexedPopulation::new(2, 10).unwrap();
         let birth_time: crate::LargeSignedInteger = 1;
         let parent_0 = 0_usize;
         let parent_1 = 1_usize;
