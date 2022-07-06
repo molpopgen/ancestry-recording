@@ -36,12 +36,25 @@ impl Node {
             ancestry: vec![AncestrySegment {
                 segment: Segment::new(0, genome_length).unwrap(),
                 child: index,
-            }], // FIXME: should be a mapping to self, which needs genome length!
+            }],
             children: ChildMap::default(),
         }
     }
 
-    pub(crate) fn recycle(&mut self, birth_time: LargeSignedInteger, parents: ParentSet) {
-        unimplemented!("recycle not implemented");
+    pub(crate) fn recycle(
+        &mut self,
+        birth_time: LargeSignedInteger,
+        genome_length: LargeSignedInteger,
+        parents: ParentSet,
+    ) {
+        self.ancestry.clear();
+        self.children.clear();
+        let mut p = parents;
+        std::mem::swap(&mut self.parents, &mut p);
+        self.ancestry.push(AncestrySegment {
+            segment: Segment::new(0, genome_length).unwrap(),
+            child: self.index,
+        });
+        self.birth_time = birth_time;
     }
 }

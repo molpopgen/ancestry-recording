@@ -50,7 +50,7 @@ impl IndexedPopulation {
         match self.queue.pop() {
             Some(index) => {
                 // FIXME: this should pass on a set!
-                self.nodes[index].recycle(birth_time, parents);
+                self.nodes[index].recycle(birth_time, self.genome_length, parents);
                 self.counts[index] += 1;
             }
             None => {
@@ -61,9 +61,9 @@ impl IndexedPopulation {
                     self.genome_length,
                     parents,
                 ));
+                self.counts.push(1);
             }
         }
-        self.counts.push(1);
         debug_assert_eq!(self.nodes.len(), self.counts.len());
     }
 
