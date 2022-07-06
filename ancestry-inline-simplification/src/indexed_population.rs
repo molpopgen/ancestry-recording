@@ -44,8 +44,8 @@ impl IndexedPopulation {
         let mut parents = crate::indexed_node::ParentSet::default();
         for parent in parent_indexes {
             //FIXME: parents must exist...
-            //FIXME: increase parent count by 1
             parents.insert(*parent);
+            self.counts[*parent] += 1;
         }
         let rv = match self.queue.pop() {
             Some(index) => {
@@ -90,6 +90,8 @@ mod test_indexed_population {
         let parent_1 = 1_usize;
         let b = pop.add_node(birth_time, &[parent_0, parent_1]);
         assert_eq!(b, 2);
+        assert_eq!(pop.counts[parent_0], 2);
+        assert_eq!(pop.counts[parent_1], 2);
     }
 
     #[test]
