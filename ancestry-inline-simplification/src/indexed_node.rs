@@ -10,6 +10,8 @@ pub struct AncestrySegment {
 pub type ChildMap = nohash_hasher::IntMap<usize, Vec<Segment>>;
 pub type ParentSet = nohash_hasher::IntSet<usize>;
 
+// NOTE: this is probably borrow-checker hell waiting to happen!
+// This stuff will need to be broken up into several Vec<_>.
 #[derive(Default)]
 pub struct Node {
     /// Index of this node in the container
