@@ -26,6 +26,7 @@ pub struct Node {
 #[derive(Default)]
 pub struct NodeTable {
     pub index: Vec<usize>, // Redundant?
+    pub counts: Vec<u32>,
     pub birth_time: Vec<LargeSignedInteger>,
     pub flags: Vec<NodeFlags>,
     pub parents: Vec<ParentSet>,
@@ -47,6 +48,7 @@ impl NodeTable {
     ) -> usize {
         match self.queue.pop() {
             Some(index) => {
+                self.counts[index] = 1;
                 self.birth_time[index] = birth_time;
                 self.flags[index] = NodeFlags::new_alive();
                 self.parents[index] = parents;
@@ -61,6 +63,7 @@ impl NodeTable {
             }
             None => {
                 self.index.push(self.index.len());
+                self.counts.push(1);
                 self.birth_time.push(birth_time);
                 self.flags.push(NodeFlags::new_alive());
                 self.parents.push(parents);
