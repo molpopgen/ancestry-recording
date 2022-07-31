@@ -3,6 +3,7 @@ pub use ancestry_common::{LargeSignedInteger, SignedInteger};
 mod ancestry_overlapper;
 mod error;
 mod flags;
+mod indexed_node_update_ancestry;
 mod node_heap;
 mod propagate_ancestry_changes;
 mod segments;
