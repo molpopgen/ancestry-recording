@@ -38,10 +38,13 @@ impl IndexedPopulation {
         }
     }
 
-    fn add_node(&mut self, birth_time: LargeSignedInteger, parent_indexes: &[usize]) -> usize {
+    fn add_node(&mut self, birth_time: LargeSignedInteger, parent_indexes: &[usize]) -> Result<usize, usize> {
         let mut parents = crate::indexed_node::ParentSet::default();
         for parent in parent_indexes {
             //FIXME: parents must exist...
+            if *parent >= self.nodes.len() {
+                return Err(*parent);
+            }
             parents.insert(*parent);
             self.counts[*parent] += 1;
         }
@@ -65,7 +68,7 @@ impl IndexedPopulation {
             }
         };
         debug_assert_eq!(self.nodes.len(), self.counts.len());
-        rv
+        Ok(rv)
     }
 
     fn get_next_node_index(&mut self) -> usize {
@@ -87,7 +90,7 @@ mod test_indexed_population {
         let parent_0 = 0_usize;
         let parent_1 = 1_usize;
         let b = pop.add_node(birth_time, &[parent_0, parent_1]);
-        assert_eq!(b, 2);
+        assert_eq!(b, Ok(2));
         assert_eq!(pop.counts[parent_0], 2);
         assert_eq!(pop.counts[parent_1], 2);
     }
@@ -106,7 +109,7 @@ mod test_indexed_population {
     fn test_bad_parents() {
         let mut pop = IndexedPopulation::new(2, 10).unwrap();
         let birth_time: crate::LargeSignedInteger = 1;
-        let parent_0 = 0_usize;
+        let parent_0 = 2_usize;
         assert!(pop.add_node(birth_time, &[parent_0]).is_err());
     }
 }
