@@ -45,7 +45,13 @@ impl NodeTable {
         birth_time: LargeSignedInteger,
         genome_length: LargeSignedInteger,
         parents: ParentSet,
-    ) -> usize {
+    ) -> Result<usize, usize> {
+        for p in &parents {
+            if *p >= self.counts.len() { return Err(*p); }
+            if self.birth_time[*p] >= birth_time {
+                return Err(p);
+            }
+        }
         match self.queue.pop() {
             Some(index) => {
                 self.counts[index] = 1;
@@ -58,8 +64,7 @@ impl NodeTable {
                     child: index,
                 });
                 self.children[index].clear();
-
-                index
+                Ok(index)
             }
             None => {
                 self.index.push(self.index.len());
@@ -72,8 +77,7 @@ impl NodeTable {
                     child: self.index.len() - 1,
                 }]);
                 self.children.push(ChildMap::default());
-
-                self.index.len() - 1
+                Ok(self.index.len() - 1)
             }
         }
     }

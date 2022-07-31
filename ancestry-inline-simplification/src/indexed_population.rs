@@ -1,14 +1,11 @@
-use crate::indexed_node::{Node, ParentSet};
+use crate::indexed_node::{NodeTable, ParentSet};
 use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
 
 #[derive(Default)]
 pub struct IndexedPopulation {
-    nodes: Vec<crate::indexed_node::Node>,
-    counts: Vec<i32>,
-    // FIFO queue to recycle indexes of extinct (zero) counts
-    queue: Vec<usize>,
+    nodes: NodeTable,
     genome_length: LargeSignedInteger,
 }
 
@@ -18,19 +15,18 @@ impl IndexedPopulation {
         genome_length: LargeSignedInteger,
     ) -> Result<Self, InlineAncestryError> {
         if genome_length > 0 {
-            let mut nodes = vec![];
-            let mut counts = vec![];
+            let mut nodes = NodeTable::default();
 
             for i in 0..popsize {
-                let node = Node::new_birth(i as usize, 0, genome_length, ParentSet::default());
-                nodes.push(node);
-                counts.push(1);
+                let node = nodes.new_birth(0, genome_length, ParentSet::default());
+                match node {
+                    Ok(v) => assert_eq!(v, i as usize),
+                    Err(v) => panic!("{}", v), // Should be an error.
+                }
             }
 
             Ok(Self {
                 nodes,
-                counts,
-                queue: vec![],
                 genome_length,
             })
         } else {
@@ -38,44 +34,16 @@ impl IndexedPopulation {
         }
     }
 
-    fn add_node(&mut self, birth_time: LargeSignedInteger, parent_indexes: &[usize]) -> Result<usize, usize> {
-        let mut parents = crate::indexed_node::ParentSet::default();
-        for parent in parent_indexes {
-            //FIXME: parents must exist...
-            if *parent >= self.nodes.len() {
-                return Err(*parent);
-            }
-            parents.insert(*parent);
-            self.counts[*parent] += 1;
-        }
-        let rv = match self.queue.pop() {
-            Some(index) => {
-                // FIXME: this should pass on a set!
-                self.nodes[index].recycle(birth_time, self.genome_length, parents);
-                self.counts[index] += 1;
-                index
-            }
-            None => {
-                let index = self.nodes.len();
-                self.nodes.push(crate::indexed_node::Node::new_birth(
-                    index,
-                    birth_time,
-                    self.genome_length,
-                    parents,
-                ));
-                self.counts.push(1);
-                index
-            }
-        };
-        debug_assert_eq!(self.nodes.len(), self.counts.len());
-        Ok(rv)
-    }
-
-    fn get_next_node_index(&mut self) -> usize {
-        match self.queue.pop() {
-            Some(value) => value,
-            None => self.nodes.len(),
-        }
+    fn add_birth(
+        &mut self,
+        birth_time: LargeSignedInteger,
+        parent_indexes: &[usize],
+    ) -> Result<usize, usize> {
+        self.nodes.new_birth(
+            birth_time,
+            self.genome_length,
+            ParentSet::from_iter(parent_indexes.iter().map(|v| *v)),
+        )
     }
 }
 
