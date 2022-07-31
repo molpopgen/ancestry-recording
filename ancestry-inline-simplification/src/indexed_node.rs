@@ -49,7 +49,7 @@ impl NodeTable {
         for p in &parents {
             if *p >= self.counts.len() { return Err(*p); }
             if self.birth_time[*p] >= birth_time {
-                return Err(p);
+                return Err(*p);
             }
         }
         match self.queue.pop() {
