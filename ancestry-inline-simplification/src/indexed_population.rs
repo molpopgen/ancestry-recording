@@ -59,11 +59,18 @@ mod test_indexed_population {
         let parent_1 = 1_usize;
         let b = pop.add_birth(birth_time, &[parent_0, parent_1]);
         assert_eq!(b, Ok(2));
-        assert_eq!(pop.nodes.counts[parent_0], 2); // DESIGN ?? -- do we want to do this at birth,
-                                                   // or just when simplification happens?
-                                                   // Likely the latter, else we do a bunch of
-                                                   // stuff multiple times.
-        assert_eq!(pop.nodes.counts[parent_1], 2);
+
+        // DESIGN NOTE:
+        // Adding a birth DOES NOT increase the
+        // reference count of a parent!!!!!!!!!!!!!!!!!!!!!!!!!
+        // Simplification will handle that later!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+        // The reason is:
+        // 1. We do births, update ref counts.
+        // 2. We simplify, which will first (probably?) set ref counts to zero.
+        // 3. During simplification, we increment the ref counts.
+        // 4. Let's not do the same stuff over and over.
+        assert_eq!(pop.nodes.counts[parent_0], 1); 
+        assert_eq!(pop.nodes.counts[parent_1], 1);
     }
 
     //#[test]
