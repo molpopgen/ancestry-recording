@@ -231,14 +231,7 @@ mod overlapper_tests {
             match self.data.pop() {
                 Some(pos) => Some(
                     pos.into_iter()
-                        .map(|p| {
-                            AncestryIntersection::new(
-                                p.0,
-                                p.1,
-                                Node::new_alive(0, 1),
-                                Node::new_alive(0, 1),
-                            )
-                        })
+                        .map(|p| AncestryIntersection::new(p.0, p.1, 0, 0))
                         .collect::<Vec<AncestryIntersection>>(),
                 ),
                 None => None,
