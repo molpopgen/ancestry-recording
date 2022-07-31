@@ -1,11 +1,11 @@
 use crate::{
-    indexed_node::NodeTable, Segment, HalfOpenInterval, LargeSignedInteger,
-    SignedInteger,
+    indexed_node::NodeTable, HalfOpenInterval, LargeSignedInteger, Segment, SignedInteger,
 };
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::rc::Rc;
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AncestrySegment {
     pub segment: Segment,
     pub child: usize,
@@ -20,8 +20,8 @@ impl AncestrySegment {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
-struct AncestryIntersection {
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct AncestryIntersection {
     pub ancestry_segment: AncestrySegment,
     pub mapped_node: usize,
 }
@@ -39,6 +39,42 @@ impl AncestryIntersection {
         }
     }
 }
+
+macro_rules! impl_ord_partial_ord_for_half_open_interval {
+    ($type: ty) => {
+        impl Ord for $type {
+            fn cmp(&self, other: &Self) -> Ordering {
+                self.left().cmp(&other.left())
+            }
+        }
+
+        impl PartialOrd for $type {
+            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+    };
+}
+
+macro_rules! impl_half_open_interval {
+    ($type: ty, $field: ident) => {
+        impl HalfOpenInterval for $type {
+            fn left(&self) -> LargeSignedInteger {
+                self.$field.left()
+            }
+            fn right(&self) -> LargeSignedInteger {
+                self.$field.right()
+            }
+        }
+    };
+}
+
+impl_half_open_interval!(AncestrySegment, segment);
+impl_half_open_interval!(AncestryIntersection, ancestry_segment);
+
+// impl_ord_partial_ord_for_half_open_interval!(Segment);
+impl_ord_partial_ord_for_half_open_interval!(AncestrySegment);
+impl_ord_partial_ord_for_half_open_interval!(AncestryIntersection);
 
 ///
 /// # Panics
@@ -70,8 +106,8 @@ impl AncestryOverlapper {
             LargeSignedInteger::MAX,
             // NOTE: dummy node here to avoid using Option globally for
             // child field of Overlap
-            Node::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
-            Node::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
+            usize::MAX,
+            usize::MAX,
         ));
         let right = intersections[0].left();
         Self {

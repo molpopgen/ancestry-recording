@@ -11,7 +11,7 @@ pub(crate) trait HalfOpenInterval {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct Segment {
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
