@@ -262,10 +262,10 @@ fn update_child_segments(
 #[inline(never)]
 fn process_overlaps(
     input_ancestry_len: usize,
-    output_ancestry_index: &mut usize,
-    ancestry_change_detected: &mut bool,
     node_index: usize,
     flags: &[crate::NodeFlags],
+    output_ancestry_index: &mut usize,
+    ancestry_change_detected: &mut bool,
     overlapper: &mut AncestryOverlapper,
     children: &mut [crate::indexed_node::ChildMap],
     ancestry: &mut [Vec<crate::indexed_node::AncestrySegment>],
@@ -319,6 +319,9 @@ pub(crate) fn update_ancestry(
 ) -> bool {
     let mut changed = false;
     let mut overlapper = make_overlapper(node_index, ancestry, children);
+    let input_ancestry_len = ancestry[node_index].len();
+    let mut output_ancestry_index: usize = 0;
+    let mut ancestry_change_detected = false;
 
     // remove current node from parents set of children
     for child in children[node_index].iter() {
@@ -326,6 +329,17 @@ pub(crate) fn update_ancestry(
         parents[*child.0].remove(&node_index);
     }
     children[node_index].clear(); // It'd be nice to not do this.
+
+    process_overlaps(
+        input_ancestry_len,
+        node_index,
+        flags,
+        &mut output_ancestry_index,
+        &mut ancestry_change_detected,
+        &mut overlapper,
+        children,
+        ancestry,
+    );
 
     changed
 }
