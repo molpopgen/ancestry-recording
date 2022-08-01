@@ -136,6 +136,7 @@ impl EvolveAncestry for Population {
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        // NOTE: this is wrong for growing pops, etc..
         assert_eq!(self.replacements.len(), self.births.len());
         assert!(self.node_heap.is_empty());
 

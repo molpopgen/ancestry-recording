@@ -4,7 +4,7 @@ use hashbrown::HashSet;
 use std::collections::BinaryHeap;
 
 #[derive(PartialEq, PartialOrd, Ord, Eq, Debug, Clone, Copy)]
-enum NodeType {
+pub enum NodeType {
     Parent,
     Birth,
     Death,

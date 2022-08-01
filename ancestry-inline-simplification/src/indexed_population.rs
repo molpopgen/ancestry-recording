@@ -1,14 +1,17 @@
 use crate::indexed_node::{NodeTable, ParentSet};
+use crate::node_heap::NodeType;
+use crate::HalfOpenInterval;
 use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
 // use neutral_evolution::EvolveAncestry;
 use std::collections::BinaryHeap;
 
+#[derive(Debug)]
 struct PrioritizedNode {
     index: usize,
     birth_time: LargeSignedInteger,
-    node_type: crate::node_heap::NodeType,
+    node_type: NodeType,
 }
 
 impl PartialEq for PrioritizedNode {
@@ -17,15 +20,22 @@ impl PartialEq for PrioritizedNode {
     }
 }
 
+impl Eq for PrioritizedNode {}
+
 impl PartialOrd for PrioritizedNode {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some((self.birth_time, self.node_type).cmp(&(other.birth_time, other.node_type)))
     }
 }
 
-pub struct NodeHeap {
-    heap: BinaryHeap<PrioritizedNode>,
+impl Ord for PrioritizedNode {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
 }
+
+#[derive(Debug, Default)]
+pub struct NodeHeap(BinaryHeap<PrioritizedNode>);
 
 #[derive(Default)]
 pub struct IndexedPopulation {
@@ -34,6 +44,7 @@ pub struct IndexedPopulation {
     pub births: Vec<usize>,
     pub deaths: Vec<usize>,
     pub next_replacement: usize,
+    pub heap: NodeHeap,
 }
 
 impl IndexedPopulation {
@@ -58,6 +69,7 @@ impl IndexedPopulation {
                 births: vec![],
                 deaths: vec![],
                 next_replacement: 0,
+                heap: NodeHeap::default(),
             })
         } else {
             Err(InlineAncestryError::InvalidGenomeLength { l: genome_length })
@@ -80,6 +92,57 @@ impl IndexedPopulation {
             }
             Err(b) => Err(b),
         }
+    }
+
+    fn kill(&mut self, index: usize) {
+        assert!(index < self.nodes.counts.len());
+        self.nodes.flags[index].clear_alive();
+        self.nodes.ancestry[index].retain(|a| {
+            if a.left() == 0 && a.right() == self.genome_length {
+                false
+            } else {
+                true
+            }
+        });
+    }
+
+    fn propagate_ancestry_changes(&mut self) -> Result<(), InlineAncestryError> {
+        // Set all counts to zero == setting all output node IDs to NULL.
+        self.nodes.counts.fill(0);
+        while let Some(node) = self.heap.0.pop() {
+            if matches!(node.node_type, NodeType::Death) {
+                self.kill(node.index);
+            }
+        }
+        Ok(())
+    }
+
+    fn simplify(
+        &mut self,
+        current_time_point: LargeSignedInteger,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        //assert_eq!(self.deaths.len(), self.births.len()); // NOTE: this is wrong for growing pops, etc..
+        assert!(self.heap.0.is_empty());
+
+        for b in self.births.iter() {
+            self.heap.0.push(PrioritizedNode {
+                index: *b,
+                birth_time: self.nodes.birth_time[*b],
+                node_type: NodeType::Birth,
+            });
+        }
+        for d in self.deaths.iter() {
+            self.heap.0.push(PrioritizedNode {
+                index: *d,
+                birth_time: self.nodes.birth_time[*d],
+                node_type: NodeType::Death,
+            });
+        }
+        self.births.clear();
+
+        assert!(self.heap.0.is_empty());
+
+        Ok(())
     }
 }
 

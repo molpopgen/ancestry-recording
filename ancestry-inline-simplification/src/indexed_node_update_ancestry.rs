@@ -1,24 +1,10 @@
 use crate::{
-    indexed_node::NodeTable, HalfOpenInterval, LargeSignedInteger, Segment, SignedInteger,
+    indexed_node::AncestrySegment, indexed_node::NodeTable, HalfOpenInterval, LargeSignedInteger,
+    Segment, SignedInteger,
 };
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct AncestrySegment {
-    pub segment: Segment,
-    pub child: usize,
-}
-
-impl AncestrySegment {
-    pub fn new(left: LargeSignedInteger, right: LargeSignedInteger, child: usize) -> Self {
-        Self {
-            segment: Segment::new_unchecked(left, right),
-            child,
-        }
-    }
-}
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AncestryIntersection {
@@ -69,7 +55,6 @@ macro_rules! impl_half_open_interval {
     };
 }
 
-impl_half_open_interval!(AncestrySegment, segment);
 impl_half_open_interval!(AncestryIntersection, ancestry_segment);
 
 // impl_ord_partial_ord_for_half_open_interval!(Segment);

@@ -1,11 +1,37 @@
+use crate::HalfOpenInterval;
 use crate::LargeSignedInteger;
 use crate::NodeFlags;
 use crate::Segment;
 
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AncestrySegment {
     pub segment: Segment,
     pub child: usize,
 }
+
+impl AncestrySegment {
+    pub fn new(left: LargeSignedInteger, right: LargeSignedInteger, child: usize) -> Self {
+        Self {
+            segment: Segment::new_unchecked(left, right),
+            child,
+        }
+    }
+}
+
+macro_rules! impl_half_open_interval {
+    ($type: ty, $field: ident) => {
+        impl HalfOpenInterval for $type {
+            fn left(&self) -> LargeSignedInteger {
+                self.$field.left()
+            }
+            fn right(&self) -> LargeSignedInteger {
+                self.$field.right()
+            }
+        }
+    };
+}
+
+impl_half_open_interval!(AncestrySegment, segment);
 
 pub type ChildMap = nohash_hasher::IntMap<usize, Vec<Segment>>;
 pub type ParentSet = nohash_hasher::IntSet<usize>;
@@ -34,7 +60,9 @@ impl NodeTable {
         parents: ParentSet,
     ) -> Result<usize, usize> {
         for p in &parents {
-            if *p >= self.counts.len() { return Err(*p); }
+            if *p >= self.counts.len() {
+                return Err(*p);
+            }
             if self.birth_time[*p] >= birth_time {
                 return Err(*p);
             }
