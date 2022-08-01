@@ -3,6 +3,29 @@ use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
 // use neutral_evolution::EvolveAncestry;
+use std::collections::BinaryHeap;
+
+struct PrioritizedNode {
+    index: usize,
+    birth_time: LargeSignedInteger,
+    node_type: crate::node_heap::NodeType,
+}
+
+impl PartialEq for PrioritizedNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.index == other.index
+    }
+}
+
+impl PartialOrd for PrioritizedNode {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some((self.birth_time, self.node_type).cmp(&(other.birth_time, other.node_type)))
+    }
+}
+
+pub struct NodeHeap {
+    heap: BinaryHeap<PrioritizedNode>,
+}
 
 #[derive(Default)]
 pub struct IndexedPopulation {
@@ -109,20 +132,20 @@ mod test_indexed_population {
 //     fn genome_length(&self) -> LargeSignedInteger {
 //         self.genome_length
 //     }
-// 
+//
 //     fn setup(&mut self, _final_time: LargeSignedInteger) {}
-// 
+//
 //     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
 //         self.replacements.clear();
 //         self.next_replacement = 0;
-// 
+//
 //         // FIXME: this is wrong
 //         for i in 0..self.nodes.counts.len() {
 //             if death.dies() {
 //                 self.replacements.push(i);
 //             }
 //         }
-// 
+//
 //         self.replacements.len()
 //     }
 // }
