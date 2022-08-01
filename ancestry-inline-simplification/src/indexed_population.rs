@@ -2,12 +2,15 @@ use crate::indexed_node::{NodeTable, ParentSet};
 use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
+// use neutral_evolution::EvolveAncestry;
 
 #[derive(Default)]
 pub struct IndexedPopulation {
     pub nodes: NodeTable,
     pub genome_length: LargeSignedInteger,
     pub births: Vec<usize>,
+    pub replacements: Vec<usize>,
+    pub next_replacement: usize,
 }
 
 impl IndexedPopulation {
@@ -30,6 +33,8 @@ impl IndexedPopulation {
                 nodes,
                 genome_length,
                 births: vec![],
+                replacements: vec![],
+                next_replacement: 0,
             })
         } else {
             Err(InlineAncestryError::InvalidGenomeLength { l: genome_length })
@@ -99,3 +104,25 @@ mod test_indexed_population {
         assert!(pop.add_birth(birth_time, &[parent_0]).is_err());
     }
 }
+
+// impl EvolveAncestry for IndexedPopulation {
+//     fn genome_length(&self) -> LargeSignedInteger {
+//         self.genome_length
+//     }
+// 
+//     fn setup(&mut self, _final_time: LargeSignedInteger) {}
+// 
+//     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
+//         self.replacements.clear();
+//         self.next_replacement = 0;
+// 
+//         // FIXME: this is wrong
+//         for i in 0..self.nodes.counts.len() {
+//             if death.dies() {
+//                 self.replacements.push(i);
+//             }
+//         }
+// 
+//         self.replacements.len()
+//     }
+// }
