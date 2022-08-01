@@ -7,6 +7,7 @@ use crate::SignedInteger;
 pub struct IndexedPopulation {
     pub nodes: NodeTable,
     pub genome_length: LargeSignedInteger,
+    pub births: Vec<usize>,
 }
 
 impl IndexedPopulation {
@@ -28,6 +29,7 @@ impl IndexedPopulation {
             Ok(Self {
                 nodes,
                 genome_length,
+                births: vec![],
             })
         } else {
             Err(InlineAncestryError::InvalidGenomeLength { l: genome_length })
@@ -39,11 +41,17 @@ impl IndexedPopulation {
         birth_time: LargeSignedInteger,
         parent_indexes: &[usize],
     ) -> Result<usize, usize> {
-        self.nodes.new_birth(
+        match self.nodes.new_birth(
             birth_time,
             self.genome_length,
             ParentSet::from_iter(parent_indexes.iter().map(|v| *v)),
-        )
+        ) {
+            Ok(b) => {
+                self.births.push(b);
+                Ok(b)
+            }
+            Err(b) => Err(b),
+        }
     }
 }
 
@@ -69,7 +77,7 @@ mod test_indexed_population {
         // 2. We simplify, which will first (probably?) set ref counts to zero.
         // 3. During simplification, we increment the ref counts.
         // 4. Let's not do the same stuff over and over.
-        assert_eq!(pop.nodes.counts[parent_0], 1); 
+        assert_eq!(pop.nodes.counts[parent_0], 1);
         assert_eq!(pop.nodes.counts[parent_1], 1);
     }
 
