@@ -115,6 +115,14 @@ impl IndexedPopulation {
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
+            let changed = crate::indexed_node_update_ancestry::update_ancestry(
+                node.index,
+                &self.nodes.flags,
+                &mut self.nodes.ancestry,
+                &mut self.nodes.parents,
+                &mut self.nodes.children,
+            );
+            unimplemented!("we need to update the counts at some point");
         }
         Ok(())
     }
