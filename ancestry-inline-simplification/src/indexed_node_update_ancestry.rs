@@ -317,7 +317,6 @@ pub(crate) fn update_ancestry(
     parents: &mut [crate::indexed_node::ParentSet],
     children: &mut [crate::indexed_node::ChildMap],
 ) -> bool {
-    let mut changed = false;
     let mut overlapper = make_overlapper(node_index, ancestry, children);
     let input_ancestry_len = ancestry[node_index].len();
     let mut output_ancestry_index: usize = 0;
@@ -341,7 +340,19 @@ pub(crate) fn update_ancestry(
         ancestry,
     );
 
-    changed
+    if !flags[node_index].is_alive() {
+        // Remove trailing input ancestry
+        if output_ancestry_index < input_ancestry_len {
+            ancestry[node_index].truncate(output_ancestry_index);
+            ancestry_change_detected = true;
+        }
+    }
+
+    for child in children[node_index].keys() {
+        parents[*child].insert(node_index);
+    }
+
+    ancestry_change_detected || ancestry[node_index].is_empty()
 }
 
 #[cfg(test)]
