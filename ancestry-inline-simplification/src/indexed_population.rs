@@ -109,7 +109,7 @@ impl IndexedPopulation {
     fn propagate_ancestry_changes(&mut self) -> Result<(), InlineAncestryError> {
         // Set all counts to zero == setting all output node IDs to NULL.
         self.nodes.counts.fill(0);
-        let mut node_in_queue = vec![0_usize; self.nodes.counts.len()];
+        let mut node_in_queue = vec![0_usize; self.nodes.counts.len()]; // NOTE: this should be stored elsewhere to reuse the memory each time!!!!!!!!!!!
         while let Some(node) = self.heap.0.pop() {
             node_in_queue[node.index] = 0;
             if matches!(node.node_type, NodeType::Death) {
