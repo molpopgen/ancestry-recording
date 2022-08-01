@@ -191,6 +191,145 @@ impl Iterator for AncestryOverlapper {
     }
 }
 
+#[inline(never)]
+fn intersecting_ancestry(
+    node_index: usize,
+    ancestry: &[Vec<crate::indexed_node::AncestrySegment>],
+    children: &[crate::indexed_node::ChildMap],
+) -> Vec<AncestryIntersection> {
+    let mut rv = vec![];
+
+    for (child, segs) in &children[node_index] {
+        assert!(!segs.is_empty());
+        for seg in segs.iter() {
+            for x in ancestry[*child].iter() {
+                if x.overlaps(seg) {
+                    rv.push(AncestryIntersection::new(
+                        std::cmp::max(x.left(), seg.left()),
+                        std::cmp::min(x.right(), seg.right()),
+                        *child,
+                        x.child,
+                    ));
+                }
+            }
+        }
+    }
+
+    rv
+}
+#[inline(never)]
+fn make_overlapper(
+    node_index: usize,
+    ancestry: &[Vec<crate::indexed_node::AncestrySegment>],
+    children: &[crate::indexed_node::ChildMap],
+) -> AncestryOverlapper {
+    let intersection = intersecting_ancestry(node_index, ancestry, children);
+    AncestryOverlapper::new(intersection)
+}
+#[inline(never)]
+fn update_child_segments(
+    node_index: usize,
+    child: usize,
+    left: LargeSignedInteger,
+    right: LargeSignedInteger,
+    children: &mut [crate::indexed_node::ChildMap],
+) {
+    match children[node_index].get_mut(&child) {
+        Some(segs) => {
+            let need_push = match segs.last_mut() {
+                Some(seg) => {
+                    if seg.right == left {
+                        seg.right = right; // Squash child segs as we go.
+                        false
+                    } else {
+                        true
+                    }
+                }
+                None => true,
+            };
+            if need_push {
+                let seg = Segment::new(left, right).unwrap();
+                segs.push(seg);
+            }
+        }
+        None => {
+            let seg = Segment::new(left, right).unwrap();
+            children[node_index].insert(child.clone(), vec![seg]);
+        }
+    }
+}
+
+#[inline(never)]
+fn process_overlaps(
+    input_ancestry_len: usize,
+    output_ancestry_index: &mut usize,
+    ancestry_change_detected: &mut bool,
+    node_index: usize,
+    flags: &[crate::NodeFlags],
+    overlapper: &mut AncestryOverlapper,
+    children: &mut [crate::indexed_node::ChildMap],
+    ancestry: &mut [Vec<crate::indexed_node::AncestrySegment>],
+) {
+    for (left, right, overlaps) in overlapper {
+        assert!(left < right);
+        let mut mapped_node = node_index;
+        let borrowed_overlaps = overlaps.borrow();
+
+        if borrowed_overlaps.len() == 1 {
+            mapped_node = borrowed_overlaps[0].mapped_node;
+            if flags[node_index].is_alive() {
+                update_child_segments(node_index, mapped_node, left, right, children);
+            }
+        } else {
+            debug_assert_eq!(mapped_node, node_index);
+            for overlap in borrowed_overlaps.iter() {
+                update_child_segments(node_index, overlap.mapped_node, left, right, children);
+            }
+        }
+        if !flags[node_index].is_alive() {
+            if *output_ancestry_index < input_ancestry_len {
+                // SAFETY: we just checked the bounds
+                let input_ancestry_seg =
+                    unsafe { ancestry[node_index].get_unchecked_mut(*output_ancestry_index) };
+                if input_ancestry_seg.left() != left
+                    || input_ancestry_seg.right() != right
+                    || input_ancestry_seg.child != mapped_node
+                {
+                    input_ancestry_seg.segment.left = left;
+                    input_ancestry_seg.segment.right = right;
+                    input_ancestry_seg.child = mapped_node;
+                    *ancestry_change_detected = true;
+                }
+            } else {
+                let seg = AncestrySegment::new(left, right, mapped_node);
+                ancestry[node_index].push(seg);
+                *ancestry_change_detected = true;
+            }
+            *output_ancestry_index += 1;
+        }
+    }
+}
+
+pub(crate) fn update_ancestry(
+    node_index: usize,
+    flags: &[crate::NodeFlags],
+    ancestry: &mut [Vec<crate::indexed_node::AncestrySegment>],
+    parents: &mut [crate::indexed_node::ParentSet],
+    children: &mut [crate::indexed_node::ChildMap],
+) -> bool {
+    let mut changed = false;
+    let mut overlapper = make_overlapper(node_index, ancestry, children);
+
+    // remove current node from parents set of children
+    for child in children[node_index].iter() {
+        assert!(parents[*child.0].contains(&node_index));
+        parents[*child.0].remove(&node_index);
+    }
+    children[node_index].clear(); // It'd be nice to not do this.
+
+    changed
+}
+
 #[cfg(test)]
 mod overlapper_tests {
     use super::*;
