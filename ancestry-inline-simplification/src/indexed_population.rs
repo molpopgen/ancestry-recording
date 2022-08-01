@@ -32,7 +32,7 @@ pub struct IndexedPopulation {
     pub nodes: NodeTable,
     pub genome_length: LargeSignedInteger,
     pub births: Vec<usize>,
-    pub replacements: Vec<usize>,
+    pub deaths: Vec<usize>,
     pub next_replacement: usize,
 }
 
@@ -56,7 +56,7 @@ impl IndexedPopulation {
                 nodes,
                 genome_length,
                 births: vec![],
-                replacements: vec![],
+                deaths: vec![],
                 next_replacement: 0,
             })
         } else {
