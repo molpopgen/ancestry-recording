@@ -56,19 +56,23 @@ impl IndexedPopulation {
         if genome_length > 0 {
             let mut nodes = NodeTable::default();
 
+            let mut alive_nodes = vec![];
+            let mut births = vec![];
             for i in 0..popsize {
                 let node = nodes.new_birth(0, genome_length);
                 match node {
                     Ok(v) => assert_eq!(v, i as usize),
                     Err(v) => panic!("{}", v), // Should be an error.
                 }
+                alive_nodes.push(i as usize);
+                births.push(i as usize);
             }
 
             Ok(Self {
                 nodes,
                 genome_length,
-                alive_nodes: vec![],
-                births: vec![],
+                alive_nodes,
+                births,
                 deaths: vec![],
                 next_replacement: vec![],
                 heap: NodeHeap::default(),
@@ -182,51 +186,6 @@ impl IndexedPopulation {
         assert!(self.heap.0.is_empty());
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test_indexed_population {
-    use super::*;
-
-    #[test]
-    fn test_add_node() {
-        let mut pop = IndexedPopulation::new(2, 10).unwrap();
-        let birth_time: crate::LargeSignedInteger = 1;
-        let parent_0 = 0_usize;
-        let parent_1 = 1_usize;
-        let b = pop.add_birth(birth_time, &[parent_0, parent_1]);
-        assert_eq!(b, Ok(2));
-
-        // DESIGN NOTE:
-        // Adding a birth DOES NOT increase the
-        // reference count of a parent!!!!!!!!!!!!!!!!!!!!!!!!!
-        // Simplification will handle that later!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-        // The reason is:
-        // 1. We do births, update ref counts.
-        // 2. We simplify, which will first (probably?) set ref counts to zero.
-        // 3. During simplification, we increment the ref counts.
-        // 4. Let's not do the same stuff over and over.
-        assert_eq!(pop.nodes.counts[parent_0], 1);
-        assert_eq!(pop.nodes.counts[parent_1], 1);
-    }
-
-    //#[test]
-    //fn test_forced_recycling() {
-    //    let mut pop = IndexedPopulation::new(2, 10).unwrap();
-    //    let birth_time: crate::LargeSignedInteger = 1;
-    //    let parent_0 = 0_usize;
-    //    let parent_1 = 1_usize;
-    //    // pop.queue.push(0); // FIXME: not working via public interface
-    //    pop.add_birth(birth_time, &[parent_0, parent_1]).unwrap();
-    //}
-
-    #[test]
-    fn test_bad_parents() {
-        let mut pop = IndexedPopulation::new(2, 10).unwrap();
-        let birth_time: crate::LargeSignedInteger = 1;
-        let parent_0 = 2_usize;
-        assert!(pop.add_birth(birth_time, &[parent_0]).is_err());
     }
 }
 
