@@ -175,11 +175,13 @@ impl IndexedPopulation {
         // indexes (e.g., an index previously entered
         // but did not get recycled in the last round).
         self.nodes.queue.clear();
+        let mut reachable = 0; 
         for (i, c) in self.nodes.counts.iter().enumerate() {
             if *c == 0 {
                 self.nodes.queue.push(i);
-            }
+            } else { reachable+=1;}
         }
+        println!("{} {}", current_time_point, reachable);
 
         assert!(self.heap.0.is_empty());
 
