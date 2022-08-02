@@ -162,6 +162,17 @@ impl IndexedPopulation {
                 }
                 println!("{} {}", node.index, self.nodes.counts[node.index]);
             }
+
+            #[cfg(debug_assertions)]
+            {
+                if self.nodes.ancestry[node.index].is_empty() {
+                    assert!(self.nodes.children[node.index].is_empty());
+                    for (i, p) in self.nodes.parents.iter().enumerate() {
+                        assert!(p.get(&node.index).is_none(), "{} <-> {}", i, node.index);
+                    }
+                }
+            }
+
             if changed || self.nodes.flags[node.index].is_alive() {
                 for parent in self.nodes.parents[node.index].iter() {
                     assert_ne!(*parent, node.index);
