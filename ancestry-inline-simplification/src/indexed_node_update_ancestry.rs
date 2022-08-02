@@ -217,6 +217,7 @@ fn intersecting_ancestry(
 
     rv
 }
+
 #[inline(never)]
 fn make_overlapper(
     node_index: usize,
@@ -226,6 +227,7 @@ fn make_overlapper(
     let intersection = intersecting_ancestry(node_index, ancestry, children);
     AncestryOverlapper::new(intersection)
 }
+
 #[inline(never)]
 fn update_child_segments(
     node_index: usize,
