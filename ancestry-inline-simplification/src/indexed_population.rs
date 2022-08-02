@@ -141,6 +141,7 @@ impl IndexedPopulation {
                 }
             }
         }
+        println!("{:?}", self.nodes);
         Ok(())
     }
 

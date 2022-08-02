@@ -36,7 +36,7 @@ impl_half_open_interval!(AncestrySegment, segment);
 pub type ChildMap = nohash_hasher::IntMap<usize, Vec<Segment>>;
 pub type ParentSet = nohash_hasher::IntSet<usize>;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct NodeTable {
     pub index: Vec<usize>, // Redundant?
     pub counts: Vec<u32>,
