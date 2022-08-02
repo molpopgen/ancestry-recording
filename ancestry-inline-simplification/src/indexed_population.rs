@@ -4,7 +4,7 @@ use crate::HalfOpenInterval;
 use crate::InlineAncestryError;
 use crate::LargeSignedInteger;
 use crate::SignedInteger;
-// use neutral_evolution::EvolveAncestry;
+use neutral_evolution::EvolveAncestry;
 use std::collections::BinaryHeap;
 
 #[derive(Debug)]
@@ -41,9 +41,10 @@ pub struct NodeHeap(BinaryHeap<PrioritizedNode>);
 pub struct IndexedPopulation {
     pub nodes: NodeTable,
     pub genome_length: LargeSignedInteger,
+    pub alive_nodes: Vec<usize>,
     pub births: Vec<usize>,
     pub deaths: Vec<usize>,
-    pub next_replacement: usize,
+    pub next_replacement: Vec<usize>,
     pub heap: NodeHeap,
 }
 
@@ -66,9 +67,10 @@ impl IndexedPopulation {
             Ok(Self {
                 nodes,
                 genome_length,
+                alive_nodes: vec![],
                 births: vec![],
                 deaths: vec![],
-                next_replacement: 0,
+                next_replacement: vec![],
                 heap: NodeHeap::default(),
             })
         } else {
@@ -235,24 +237,51 @@ mod test_indexed_population {
     }
 }
 
-// impl EvolveAncestry for IndexedPopulation {
-//     fn genome_length(&self) -> LargeSignedInteger {
-//         self.genome_length
-//     }
-//
-//     fn setup(&mut self, _final_time: LargeSignedInteger) {}
-//
-//     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
-//         self.replacements.clear();
-//         self.next_replacement = 0;
-//
-//         // FIXME: this is wrong
-//         for i in 0..self.nodes.counts.len() {
-//             if death.dies() {
-//                 self.replacements.push(i);
-//             }
-//         }
-//
-//         self.replacements.len()
-//     }
-// }
+impl EvolveAncestry for IndexedPopulation {
+    fn genome_length(&self) -> LargeSignedInteger {
+        self.genome_length
+    }
+
+    fn setup(&mut self, _final_time: LargeSignedInteger) {}
+
+    fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
+        self.deaths.clear();
+        self.next_replacement.clear();
+
+        for i in 0..self.alive_nodes.len() {
+            if death.dies() {
+                self.deaths.push(i);
+                self.next_replacement.push(i);
+            }
+        }
+
+        self.next_replacement.len()
+    }
+
+    fn current_population_size(&self) -> usize {
+        self.alive_nodes.len()
+    }
+
+    fn record_birth(
+        &mut self,
+        birth_time: LargeSignedInteger,
+        final_time: LargeSignedInteger,
+        breakpoints: &[neutral_evolution::TransmittedSegment],
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        unimplemented!("nope");
+    }
+
+    fn simplify(
+        &mut self,
+        current_time_point: LargeSignedInteger,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.simplify(current_time_point)
+    }
+
+    fn finish(
+        &mut self,
+        current_time_point: LargeSignedInteger,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
+}

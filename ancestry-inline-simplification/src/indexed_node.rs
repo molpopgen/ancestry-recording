@@ -45,7 +45,7 @@ pub struct NodeTable {
     pub parents: Vec<ParentSet>,
     pub ancestry: Vec<Vec<AncestrySegment>>,
     pub children: Vec<ChildMap>,
-    queue: Vec<usize>, // for recycling
+    pub queue: Vec<usize>, // for recycling
 }
 
 impl NodeTable {
