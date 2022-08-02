@@ -82,9 +82,7 @@ impl IndexedPopulation {
 
     fn add_birth(&mut self, birth_time: LargeSignedInteger) -> Result<usize, usize> {
         match self.nodes.new_birth(birth_time, self.genome_length) {
-            Ok(b) => {
-                Ok(b)
-            }
+            Ok(b) => Ok(b),
             Err(b) => Err(b),
         }
     }
@@ -220,9 +218,9 @@ impl EvolveAncestry for IndexedPopulation {
         self.deaths.clear();
         self.next_replacement.clear();
 
-        for i in 0..self.alive_nodes.len() {
+        for (i, n) in self.alive_nodes.iter().enumerate() {
             if death.dies() {
-                self.deaths.push(i);
+                self.deaths.push(*n);
                 self.next_replacement.push(i);
             }
         }
