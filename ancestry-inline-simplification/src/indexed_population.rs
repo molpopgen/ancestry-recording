@@ -50,7 +50,7 @@ impl NodeHeap {
         self.in_heap.fill(false);
     }
 
-    pub fn pop(&mut self) -> Option<PrioritizedNode> {
+    fn pop(&mut self) -> Option<PrioritizedNode> {
         match self.heap.pop() {
             Some(node) => {
                 self.in_heap[node.index] = false;
@@ -137,7 +137,6 @@ impl IndexedPopulation {
     fn propagate_ancestry_changes(&mut self) -> Result<(), InlineAncestryError> {
         // Set all counts to zero == setting all output node IDs to NULL.
         self.nodes.counts.fill(0);
-        self.heap.initialize(self.nodes.counts.len());
 
         // and its API should have a "set number of nodes" function
         // println!("{:?}", self.heap);
@@ -178,23 +177,18 @@ impl IndexedPopulation {
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
         //assert_eq!(self.deaths.len(), self.births.len()); // NOTE: this is wrong for growing pops, etc..
-        assert!(self.heap.0.is_empty());
+        assert!(self.heap.heap.is_empty()); // FIXME: private detail
+        self.heap.initialize(self.nodes.birth_time.len());
 
         for b in self.births.iter() {
             assert_eq!(self.nodes.birth_time[*b], current_time_point);
             assert!(self.nodes.flags[*b].is_alive());
-            self.heap.0.push(PrioritizedNode {
-                index: *b,
-                birth_time: self.nodes.birth_time[*b],
-                node_type: NodeType::Birth,
-            });
+            self.heap
+                .push_if(*b, self.nodes.birth_time[*b], NodeType::Birth);
         }
         for d in self.deaths.iter() {
-            self.heap.0.push(PrioritizedNode {
-                index: *d,
-                birth_time: self.nodes.birth_time[*d],
-                node_type: NodeType::Death,
-            });
+            self.heap
+                .push_if(*d, self.nodes.birth_time[*d], NodeType::Death);
         }
         self.births.clear();
 
@@ -229,7 +223,7 @@ impl IndexedPopulation {
             self.nodes.queue.len()
         );
 
-        assert!(self.heap.0.is_empty());
+        assert!(self.heap.heap.is_empty());
 
         Ok(())
     }
