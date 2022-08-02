@@ -35,7 +35,42 @@ impl Ord for PrioritizedNode {
 }
 
 #[derive(Debug, Default)]
-pub struct NodeHeap(BinaryHeap<PrioritizedNode>);
+pub struct NodeHeap {
+    heap: BinaryHeap<PrioritizedNode>,
+    in_heap: Vec<bool>,
+}
+
+impl NodeHeap {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn initialize(&mut self, num_nodes: usize) {
+        self.in_heap.resize(num_nodes, false);
+        self.in_heap.fill(false);
+    }
+
+    pub fn pop(&mut self) -> Option<PrioritizedNode> {
+        match self.heap.pop() {
+            Some(node) => {
+                self.in_heap[node.index] = false;
+                Some(node)
+            }
+            None => None,
+        }
+    }
+
+    pub fn push_if(&mut self, index: usize, birth_time: LargeSignedInteger, node_type: NodeType) {
+        if !self.in_heap[index] {
+            self.in_heap[index] = true;
+            self.heap.push(PrioritizedNode {
+                index,
+                birth_time,
+                node_type,
+            });
+        }
+    }
+}
 
 #[derive(Default)]
 pub struct IndexedPopulation {
@@ -102,14 +137,12 @@ impl IndexedPopulation {
     fn propagate_ancestry_changes(&mut self) -> Result<(), InlineAncestryError> {
         // Set all counts to zero == setting all output node IDs to NULL.
         self.nodes.counts.fill(0);
-        // NOTE: this vector should be stored as part of the queue
+        self.heap.initialize(self.nodes.counts.len());
+
         // and its API should have a "set number of nodes" function
-        let mut node_in_queue = vec![false; self.nodes.counts.len()];
         // println!("{:?}", self.heap);
         // println!("{:?}", self.nodes.flags);
-        while let Some(node) = self.heap.0.pop() {
-            println!("{:?}", node);
-            node_in_queue[node.index] = false;
+        while let Some(node) = self.heap.pop() {
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
@@ -130,14 +163,8 @@ impl IndexedPopulation {
             }
             if changed || self.nodes.flags[node.index].is_alive() {
                 for parent in self.nodes.parents[node.index].iter() {
-                    if !node_in_queue[*parent] {
-                        self.heap.0.push(PrioritizedNode {
-                            index: *parent,
-                            birth_time: self.nodes.birth_time[*parent],
-                            node_type: NodeType::Parent,
-                        });
-                        node_in_queue[*parent] = true;
-                    }
+                    self.heap
+                        .push_if(*parent, self.nodes.birth_time[*parent], NodeType::Parent);
                 }
             }
         }
