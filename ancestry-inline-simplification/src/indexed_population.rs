@@ -142,6 +142,7 @@ impl IndexedPopulation {
         // println!("{:?}", self.heap);
         // println!("{:?}", self.nodes.flags);
         while let Some(node) = self.heap.pop() {
+            println!("{:?}", node);
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
@@ -162,6 +163,7 @@ impl IndexedPopulation {
             }
             if changed || self.nodes.flags[node.index].is_alive() {
                 for parent in self.nodes.parents[node.index].iter() {
+                    assert_ne!(*parent, node.index);
                     self.heap
                         .push_if(*parent, self.nodes.birth_time[*parent], NodeType::Parent);
                 }
@@ -211,6 +213,7 @@ impl IndexedPopulation {
         let mut reachable = 0;
         for (i, c) in self.nodes.counts.iter().enumerate() {
             if *c == 0 {
+                println!("setting {} for recycling", i);
                 self.nodes.queue.push(i);
             } else {
                 reachable += 1;
