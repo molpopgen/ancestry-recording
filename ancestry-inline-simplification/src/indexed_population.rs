@@ -108,6 +108,7 @@ impl IndexedPopulation {
         // NOTE: this vector should be stored as part of the queue
         // and its API should have a "set number of nodes" function
         let mut node_in_queue = vec![false; self.nodes.counts.len()];
+        println!("{:?}", self.heap);
         while let Some(node) = self.heap.0.pop() {
             node_in_queue[node.index] = false;
             if matches!(node.node_type, NodeType::Death) {
@@ -171,6 +172,13 @@ impl IndexedPopulation {
         self.births.clear();
 
         self.propagate_ancestry_changes()?;
+
+        debug_assert_eq!(
+            self.nodes.flags.iter().map(|x| x.is_alive()).count(),
+            self.alive_nodes.len(),
+            "{}",
+            current_time_point
+        );
 
         // add to queue
         // We clear the queue to avoid duplicating
