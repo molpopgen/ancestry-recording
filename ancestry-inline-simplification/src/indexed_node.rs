@@ -62,6 +62,16 @@ impl NodeTable {
             Some(index) => {
                 println!("recycling index {}", index);
                 assert_eq!(self.index[index], index);
+
+                #[cfg(debug_assertions)]
+                {
+                    for (i, p) in self.parents.iter().enumerate() {
+                        if i != index {
+                            assert!(p.get(&index).is_none(), "{}", birth_time);
+                        }
+                    }
+                }
+
                 self.counts[index] = 1;
                 self.birth_time[index] = birth_time;
                 self.flags[index] = NodeFlags::new_alive();
