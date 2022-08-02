@@ -150,6 +150,7 @@ impl IndexedPopulation {
         assert!(self.heap.0.is_empty());
 
         for b in self.births.iter() {
+            assert_eq!(self.nodes.birth_time[*b], current_time_point);
             self.heap.0.push(PrioritizedNode {
                 index: *b,
                 birth_time: self.nodes.birth_time[*b],
@@ -260,12 +261,28 @@ impl EvolveAncestry for IndexedPopulation {
     fn record_birth(
         &mut self,
         birth_time: LargeSignedInteger,
-        final_time: LargeSignedInteger,
+        _final_time: LargeSignedInteger,
         breakpoints: &[neutral_evolution::TransmittedSegment],
     ) -> Result<(), Box<dyn std::error::Error>> {
-        unimplemented!("nope");
-        //let birth_node_index = self.add_birth(birth_time, parent_indexes);
-        let mut children = crate::indexed_node::ChildMap::default();
+        let birth_node_index = self.add_birth(birth_time).unwrap();
+
+        for b in breakpoints {
+            self.nodes.parents[birth_node_index].insert(b.parent);
+            self.nodes
+                .add_child_segment(b.left, b.right, b.parent, birth_node_index)
+                .unwrap();
+        }
+
+        // handle our updating of alive nodes
+        match self.next_replacement.pop() {
+            Some(index) => {
+                self.alive_nodes[index] = birth_node_index;
+            }
+            None => self.alive_nodes.push(birth_node_index),
+        }
+        self.births.push(birth_node_index);
+
+        Ok(())
     }
 
     fn simplify(

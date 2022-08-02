@@ -87,4 +87,20 @@ impl NodeTable {
             }
         }
     }
+
+    pub fn add_child_segment(
+        &mut self,
+        left: LargeSignedInteger,
+        right: LargeSignedInteger,
+        parent: usize,
+        child: usize,
+    ) -> Result<(), usize> {
+        let interval = Segment::new(left, right).unwrap();
+        if let Some(v) = self.children[parent].get_mut(&child) {
+            v.push(interval);
+        } else {
+            self.children[parent].insert(child, vec![interval]);
+        }
+        Ok(())
+    }
 }
