@@ -156,12 +156,20 @@ impl IndexedPopulation {
             );
             // TODO: is this the right criterion?
             // TODO: is this the right place to do this?
-            if !self.nodes.ancestry[node.index].is_empty() {
+            //if !self.nodes.ancestry[node.index].is_empty() {
+            //    self.nodes.counts[node.index] += 1;
+            //    for child in self.nodes.children[node.index].keys() {
+            //        self.nodes.counts[*child] += 1;
+            //    }
+            //    println!("{} {}", node.index, self.nodes.counts[node.index]);
+            //}
+            for child in self.nodes.children[node.index].keys() {
+                println!(
+                    "incrementing counts of {} and {} <-> {:?}",
+                    node.index, *child, self.nodes.parents[*child]
+                );
                 self.nodes.counts[node.index] += 1;
-                for child in self.nodes.children[node.index].keys() {
-                    self.nodes.counts[*child] += 1;
-                }
-                println!("{} {}", node.index, self.nodes.counts[node.index]);
+                self.nodes.counts[*child] += 1;
             }
 
             #[cfg(debug_assertions)]
@@ -191,6 +199,10 @@ impl IndexedPopulation {
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        println!(
+            "1096 starting simplifying time point {}",
+            current_time_point
+        );
         //assert_eq!(self.deaths.len(), self.births.len()); // NOTE: this is wrong for growing pops, etc..
         self.heap.initialize(self.nodes.birth_time.len());
 
@@ -225,7 +237,7 @@ impl IndexedPopulation {
         let mut reachable = 0;
         for (i, c) in self.nodes.counts.iter().enumerate() {
             if *c == 0 {
-                println!("setting {} for recycling", i);
+                // println!("setting {} for recycling", i);
                 self.nodes.queue.push(i);
             } else {
                 reachable += 1;
@@ -241,23 +253,57 @@ impl IndexedPopulation {
         #[cfg(debug_assertions)]
         {
             for (i, p) in self.nodes.parents.iter().enumerate() {
-                for pi in p {
-                    assert!(self.nodes.counts[*pi] > 0, "{}", *pi);
-                    for c in self.nodes.children[*pi].keys() {
-                        assert!(self.nodes.counts[*c] > 0, "{}", *c);
+                if self.nodes.counts[i] > 0 {
+                    for pi in p {
+                        assert!(self.nodes.counts[*pi] > 0, "{}", *pi);
+                        for c in self.nodes.children[*pi].keys() {
+                            assert!(self.nodes.counts[*c] > 0, "{}", *c);
+                        }
                     }
-                }
-                if self.nodes.ancestry[i].is_empty() {
-                    assert_eq!(self.nodes.counts[i], 0);
-                } else {
-                    assert!(self.nodes.counts[i] > 0);
+                    if self.nodes.ancestry[i].is_empty() {
+                        // node i cannot be a parent
+                        for (j, pp) in self.nodes.parents.iter().enumerate() {
+                            assert!(pp.get(&i).is_none());
+                        }
+                        // it probably shouldn't be a child?
+                        for (j, pp) in self.nodes.children.iter().enumerate() {
+                            assert!(pp.get(&i).is_none());
+                        }
+
+                        assert_eq!(
+                            self.nodes.counts[i],
+                            0,
+                            "{} (? {} ?), (? {} ?)| {} {} | {:?} {:?} | {:?}",
+                            i,
+                            self.nodes.counts[1083],
+                            self.nodes.counts[1009],
+                            current_time_point,
+                            self.nodes.birth_time[i],
+                            self.nodes.parents[i],
+                            self.nodes.children[i],
+                            self.nodes.flags[i],
+                        );
+                    } else {
+                        if self.nodes.counts[i] == 0 {
+                            println!("I don't like this");
+                            for c in self.nodes.children[i].keys() {
+                                println!("{:?}", self.nodes.parents[*c]);
+                            }
+                        }
+                        assert!(
+                            self.nodes.counts[i] > 0,
+                            "{} => {:?}",
+                            i,
+                            self.nodes.ancestry[i]
+                        );
+                    }
                 }
             }
         }
 
         assert!(self.heap.heap.is_empty());
 
-        println!("done simplifying time point {}", current_time_point);
+        println!("1096 done simplifying time point {}", current_time_point);
 
         Ok(())
     }
