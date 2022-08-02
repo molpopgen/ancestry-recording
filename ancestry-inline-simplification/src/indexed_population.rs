@@ -109,6 +109,7 @@ impl IndexedPopulation {
         // and its API should have a "set number of nodes" function
         let mut node_in_queue = vec![false; self.nodes.counts.len()];
         println!("{:?}", self.heap);
+        println!("{:?}", self.nodes.flags);
         while let Some(node) = self.heap.0.pop() {
             node_in_queue[node.index] = false;
             if matches!(node.node_type, NodeType::Death) {
@@ -143,6 +144,7 @@ impl IndexedPopulation {
             }
         }
         println!("{:?}", self.nodes);
+        println!("{:?}", self.nodes.flags);
         Ok(())
     }
 
@@ -171,10 +173,12 @@ impl IndexedPopulation {
         }
         self.births.clear();
 
+        println!("{:?}", self.nodes.flags);
         self.propagate_ancestry_changes()?;
+        println!("{:?}", self.nodes.flags);
 
         debug_assert_eq!(
-            self.nodes.flags.iter().map(|x| x.is_alive()).count(),
+            self.nodes.flags.iter().filter(|x| x.is_alive()).count(),
             self.alive_nodes.len(),
             "{}",
             current_time_point
