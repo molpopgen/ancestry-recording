@@ -67,7 +67,14 @@ impl NodeTable {
                 {
                     for (i, p) in self.parents.iter().enumerate() {
                         if i != index {
-                            assert!(p.get(&index).is_none(), "{}", birth_time);
+                            assert!(
+                                p.get(&index).is_none(),
+                                "{} {} {} {:?}",
+                                i,
+                                index,
+                                birth_time,
+                                self.ancestry[index]
+                            );
                         }
                     }
                 }
