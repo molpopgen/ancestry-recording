@@ -63,6 +63,8 @@ impl NodeTable {
                 println!("recycling index {}", index);
                 assert_eq!(self.index[index], index);
 
+                // Command lines triggerring this assert:
+                // ./target/debug/benchmark --popsize 100 --nsteps 4 --rho 50 flattened-v1
                 #[cfg(debug_assertions)]
                 {
                     for (i, p) in self.parents.iter().enumerate() {
