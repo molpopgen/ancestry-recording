@@ -353,6 +353,7 @@ pub(crate) fn update_ancestry(
 
     for child in children[node_index].keys() {
         parents[*child].insert(node_index);
+        assert!(parents[*child].contains(&node_index));
     }
 
     ancestry_change_detected || ancestry[node_index].is_empty()
