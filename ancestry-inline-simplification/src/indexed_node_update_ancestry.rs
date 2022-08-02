@@ -328,6 +328,7 @@ pub(crate) fn update_ancestry(
     for child in children[node_index].keys() {
         assert!(parents[*child].contains(&node_index));
         parents[*child].remove(&node_index);
+        assert!(!parents[*child].contains(&node_index));
     }
     children[node_index].clear(); // It'd be nice to not do this.
 
