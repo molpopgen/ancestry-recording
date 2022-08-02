@@ -71,10 +71,12 @@ impl NodeTable {
                         if i != index {
                             assert!(
                                 p.get(&index).is_none(),
-                                "{} {} {} {:?}",
+                                "{} {} {} {} {} {:?}",
                                 i,
                                 index,
                                 birth_time,
+                                self.birth_time[i],
+                                self.birth_time[index],
                                 self.ancestry[index]
                             );
                         }
