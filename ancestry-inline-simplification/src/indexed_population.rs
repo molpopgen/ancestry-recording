@@ -153,6 +153,7 @@ impl IndexedPopulation {
 
         for b in self.births.iter() {
             assert_eq!(self.nodes.birth_time[*b], current_time_point);
+            assert!(self.nodes.flags[*b].is_alive());
             self.heap.0.push(PrioritizedNode {
                 index: *b,
                 birth_time: self.nodes.birth_time[*b],
