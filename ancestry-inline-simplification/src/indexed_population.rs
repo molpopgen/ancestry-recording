@@ -122,7 +122,13 @@ impl IndexedPopulation {
                 &mut self.nodes.parents,
                 &mut self.nodes.children,
             );
-            unimplemented!("we need to update the counts at some point");
+            // TODO: is this the right criterion?
+            if !self.nodes.ancestry[node.index].is_empty() {
+                self.nodes.counts[node.index] += 1;
+                for child in self.nodes.children[node.index].keys() {
+                    self.nodes.counts[*child] += 1;
+                }
+            }
         }
         Ok(())
     }
