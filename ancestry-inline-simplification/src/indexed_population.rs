@@ -108,6 +108,7 @@ impl IndexedPopulation {
         // println!("{:?}", self.heap);
         // println!("{:?}", self.nodes.flags);
         while let Some(node) = self.heap.0.pop() {
+            println!("{:?}", node);
             node_in_queue[node.index] = false;
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
