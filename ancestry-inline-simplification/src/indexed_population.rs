@@ -238,6 +238,23 @@ impl IndexedPopulation {
             self.nodes.queue.len()
         );
 
+        #[cfg(debug_assertions)]
+        {
+            for (i, p) in self.nodes.parents.iter().enumerate() {
+                for pi in p {
+                    assert!(self.nodes.counts[*pi] > 0, "{}", *pi);
+                    for c in self.nodes.children[*pi].keys() {
+                        assert!(self.nodes.counts[*c] > 0, "{}", *c);
+                    }
+                }
+                if self.nodes.ancestry[i].is_empty() {
+                    assert_eq!(self.nodes.counts[i], 0);
+                } else {
+                    assert!(self.nodes.counts[i] > 0);
+                }
+            }
+        }
+
         assert!(self.heap.heap.is_empty());
 
         Ok(())
