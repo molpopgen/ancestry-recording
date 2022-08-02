@@ -171,6 +171,19 @@ impl IndexedPopulation {
         }
         self.births.clear();
 
+        self.propagate_ancestry_changes()?;
+
+        // add to queue
+        // We clear the queue to avoid duplicating
+        // indexes (e.g., an index previously entered
+        // but did not get recycled in the last round).
+        self.nodes.queue.clear();
+        for (i, c) in self.nodes.counts.iter().enumerate() {
+            if *c == 0 {
+                self.nodes.queue.push(i);
+            }
+        }
+
         assert!(self.heap.0.is_empty());
 
         Ok(())
