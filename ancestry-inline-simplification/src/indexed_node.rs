@@ -57,22 +57,13 @@ impl NodeTable {
         &mut self,
         birth_time: LargeSignedInteger,
         genome_length: LargeSignedInteger,
-        parents: ParentSet,
     ) -> Result<usize, usize> {
-        for p in &parents {
-            if *p >= self.counts.len() {
-                return Err(*p);
-            }
-            if self.birth_time[*p] >= birth_time {
-                return Err(*p);
-            }
-        }
         match self.queue.pop() {
             Some(index) => {
                 self.counts[index] = 1;
                 self.birth_time[index] = birth_time;
                 self.flags[index] = NodeFlags::new_alive();
-                self.parents[index] = parents;
+                self.parents[index] = ParentSet::default();
                 self.ancestry[index].clear();
                 self.ancestry[index].push(AncestrySegment {
                     segment: Segment::new(0, genome_length).unwrap(),
@@ -86,7 +77,7 @@ impl NodeTable {
                 self.counts.push(1);
                 self.birth_time.push(birth_time);
                 self.flags.push(NodeFlags::new_alive());
-                self.parents.push(parents);
+                self.parents.push(ParentSet::default());
                 self.ancestry.push(vec![AncestrySegment {
                     segment: Segment::new(0, genome_length).unwrap(),
                     child: self.index.len() - 1,

@@ -57,7 +57,7 @@ impl IndexedPopulation {
             let mut nodes = NodeTable::default();
 
             for i in 0..popsize {
-                let node = nodes.new_birth(0, genome_length, ParentSet::default());
+                let node = nodes.new_birth(0, genome_length);
                 match node {
                     Ok(v) => assert_eq!(v, i as usize),
                     Err(v) => panic!("{}", v), // Should be an error.
@@ -78,16 +78,8 @@ impl IndexedPopulation {
         }
     }
 
-    fn add_birth(
-        &mut self,
-        birth_time: LargeSignedInteger,
-        parent_indexes: &[usize],
-    ) -> Result<usize, usize> {
-        match self.nodes.new_birth(
-            birth_time,
-            self.genome_length,
-            ParentSet::from_iter(parent_indexes.iter().map(|v| *v)),
-        ) {
+    fn add_birth(&mut self, birth_time: LargeSignedInteger) -> Result<usize, usize> {
+        match self.nodes.new_birth(birth_time, self.genome_length) {
             Ok(b) => {
                 self.births.push(b);
                 Ok(b)
@@ -273,7 +265,6 @@ impl EvolveAncestry for IndexedPopulation {
     ) -> Result<(), Box<dyn std::error::Error>> {
         unimplemented!("nope");
         //let birth_node_index = self.add_birth(birth_time, parent_indexes);
-        let mut parents = vec![];
         let mut children = crate::indexed_node::ChildMap::default();
     }
 
