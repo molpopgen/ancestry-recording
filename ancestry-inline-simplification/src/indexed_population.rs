@@ -109,9 +109,11 @@ impl IndexedPopulation {
     fn propagate_ancestry_changes(&mut self) -> Result<(), InlineAncestryError> {
         // Set all counts to zero == setting all output node IDs to NULL.
         self.nodes.counts.fill(0);
-        let mut node_in_queue = vec![0_usize; self.nodes.counts.len()]; // NOTE: this should be stored elsewhere to reuse the memory each time!!!!!!!!!!!
+        // NOTE: this vector should be stored as part of the queue
+        // and its API should have a "set number of nodes" function
+        let mut node_in_queue = vec![false; self.nodes.counts.len()];
         while let Some(node) = self.heap.0.pop() {
-            node_in_queue[node.index] = 0;
+            node_in_queue[node.index] = false;
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
@@ -123,10 +125,23 @@ impl IndexedPopulation {
                 &mut self.nodes.children,
             );
             // TODO: is this the right criterion?
+            // TODO: is this the right place to do this?
             if !self.nodes.ancestry[node.index].is_empty() {
                 self.nodes.counts[node.index] += 1;
                 for child in self.nodes.children[node.index].keys() {
                     self.nodes.counts[*child] += 1;
+                }
+            }
+            if changed || self.nodes.flags[node.index].is_alive() {
+                for parent in self.nodes.parents[node.index].iter() {
+                    if !node_in_queue[*parent] {
+                        self.heap.0.push(PrioritizedNode {
+                            index: *parent,
+                            birth_time: self.nodes.birth_time[*parent],
+                            node_type: NodeType::Parent,
+                        });
+                        node_in_queue[*parent] = true;
+                    }
                 }
             }
         }
