@@ -57,7 +57,6 @@ impl IndexedPopulation {
             let mut nodes = NodeTable::default();
 
             let mut alive_nodes = vec![];
-            let mut births = vec![];
             for i in 0..popsize {
                 let node = nodes.new_birth(0, genome_length);
                 match node {
@@ -65,14 +64,13 @@ impl IndexedPopulation {
                     Err(v) => panic!("{}", v), // Should be an error.
                 }
                 alive_nodes.push(i as usize);
-                births.push(i as usize);
             }
 
             Ok(Self {
                 nodes,
                 genome_length,
                 alive_nodes,
-                births,
+                births: vec![],
                 deaths: vec![],
                 next_replacement: vec![],
                 heap: NodeHeap::default(),
