@@ -183,7 +183,12 @@ impl IndexedPopulation {
                 reachable += 1;
             }
         }
-        println!("{} {}", current_time_point, reachable);
+        println!(
+            "{} {} {}",
+            current_time_point,
+            reachable,
+            self.nodes.queue.len()
+        );
 
         assert!(self.heap.0.is_empty());
 
