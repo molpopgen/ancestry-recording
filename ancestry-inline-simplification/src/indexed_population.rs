@@ -300,10 +300,15 @@ impl EvolveAncestry for IndexedPopulation {
         let birth_node_index = self.add_birth(birth_time).unwrap();
 
         for b in breakpoints {
-            assert_ne!(birth_node_index, b.parent);
-            self.nodes.parents[birth_node_index].insert(b.parent);
+            let parent = self.alive_nodes[b.parent];
+            assert_ne!(birth_node_index, parent);
+            println!(
+                "adding parent {} (or is it {}) to {}",
+                b.parent, self.alive_nodes[b.parent], birth_node_index
+            );
+            self.nodes.parents[birth_node_index].insert(parent);
             self.nodes
-                .add_child_segment(b.left, b.right, b.parent, birth_node_index)
+                .add_child_segment(b.left, b.right, parent, birth_node_index)
                 .unwrap();
         }
 

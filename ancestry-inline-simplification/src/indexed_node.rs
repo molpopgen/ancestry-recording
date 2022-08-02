@@ -60,24 +60,27 @@ impl NodeTable {
     ) -> Result<usize, usize> {
         match self.queue.pop() {
             Some(index) => {
-                println!("recycling index {}", index);
+                println!("recycling index {} {:?}", index, self.parents[index]);
                 assert_eq!(self.index[index], index);
+                assert_eq!(self.counts[index], 0);
 
                 // Command lines triggerring this assert:
                 // ./target/debug/benchmark --popsize 100 --nsteps 4 --rho 50 flattened-v1
                 #[cfg(debug_assertions)]
                 {
                     for (i, p) in self.parents.iter().enumerate() {
-                        if i != index {
+                        if i != index && self.counts[i] > 0 {
                             assert!(
                                 p.get(&index).is_none(),
-                                "{} {} {} {} {} {:?}",
+                                "{} {} {} {} {} {:?} | {}, {:?}",
                                 i,
                                 index,
                                 birth_time,
                                 self.birth_time[i],
                                 self.birth_time[index],
-                                self.ancestry[index]
+                                self.ancestry[index],
+                                self.counts[i],
+                                self.parents[i],
                             );
                         }
                     }
@@ -93,6 +96,10 @@ impl NodeTable {
                     child: index,
                 });
                 self.children[index].clear();
+                println!(
+                    "done recycling {},parents = {:?}",
+                    index, self.parents[index]
+                );
                 Ok(index)
             }
             None => {
