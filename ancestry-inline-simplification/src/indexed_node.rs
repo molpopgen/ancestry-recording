@@ -89,7 +89,7 @@ impl NodeTable {
                 self.counts[index] = 1;
                 self.birth_time[index] = birth_time;
                 self.flags[index] = NodeFlags::new_alive();
-                self.parents[index] = ParentSet::default();
+                self.parents[index].clear();
                 self.ancestry[index].clear();
                 self.ancestry[index].push(AncestrySegment {
                     segment: Segment::new(0, genome_length).unwrap(),
