@@ -46,6 +46,7 @@ impl NodeHeap {
     }
 
     pub fn initialize(&mut self, num_nodes: usize) {
+        assert!(self.heap.is_empty());
         self.in_heap.resize(num_nodes, false);
         self.in_heap.fill(false);
     }
@@ -191,7 +192,6 @@ impl IndexedPopulation {
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
         //assert_eq!(self.deaths.len(), self.births.len()); // NOTE: this is wrong for growing pops, etc..
-        assert!(self.heap.heap.is_empty()); // FIXME: private detail
         self.heap.initialize(self.nodes.birth_time.len());
 
         for b in self.births.iter() {
