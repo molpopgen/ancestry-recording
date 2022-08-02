@@ -1,5 +1,5 @@
 use ancestry_common::{LargeSignedInteger, SignedInteger};
-use ancestry_inline_simplification::Population;
+use ancestry_inline_simplification::{IndexedPopulation, Population};
 use clap::Parser;
 use neutral_evolution::{evolve, Parameters};
 use tskit::TableAccess;
@@ -32,6 +32,7 @@ struct Args {
 enum Simulator {
     Tskit(Tskit),
     Dynamic,
+    FlattenedV1,
 }
 
 #[derive(clap::Parser, Clone, Copy)]
@@ -79,6 +80,11 @@ fn main() {
             let mut population = Population::new(args.popsize, args.sequence_length).unwrap();
             evolve_wrapper(parameters, args, &mut population);
             println!("num still reachable = {}", population.num_still_reachable());
+        }
+        Simulator::FlattenedV1 => {
+            let mut population =
+                IndexedPopulation::new(args.popsize, args.sequence_length).unwrap();
+            evolve_wrapper(parameters, args, &mut population);
         }
     }
 }
