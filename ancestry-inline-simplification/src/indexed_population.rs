@@ -262,6 +262,9 @@ impl EvolveAncestry for IndexedPopulation {
         self.alive_nodes.len()
     }
 
+    // NOTE: having to implement this
+    // trait forces us to change the api of the
+    // population to accommodate the behavior.
     fn record_birth(
         &mut self,
         birth_time: LargeSignedInteger,
@@ -269,6 +272,9 @@ impl EvolveAncestry for IndexedPopulation {
         breakpoints: &[neutral_evolution::TransmittedSegment],
     ) -> Result<(), Box<dyn std::error::Error>> {
         unimplemented!("nope");
+        //let birth_node_index = self.add_birth(birth_time, parent_indexes);
+        let mut parents = vec![];
+        let mut children = crate::indexed_node::ChildMap::default();
     }
 
     fn simplify(
