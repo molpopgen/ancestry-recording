@@ -292,8 +292,7 @@ fn process_overlaps(
         if !flags[node_index].is_alive() {
             if *output_ancestry_index < input_ancestry_len {
                 // SAFETY: we just checked the bounds
-                let input_ancestry_seg =
-                    unsafe { ancestry[node_index].get_unchecked_mut(*output_ancestry_index) };
+                let input_ancestry_seg = &mut ancestry[node_index][*output_ancestry_index];
                 if input_ancestry_seg.left() != left
                     || input_ancestry_seg.right() != right
                     || input_ancestry_seg.child != mapped_node
