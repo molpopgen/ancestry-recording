@@ -257,6 +257,8 @@ impl IndexedPopulation {
 
         assert!(self.heap.heap.is_empty());
 
+        println!("done simplifying time point {}", current_time_point);
+
         Ok(())
     }
 }
