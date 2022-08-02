@@ -83,7 +83,6 @@ impl IndexedPopulation {
     fn add_birth(&mut self, birth_time: LargeSignedInteger) -> Result<usize, usize> {
         match self.nodes.new_birth(birth_time, self.genome_length) {
             Ok(b) => {
-                self.births.push(b);
                 Ok(b)
             }
             Err(b) => Err(b),
@@ -256,9 +255,16 @@ impl EvolveAncestry for IndexedPopulation {
         // handle our updating of alive nodes
         match self.next_replacement.pop() {
             Some(index) => {
+                println!(
+                    "replacing death {} at {} with {}",
+                    self.alive_nodes[index], index, birth_node_index
+                );
                 self.alive_nodes[index] = birth_node_index;
             }
-            None => self.alive_nodes.push(birth_node_index),
+            None => {
+                println!("pushing alive node {}", birth_node_index);
+                self.alive_nodes.push(birth_node_index);
+            }
         }
         self.births.push(birth_node_index);
 
@@ -269,6 +275,10 @@ impl EvolveAncestry for IndexedPopulation {
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        println!("about to simplify at {}", current_time_point);
+        println!("{:?}", self.deaths);
+        println!("{:?}", self.births);
+        println!("{:?}", self.alive_nodes);
         self.simplify(current_time_point)
     }
 
