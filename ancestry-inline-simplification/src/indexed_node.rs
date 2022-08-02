@@ -61,6 +61,7 @@ impl NodeTable {
         match self.queue.pop() {
             Some(index) => {
                 println!("recycling index {}", index);
+                assert_eq!(self.index[index], index);
                 self.counts[index] = 1;
                 self.birth_time[index] = birth_time;
                 self.flags[index] = NodeFlags::new_alive();
