@@ -257,7 +257,7 @@ fn update_child_segments(
         }
         None => {
             let seg = Segment::new(left, right).unwrap();
-            children[node_index].insert(child.clone(), vec![seg]);
+            children[node_index].insert(child, vec![seg]);
         }
     }
 }
