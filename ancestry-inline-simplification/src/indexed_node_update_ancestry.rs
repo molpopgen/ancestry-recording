@@ -234,6 +234,7 @@ fn update_child_segments(
     right: LargeSignedInteger,
     children: &mut [crate::indexed_node::ChildMap],
 ) {
+    assert_ne!(node_index, child);
     match children[node_index].get_mut(&child) {
         Some(segs) => {
             let need_push = match segs.last_mut() {
@@ -323,9 +324,9 @@ pub(crate) fn update_ancestry(
     let mut ancestry_change_detected = false;
 
     // remove current node from parents set of children
-    for child in children[node_index].iter() {
-        assert!(parents[*child.0].contains(&node_index));
-        parents[*child.0].remove(&node_index);
+    for child in children[node_index].keys() {
+        assert!(parents[*child].contains(&node_index));
+        parents[*child].remove(&node_index);
     }
     children[node_index].clear(); // It'd be nice to not do this.
 

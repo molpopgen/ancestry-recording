@@ -160,6 +160,7 @@ impl IndexedPopulation {
                 for child in self.nodes.children[node.index].keys() {
                     self.nodes.counts[*child] += 1;
                 }
+                println!("{} {}", node.index, self.nodes.counts[node.index]);
             }
             if changed || self.nodes.flags[node.index].is_alive() {
                 for parent in self.nodes.parents[node.index].iter() {
