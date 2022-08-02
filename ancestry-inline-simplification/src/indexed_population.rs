@@ -105,8 +105,8 @@ impl IndexedPopulation {
         // NOTE: this vector should be stored as part of the queue
         // and its API should have a "set number of nodes" function
         let mut node_in_queue = vec![false; self.nodes.counts.len()];
-        println!("{:?}", self.heap);
-        println!("{:?}", self.nodes.flags);
+        // println!("{:?}", self.heap);
+        // println!("{:?}", self.nodes.flags);
         while let Some(node) = self.heap.0.pop() {
             node_in_queue[node.index] = false;
             if matches!(node.node_type, NodeType::Death) {
@@ -140,8 +140,8 @@ impl IndexedPopulation {
                 }
             }
         }
-        println!("{:?}", self.nodes);
-        println!("{:?}", self.nodes.flags);
+        // println!("{:?}", self.nodes);
+        // println!("{:?}", self.nodes.flags);
         Ok(())
     }
 
@@ -170,9 +170,9 @@ impl IndexedPopulation {
         }
         self.births.clear();
 
-        println!("{:?}", self.nodes.flags);
+        // println!("{:?}", self.nodes.flags);
         self.propagate_ancestry_changes()?;
-        println!("{:?}", self.nodes.flags);
+        // println!("{:?}", self.nodes.flags);
 
         debug_assert_eq!(
             self.nodes.flags.iter().filter(|x| x.is_alive()).count(),
@@ -253,14 +253,14 @@ impl EvolveAncestry for IndexedPopulation {
         // handle our updating of alive nodes
         match self.next_replacement.pop() {
             Some(index) => {
-                println!(
-                    "replacing death {} at {} with {}",
-                    self.alive_nodes[index], index, birth_node_index
-                );
+                // println!(
+                //     "replacing death {} at {} with {}",
+                //     self.alive_nodes[index], index, birth_node_index
+                // );
                 self.alive_nodes[index] = birth_node_index;
             }
             None => {
-                println!("pushing alive node {}", birth_node_index);
+                // println!("pushing alive node {}", birth_node_index);
                 self.alive_nodes.push(birth_node_index);
             }
         }
@@ -273,10 +273,10 @@ impl EvolveAncestry for IndexedPopulation {
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!("about to simplify at {}", current_time_point);
-        println!("{:?}", self.deaths);
-        println!("{:?}", self.births);
-        println!("{:?}", self.alive_nodes);
+        // println!("about to simplify at {}", current_time_point);
+        // println!("{:?}", self.deaths);
+        // println!("{:?}", self.births);
+        // println!("{:?}", self.alive_nodes);
         self.simplify(current_time_point)
     }
 
