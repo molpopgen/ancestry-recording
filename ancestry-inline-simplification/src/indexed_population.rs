@@ -147,6 +147,9 @@ impl IndexedPopulation {
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
+            if matches!(node.node_type, NodeType::Birth) {
+                assert!(self.nodes.flags[node.index].is_alive());
+            }
             let changed = crate::indexed_node_update_ancestry::update_ancestry(
                 node.index,
                 &self.nodes.flags,
