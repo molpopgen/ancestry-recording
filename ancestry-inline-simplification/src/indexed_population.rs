@@ -184,16 +184,20 @@ impl IndexedPopulation {
                 self.nodes.counts[*child] += 1;
             }
 
-            if self.nodes.children[node.index].is_empty()
-                && !self.nodes.flags[node.index].is_alive()
-            {
-                assert!(
-                    self.nodes.ancestry[node.index].is_empty(),
-                    "{} -> {:?}",
-                    node.index,
-                    self.nodes.ancestry[node.index]
-                );
-            }
+            // This assert is wrong, as it catches unary 
+            // transmissions as something we should be keeping.
+
+            //if self.nodes.children[node.index].is_empty()
+            //    && !self.nodes.flags[node.index].is_alive()
+            //{
+            //    assert!(
+            //        self.nodes.ancestry[node.index].is_empty(),
+            //        "{:?} -> {} -> {:?}",
+            //        self.nodes.parents[node.index],
+            //        node.index,
+            //        self.nodes.ancestry[node.index]
+            //    );
+            //}
 
             #[cfg(debug_assertions)]
             {
