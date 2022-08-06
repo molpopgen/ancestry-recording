@@ -281,6 +281,7 @@ fn process_overlaps(
         if borrowed_overlaps.len() == 1 {
             mapped_node = borrowed_overlaps[0].mapped_node;
             if flags[node_index].is_alive() {
+                println!("unary {} -> {}", node_index, mapped_node);
                 update_child_segments(node_index, mapped_node, left, right, children);
             }
         } else {
@@ -352,6 +353,10 @@ pub(crate) fn update_ancestry(
     }
 
     for child in children[node_index].keys() {
+        println!(
+            "update ancestry: add parent {} to child {}",
+            node_index, *child
+        );
         parents[*child].insert(node_index);
         assert!(parents[*child].contains(&node_index));
     }

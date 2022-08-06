@@ -167,12 +167,24 @@ impl IndexedPopulation {
             //    println!("{} {}", node.index, self.nodes.counts[node.index]);
             //}
             for child in self.nodes.children[node.index].keys() {
+                assert!(!self.nodes.ancestry[node.index].is_empty());
                 println!(
                     "incrementing counts of {} and {} <-> {:?}",
                     node.index, *child, self.nodes.parents[*child]
                 );
                 self.nodes.counts[node.index] += 1;
                 self.nodes.counts[*child] += 1;
+            }
+
+            if self.nodes.children[node.index].is_empty()
+                && !self.nodes.flags[node.index].is_alive()
+            {
+                assert!(
+                    self.nodes.ancestry[node.index].is_empty(),
+                    "{} -> {:?}",
+                    node.index,
+                    self.nodes.ancestry[node.index]
+                );
             }
 
             #[cfg(debug_assertions)]
@@ -276,10 +288,8 @@ impl IndexedPopulation {
                         assert_eq!(
                             self.nodes.counts[i],
                             0,
-                            "{} (? {} ?), (? {} ?)| {} {} | {:?} {:?} | {:?}",
+                            "{} | {} {} | {:?} {:?} | {:?}",
                             i,
-                            self.nodes.counts[1083],
-                            self.nodes.counts[1009],
                             current_time_point,
                             self.nodes.birth_time[i],
                             self.nodes.parents[i],
