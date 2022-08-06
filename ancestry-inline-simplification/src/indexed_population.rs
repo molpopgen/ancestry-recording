@@ -145,25 +145,25 @@ impl IndexedPopulation {
         while let Some(node) = self.heap.pop() {
             println!("{:?}", node);
             if matches!(node.node_type, NodeType::Death) {
-                println!(
-                    "before: {} -> {:?}",
-                    node.index, self.nodes.ancestry[node.index]
-                );
                 self.kill(node.index);
-                println!(
-                    "after: {} -> {:?}",
-                    node.index, self.nodes.ancestry[node.index]
-                );
             }
             if matches!(node.node_type, NodeType::Birth) {
                 assert!(self.nodes.flags[node.index].is_alive());
             }
+            println!(
+                "before: {} -> {:?}, {:?}",
+                node.index, self.nodes.ancestry[node.index], self.nodes.children[node.index],
+            );
             let changed = crate::indexed_node_update_ancestry::update_ancestry(
                 node.index,
                 &self.nodes.flags,
                 &mut self.nodes.ancestry,
                 &mut self.nodes.parents,
                 &mut self.nodes.children,
+            );
+            println!(
+                "after: {} -> {:?}, {:?}",
+                node.index, self.nodes.ancestry[node.index], self.nodes.children[node.index],
             );
             // TODO: is this the right criterion?
             // TODO: is this the right place to do this?
