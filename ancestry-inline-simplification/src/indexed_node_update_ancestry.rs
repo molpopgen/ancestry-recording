@@ -278,8 +278,15 @@ fn process_overlaps(
         let mut mapped_node = node_index;
         let borrowed_overlaps = overlaps.borrow();
 
+        println!("{:?}", borrowed_overlaps);
+
         if borrowed_overlaps.len() == 1 {
             mapped_node = borrowed_overlaps[0].mapped_node;
+            println!(
+                "mapped node is {}, {}",
+                mapped_node,
+                flags[mapped_node].is_alive()
+            );
             if flags[node_index].is_alive() {
                 println!("unary {} -> {}", node_index, mapped_node);
                 update_child_segments(node_index, mapped_node, left, right, children);
@@ -291,6 +298,7 @@ fn process_overlaps(
             }
         }
         if !flags[node_index].is_alive() {
+            println!("{} {}", *output_ancestry_index, input_ancestry_len);
             if *output_ancestry_index < input_ancestry_len {
                 // SAFETY: we just checked the bounds
                 let input_ancestry_seg = &mut ancestry[node_index][*output_ancestry_index];
@@ -310,6 +318,7 @@ fn process_overlaps(
             }
             *output_ancestry_index += 1;
         }
+        println!("{} {}", *output_ancestry_index, input_ancestry_len);
     }
 }
 
@@ -346,6 +355,10 @@ pub(crate) fn update_ancestry(
 
     if !flags[node_index].is_alive() {
         // Remove trailing input ancestry
+        println!(
+            "we need to truncate: {} {}",
+            output_ancestry_index, input_ancestry_len
+        );
         if output_ancestry_index < input_ancestry_len {
             ancestry[node_index].truncate(output_ancestry_index);
             ancestry_change_detected = true;
