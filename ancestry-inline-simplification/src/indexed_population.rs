@@ -145,7 +145,15 @@ impl IndexedPopulation {
         while let Some(node) = self.heap.pop() {
             println!("{:?}", node);
             if matches!(node.node_type, NodeType::Death) {
+                println!(
+                    "before: {} -> {:?}",
+                    node.index, self.nodes.ancestry[node.index]
+                );
                 self.kill(node.index);
+                println!(
+                    "after: {} -> {:?}",
+                    node.index, self.nodes.ancestry[node.index]
+                );
             }
             if matches!(node.node_type, NodeType::Birth) {
                 assert!(self.nodes.flags[node.index].is_alive());
