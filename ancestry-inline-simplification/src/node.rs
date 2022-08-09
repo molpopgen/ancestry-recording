@@ -2,6 +2,7 @@ use crate::InlineAncestryError;
 use crate::{
     AncestrySegment, HalfOpenInterval, LargeSignedInteger, NodeFlags, Segment, SignedInteger,
 };
+use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 use std::{cell::RefCell, ops::Deref};
@@ -32,6 +33,14 @@ pub struct NodeData {
     pub parents: ParentSet,
     pub ancestry: Vec<AncestrySegment>,
     pub children: ChildMap,
+}
+
+impl Debug for Node {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Node")
+            .field("index", &self.borrow().index)
+            .finish()
+    }
 }
 
 impl Deref for Node {

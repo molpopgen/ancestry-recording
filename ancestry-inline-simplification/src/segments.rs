@@ -40,7 +40,7 @@ impl Segment {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AncestrySegment {
     pub segment: Segment,
     pub child: Node,

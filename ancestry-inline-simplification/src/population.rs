@@ -158,6 +158,10 @@ impl EvolveAncestry for Population {
             &mut self.node_heap,
         )?;
 
+        for i in self.all_reachable_nodes() {
+            println!("{} -> {:?}", i.borrow().index, i.borrow().ancestry);
+        }
+
         #[cfg(debug_assertions)]
         {
             self.validate_graph()?;

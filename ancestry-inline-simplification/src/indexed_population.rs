@@ -238,6 +238,10 @@ impl IndexedPopulation {
             }
         }
         println!("{} {}", x.len(), x.iter().filter(|i| **i > 0).count());
+        println!("The ancestry is:");
+        for (i, a) in self.nodes.ancestry.iter().enumerate() {
+            println!("{} -> {}, {:?}", i, x[i], *a);
+        }
         // println!("{:?}", self.nodes);
         // println!("{:?}", self.nodes.flags);
         Ok(())
