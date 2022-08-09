@@ -247,10 +247,12 @@ impl IndexedPopulation {
         for b in self.births.iter() {
             assert_eq!(self.nodes.birth_time[*b], current_time_point);
             assert!(self.nodes.flags[*b].is_alive());
+            println!("{} adding birth node {} to heap", current_time_point, *b);
             self.heap
                 .push_if(*b, self.nodes.birth_time[*b], NodeType::Birth);
         }
         for d in self.deaths.iter() {
+            println!("{} adding death node {} to heap", current_time_point, *d);
             self.heap
                 .push_if(*d, self.nodes.birth_time[*d], NodeType::Death);
         }
