@@ -174,17 +174,21 @@ impl IndexedPopulation {
             //    }
             //    println!("{} {}", node.index, self.nodes.counts[node.index]);
             //}
+            if self.nodes.flags[node.index].is_alive() {
+                self.nodes.counts[node.index] += 1;
+            }
             for child in self.nodes.children[node.index].keys() {
-                assert!(!self.nodes.ancestry[node.index].is_empty());
+                assert!(self.nodes.parents[*child].contains(&node.index));
+                //assert!(!self.nodes.ancestry[node.index].is_empty());
                 println!(
                     "incrementing counts of {} and {} <-> {:?}",
                     node.index, *child, self.nodes.parents[*child]
                 );
                 self.nodes.counts[node.index] += 1;
-                self.nodes.counts[*child] += 1;
+                //self.nodes.counts[*child] += 1;
             }
 
-            // This assert is wrong, as it catches unary 
+            // This assert is wrong, as it catches unary
             // transmissions as something we should be keeping.
 
             //if self.nodes.children[node.index].is_empty()
@@ -281,13 +285,14 @@ impl IndexedPopulation {
         {
             for (i, p) in self.nodes.parents.iter().enumerate() {
                 if self.nodes.counts[i] > 0 {
-                    for pi in p {
-                        assert!(self.nodes.counts[*pi] > 0, "{}", *pi);
-                        for c in self.nodes.children[*pi].keys() {
-                            assert!(self.nodes.counts[*c] > 0, "{}", *c);
-                        }
-                    }
+                    //for pi in p {
+                    //    assert!(self.nodes.counts[*pi] > 0, "{}", *pi);
+                    //    for c in self.nodes.children[*pi].keys() {
+                    //        assert!(self.nodes.counts[*c] > 0, "{}", *c);
+                    //    }
+                    //}
                     if self.nodes.ancestry[i].is_empty() {
+                        assert!(!self.nodes.flags[i].is_alive());
                         // node i cannot be a parent
                         for (j, pp) in self.nodes.parents.iter().enumerate() {
                             assert!(pp.get(&i).is_none());
@@ -304,7 +309,7 @@ impl IndexedPopulation {
                             i,
                             current_time_point,
                             self.nodes.birth_time[i],
-                            self.nodes.parents[i],
+                            *p,
                             self.nodes.children[i],
                             self.nodes.flags[i],
                         );
