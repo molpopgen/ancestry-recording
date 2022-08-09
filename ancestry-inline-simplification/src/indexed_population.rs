@@ -228,6 +228,16 @@ impl IndexedPopulation {
                 }
             }
         }
+        let mut x = vec![0; self.nodes.counts.len()];
+        for (i, parents) in self.nodes.parents.iter().enumerate() {
+            if self.nodes.flags[i].is_alive() {
+                x[i] += 1;
+            }
+            for p in parents {
+                x[*p] += 1;
+            }
+        }
+        println!("{} {}", x.len(), x.iter().filter(|i| **i > 0).count());
         // println!("{:?}", self.nodes);
         // println!("{:?}", self.nodes.flags);
         Ok(())
