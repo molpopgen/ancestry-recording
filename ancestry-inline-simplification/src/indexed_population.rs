@@ -135,7 +135,10 @@ impl IndexedPopulation {
         });
     }
 
-    fn propagate_ancestry_changes(&mut self) -> Result<(), InlineAncestryError> {
+    fn propagate_ancestry_changes(
+        &mut self,
+        current_time_point: LargeSignedInteger,
+    ) -> Result<(), InlineAncestryError> {
         // Set all counts to zero == setting all output node IDs to NULL.
         self.nodes.counts.fill(0);
 
@@ -143,7 +146,7 @@ impl IndexedPopulation {
         // println!("{:?}", self.heap);
         // println!("{:?}", self.nodes.flags);
         while let Some(node) = self.heap.pop() {
-            println!("{:?}", node);
+            println!("{} -> {:?}", current_time_point, node);
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
@@ -215,7 +218,10 @@ impl IndexedPopulation {
 
             if changed || self.nodes.flags[node.index].is_alive() {
                 for parent in self.nodes.parents[node.index].iter() {
-                    println!("adding parent node {} to heap", *parent);
+                    println!(
+                        "{}: adding parent node {} to heap",
+                        current_time_point, *parent
+                    );
                     assert_ne!(*parent, node.index);
                     self.heap
                         .push_if(*parent, self.nodes.birth_time[*parent], NodeType::Parent);
@@ -251,7 +257,7 @@ impl IndexedPopulation {
         self.births.clear();
 
         // println!("{:?}", self.nodes.flags);
-        self.propagate_ancestry_changes()?;
+        self.propagate_ancestry_changes(current_time_point)?;
         // println!("{:?}", self.nodes.flags);
 
         debug_assert_eq!(
