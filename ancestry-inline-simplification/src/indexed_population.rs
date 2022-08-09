@@ -215,6 +215,7 @@ impl IndexedPopulation {
 
             if changed || self.nodes.flags[node.index].is_alive() {
                 for parent in self.nodes.parents[node.index].iter() {
+                    println!("adding parent node {} to heap", *parent);
                     assert_ne!(*parent, node.index);
                     self.heap
                         .push_if(*parent, self.nodes.birth_time[*parent], NodeType::Parent);
