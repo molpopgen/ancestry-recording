@@ -377,6 +377,7 @@ impl EvolveAncestry for IndexedPopulation {
         self.deaths.clear();
         self.next_replacement.clear();
 
+        unimplemented!("We are not book-keeping something right...");
         for (i, n) in self.alive_nodes.iter().enumerate() {
             if death.dies() {
                 self.deaths.push(*n);
