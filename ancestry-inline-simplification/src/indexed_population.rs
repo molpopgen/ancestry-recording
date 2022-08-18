@@ -80,7 +80,7 @@ pub struct IndexedPopulation {
     pub alive_nodes: Vec<usize>,
     pub births: Vec<usize>,
     pub deaths: Vec<usize>,
-    pub next_replacement: Vec<usize>,
+    pub next_replacement: usize,
     pub heap: NodeHeap,
 }
 
@@ -108,7 +108,7 @@ impl IndexedPopulation {
                 alive_nodes,
                 births: vec![],
                 deaths: vec![],
-                next_replacement: vec![],
+                next_replacement: 0,
                 heap: NodeHeap::default(),
             })
         } else {
@@ -274,7 +274,7 @@ impl IndexedPopulation {
             self.heap
                 .push_if(*d, self.nodes.birth_time[*d], NodeType::Death);
         }
-        self.births.clear();
+        //self.births.clear();
 
         // println!("{:?}", self.nodes.flags);
         self.propagate_ancestry_changes(current_time_point)?;
@@ -286,6 +286,11 @@ impl IndexedPopulation {
             "{}",
             current_time_point
         );
+        for (i, j) in self.deaths.iter().zip(self.births.iter()) {
+            println!("replacing {} {}", *i, *j);
+            self.alive_nodes[*i] = *j;
+        }
+        self.births.clear();
 
         // add to queue
         // We clear the queue to avoid duplicating
@@ -375,21 +380,25 @@ impl EvolveAncestry for IndexedPopulation {
 
     fn generate_deaths(&mut self, death: &mut neutral_evolution::Death) -> usize {
         self.deaths.clear();
-        self.next_replacement.clear();
+        self.next_replacement = 0;
 
         // FIXME: we have a royal poop-show going on:
         // 1. The parent picker returns U[0, popsize) as usize.
         // 2. We need to get that from alive nodes, but we
         //    are over-writing that as we go, which is dumbo.
-        unimplemented!("We are not book-keeping something right...");
+        // unimplemented!("We are not book-keeping something right...");
         for (i, n) in self.alive_nodes.iter().enumerate() {
             if death.dies() {
-                self.deaths.push(*n);
-                self.next_replacement.push(i);
+                self.deaths.push(i);
             }
         }
 
-        self.next_replacement.len()
+        println!(
+            "deaths: {:?} | {:?} <-> {:?}",
+            self.deaths, self.next_replacement, self.alive_nodes
+        );
+
+        self.deaths.len()
     }
 
     fn current_population_size(&self) -> usize {
@@ -408,7 +417,7 @@ impl EvolveAncestry for IndexedPopulation {
         let birth_node_index = self.add_birth(birth_time).unwrap();
 
         for b in breakpoints {
-            let parent = b.parent; // self.alive_nodes[b.parent];
+            let parent = self.alive_nodes[b.parent];
             assert!(
                 self.nodes.birth_time[parent] < birth_time,
                 "{} ({}) -> {} ({})",
@@ -433,19 +442,21 @@ impl EvolveAncestry for IndexedPopulation {
         }
 
         // handle our updating of alive nodes
-        match self.next_replacement.pop() {
-            Some(index) => {
-                // println!(
-                //     "replacing death {} at {} with {}",
-                //     self.alive_nodes[index], index, birth_node_index
-                // );
-                self.alive_nodes[index] = birth_node_index;
-            }
-            None => {
-                // println!("pushing alive node {}", birth_node_index);
-                self.alive_nodes.push(birth_node_index);
-            }
-        }
+        //match self.next_replacement.pop() {
+        //    Some(index) => {
+        //        // println!(
+        //        //     "replacing death {} at {} with {}",
+        //        //     self.alive_nodes[index], index, birth_node_index
+        //        // );
+        //        self.alive_nodes[index] = birth_node_index;
+        //    }
+        //    None => {
+        //        // println!("pushing alive node {}", birth_node_index);
+        //        self.alive_nodes.push(birth_node_index);
+        //    }
+        //}
+        assert!(self.next_replacement < self.deaths.len());
+        self.next_replacement += 1;
         self.births.push(birth_node_index);
 
         Ok(())
