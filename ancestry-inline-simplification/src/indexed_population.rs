@@ -377,6 +377,10 @@ impl EvolveAncestry for IndexedPopulation {
         self.deaths.clear();
         self.next_replacement.clear();
 
+        // FIXME: we have a royal poop-show going on:
+        // 1. The parent picker returns U[0, popsize) as usize.
+        // 2. We need to get that from alive nodes, but we
+        //    are over-writing that as we go, which is dumbo.
         unimplemented!("We are not book-keeping something right...");
         for (i, n) in self.alive_nodes.iter().enumerate() {
             if death.dies() {
