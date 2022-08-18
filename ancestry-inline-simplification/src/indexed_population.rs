@@ -399,7 +399,7 @@ impl EvolveAncestry for IndexedPopulation {
         let birth_node_index = self.add_birth(birth_time).unwrap();
 
         for b in breakpoints {
-            let parent = self.alive_nodes[b.parent];
+            let parent = b.parent; // self.alive_nodes[b.parent];
             assert!(
                 self.nodes.birth_time[parent] < birth_time,
                 "{} ({}) -> {} ({})",
