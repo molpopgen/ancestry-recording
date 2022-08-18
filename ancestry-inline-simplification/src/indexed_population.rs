@@ -180,6 +180,10 @@ impl IndexedPopulation {
             if self.nodes.flags[node.index].is_alive() {
                 self.nodes.counts[node.index] += 1;
             }
+
+            // NOTE: this look may need revisiting.
+            // It is more correct for nodes to keep their PARENTS
+            // alive rather than the other way around
             for child in self.nodes.children[node.index].keys() {
                 assert!(self.nodes.parents[*child].contains(&node.index));
                 //assert!(!self.nodes.ancestry[node.index].is_empty());
