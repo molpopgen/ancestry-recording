@@ -400,10 +400,22 @@ impl EvolveAncestry for IndexedPopulation {
 
         for b in breakpoints {
             let parent = self.alive_nodes[b.parent];
+            assert!(
+                self.nodes.birth_time[parent] < birth_time,
+                "{} ({}) -> {} ({})",
+                parent,
+                self.nodes.birth_time[parent],
+                birth_node_index,
+                birth_time
+            );
             assert_ne!(birth_node_index, parent);
             println!(
-                "adding parent {} (or is it {}) to {}",
-                b.parent, self.alive_nodes[b.parent], birth_node_index
+                "adding parent {} (or is it {}) to {} | {:?}, {:?}",
+                b.parent,
+                self.alive_nodes[b.parent],
+                birth_node_index,
+                self.next_replacement,
+                self.alive_nodes
             );
             self.nodes.parents[birth_node_index].insert(parent);
             self.nodes
