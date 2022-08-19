@@ -1,2 +1,2 @@
 ./target/debug/benchmark -N 10 -n 1 -r 50 flattened-v1
-./target/debug/benchmark -N 10 -n 1 -r 50 dynamic|sort -n
+./target/debug/benchmark -N 10 -n 1 -r 50 dynamic

@@ -158,8 +158,15 @@ impl EvolveAncestry for Population {
             &mut self.node_heap,
         )?;
 
+        let mut ancestry = vec![];
         for i in self.all_reachable_nodes() {
-            println!("{} -> {:?}", i.borrow().index, i.borrow().ancestry);
+            ancestry.push((i.borrow().index, i.clone()));
+            //println!("{} -> {:?}", i.borrow().index, i.borrow().ancestry);
+        }
+        println!("The ancestry is:");
+        ancestry.sort_by(|a, b| a.0.cmp(&b.0));
+        for a in ancestry {
+            println!("{} -> {:?}", a.0, a.1.borrow().ancestry);
         }
 
         #[cfg(debug_assertions)]
