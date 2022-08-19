@@ -153,10 +153,10 @@ impl IndexedPopulation {
             if matches!(node.node_type, NodeType::Birth) {
                 assert!(self.nodes.flags[node.index].is_alive());
             }
-            println!(
-                "before: {} -> {:?}, {:?}",
-                node.index, self.nodes.ancestry[node.index], self.nodes.children[node.index],
-            );
+            // println!(
+            //     "before: {} -> {:?}, {:?}",
+            //     node.index, self.nodes.ancestry[node.index], self.nodes.children[node.index],
+            // );
             let changed = crate::indexed_node_update_ancestry::update_ancestry(
                 node.index,
                 &self.nodes.flags,
@@ -164,10 +164,10 @@ impl IndexedPopulation {
                 &mut self.nodes.parents,
                 &mut self.nodes.children,
             );
-            println!(
-                "after: {} -> {:?}, {:?}",
-                node.index, self.nodes.ancestry[node.index], self.nodes.children[node.index],
-            );
+            // println!(
+            //     "after: {} -> {:?}, {:?}",
+            //     node.index, self.nodes.ancestry[node.index], self.nodes.children[node.index],
+            // );
             // TODO: is this the right criterion?
             // TODO: is this the right place to do this?
             //if !self.nodes.ancestry[node.index].is_empty() {
@@ -187,10 +187,10 @@ impl IndexedPopulation {
             for child in self.nodes.children[node.index].keys() {
                 assert!(self.nodes.parents[*child].contains(&node.index));
                 //assert!(!self.nodes.ancestry[node.index].is_empty());
-                println!(
-                    "incrementing counts of {} and {} <-> {:?}",
-                    node.index, *child, self.nodes.parents[*child]
-                );
+                //println!(
+                //    "incrementing counts of {} and {} <-> {:?}",
+                //    node.index, *child, self.nodes.parents[*child]
+                //);
                 self.nodes.counts[node.index] += 1;
                 //self.nodes.counts[*child] += 1;
             }
@@ -222,10 +222,10 @@ impl IndexedPopulation {
 
             if changed || self.nodes.flags[node.index].is_alive() {
                 for parent in self.nodes.parents[node.index].iter() {
-                    println!(
-                        "{}: adding parent node {} to heap",
-                        current_time_point, *parent
-                    );
+                    //println!(
+                    //    "{}: adding parent node {} to heap",
+                    //    current_time_point, *parent
+                    //);
                     assert_ne!(*parent, node.index);
                     self.heap
                         .push_if(*parent, self.nodes.birth_time[*parent], NodeType::Parent);
@@ -241,7 +241,7 @@ impl IndexedPopulation {
                 x[*p] += 1;
             }
         }
-        println!("{} {}", x.len(), x.iter().filter(|i| **i > 0).count());
+        //println!("{} {}", x.len(), x.iter().filter(|i| **i > 0).count());
         println!("The ancestry is:");
         for (i, a) in self.nodes.ancestry.iter().enumerate() {
             println!("{} -> {}, {:?}", i, x[i], *a);
