@@ -260,6 +260,8 @@ impl IndexedPopulation {
             "1096 starting simplifying time point {}",
             current_time_point
         );
+        println!("births = {:?}", self.births);
+        println!("deaths = {:?}", self.deaths);
         //assert_eq!(self.deaths.len(), self.births.len()); // NOTE: this is wrong for growing pops, etc..
         self.heap.initialize(self.nodes.birth_time.len());
 
