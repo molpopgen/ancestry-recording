@@ -260,11 +260,16 @@ impl IndexedPopulation {
                 x[*p] += 1;
             }
         }
-        //println!("{} {}", x.len(), x.iter().filter(|i| **i > 0).count());
-        //println!("The ancestry is:");
-        //for (i, a) in self.nodes.ancestry.iter().enumerate() {
-        //    println!("{} -> {}|{}, {:?}", i, x[i], self.nodes.counts[i], *a);
-        //}
+        println!("{} {}", x.len(), x.iter().filter(|i| **i > 0).count());
+        println!("The ancestry is:");
+        for (i, a) in self.nodes.ancestry.iter().enumerate() {
+            println!("{} -> {}|{}, {:?}", i, x[i], self.nodes.counts[i], *a);
+            assert_eq!(
+                x[i], self.nodes.counts[i],
+                "{} {:?}, {:?} <-> {:?}",
+                i, self.nodes.flags[i], self.nodes.children[i], self.nodes.parents[i]
+            );
+        }
         // println!("{:?}", self.nodes);
         // println!("{:?}", self.nodes.flags);
         Ok(())
