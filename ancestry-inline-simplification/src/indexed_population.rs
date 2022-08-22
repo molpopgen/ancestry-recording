@@ -264,9 +264,17 @@ impl IndexedPopulation {
         println!("The ancestry is:");
         for (i, a) in self.nodes.ancestry.iter().enumerate() {
             println!("{} -> {}|{}, {:?}", i, x[i], self.nodes.counts[i], *a);
+            if x[i] != self.nodes.counts[i] {
+                for p in &self.nodes.parents[i] {
+                    println!(
+                        "parent {} -> children are: {:?}",
+                        *p, self.nodes.children[*p]
+                    );
+                }
+            }
             assert_eq!(
                 x[i], self.nodes.counts[i],
-                "{} {:?}, {:?} <-> {:?}",
+                "{} {:?}, children: {:?} <-> parents: {:?}",
                 i, self.nodes.flags[i], self.nodes.children[i], self.nodes.parents[i]
             );
         }
