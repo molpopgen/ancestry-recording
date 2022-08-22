@@ -125,6 +125,7 @@ impl IndexedPopulation {
 
     fn kill(&mut self, index: usize) {
         assert!(index < self.nodes.counts.len());
+        println!("killing {}", index);
         self.nodes.flags[index].clear_alive();
         self.nodes.ancestry[index].retain(|a| {
             if a.left() == 0 && a.right() == self.genome_length {
@@ -146,7 +147,7 @@ impl IndexedPopulation {
         // println!("{:?}", self.heap);
         // println!("{:?}", self.nodes.flags);
         while let Some(node) = self.heap.pop() {
-            println!("{} -> {:?}", current_time_point, node);
+            println!("Processing heap entry: {} -> {:?}", current_time_point, node);
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
@@ -269,6 +270,7 @@ impl IndexedPopulation {
             self.heap
                 .push_if(*b, self.nodes.birth_time[*b], NodeType::Birth);
         }
+
         for d in self.deaths.iter() {
             println!("{} adding death node {} to heap", current_time_point, *d);
             self.heap
