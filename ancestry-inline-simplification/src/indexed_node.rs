@@ -97,8 +97,8 @@ impl NodeTable {
                 });
                 self.children[index].clear();
                 println!(
-                    "done recycling {},parents = {:?}",
-                    index, self.parents[index]
+                    "done recycling {},parents = {:?}, flags = {:?}",
+                    index, self.parents[index], self.flags[index],
                 );
                 Ok(index)
             }

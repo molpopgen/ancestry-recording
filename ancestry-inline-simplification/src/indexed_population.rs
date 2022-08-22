@@ -147,7 +147,10 @@ impl IndexedPopulation {
         // println!("{:?}", self.heap);
         // println!("{:?}", self.nodes.flags);
         while let Some(node) = self.heap.pop() {
-            println!("Processing heap entry: {} -> {:?}", current_time_point, node);
+            println!(
+                "Processing heap entry: {} -> {:?}",
+                current_time_point, node
+            );
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
@@ -274,9 +277,15 @@ impl IndexedPopulation {
         }
 
         for d in self.deaths.iter() {
-            println!("{} adding death node {} to heap", current_time_point, *d);
-            self.heap
-                .push_if(*d, self.nodes.birth_time[*d], NodeType::Death);
+            println!(
+                "{} adding death node {} ({}) to heap",
+                current_time_point, *d, self.alive_nodes[*d]
+            );
+            self.heap.push_if(
+                self.alive_nodes[*d],
+                self.nodes.birth_time[self.alive_nodes[*d]],
+                NodeType::Death,
+            );
         }
         //self.births.clear();
 
@@ -398,7 +407,7 @@ impl EvolveAncestry for IndexedPopulation {
         }
 
         println!(
-            "deaths: {:?} | {:?} <-> {:?}",
+            "deaths: indexes = {:?} | {:?} <-> node ids = {:?}",
             self.deaths, self.next_replacement, self.alive_nodes
         );
 
