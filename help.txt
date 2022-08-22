@@ -1,2 +1,2 @@
-./target/debug/benchmark -N 10 -n 510 -r 50 flattened-v1
-./target/debug/benchmark -N 10 -n 510 -r 50 dynamic
+./target/debug/benchmark -N 10 -n 201 -r 50 flattened-v1
+./target/debug/benchmark -N 10 -n 201 -r 50 dynamic
