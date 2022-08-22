@@ -60,7 +60,7 @@ impl NodeTable {
     ) -> Result<usize, usize> {
         match self.queue.pop() {
             Some(index) => {
-                println!("recycling index {} {:?}", index, self.parents[index]);
+                //println!("recycling index {} {:?}", index, self.parents[index]);
                 assert_eq!(self.index[index], index);
                 assert_eq!(self.counts[index], 0);
 
@@ -96,10 +96,10 @@ impl NodeTable {
                     child: index,
                 });
                 self.children[index].clear();
-                println!(
-                    "done recycling {},parents = {:?}, flags = {:?}",
-                    index, self.parents[index], self.flags[index],
-                );
+                //println!(
+                //    "done recycling {},parents = {:?}, flags = {:?}",
+                //    index, self.parents[index], self.flags[index],
+                //);
                 Ok(index)
             }
             None => {

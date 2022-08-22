@@ -324,16 +324,16 @@ impl IndexedPopulation {
         // We clear the queue to avoid duplicating
         // indexes (e.g., an index previously entered
         // but did not get recycled in the last round).
-        //self.nodes.queue.clear();
-        //let mut reachable = 0;
-        //for (i, c) in self.nodes.counts.iter().enumerate() {
-        //    if *c == 0 {
-        //        // println!("setting {} for recycling", i);
-        //        self.nodes.queue.push(i);
-        //    } else {
-        //        reachable += 1;
-        //    }
-        //}
+        self.nodes.queue.clear();
+        let mut reachable = 0;
+        for (i, c) in self.nodes.counts.iter().enumerate() {
+            if *c == 0 {
+                // println!("setting {} for recycling", i);
+                self.nodes.queue.push(i);
+            } else {
+                reachable += 1;
+            }
+        }
         //println!(
         //    "{} {} {}",
         //    current_time_point,
@@ -394,6 +394,11 @@ impl IndexedPopulation {
         assert!(self.heap.heap.is_empty());
 
         //println!("1096 done simplifying time point {}", current_time_point);
+        //println!(
+        //    "{} {}",
+        //    self.nodes.counts.len(),
+        //    self.nodes.counts.iter().filter(|x| *x > &0).count()
+        //);
 
         Ok(())
     }
