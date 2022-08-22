@@ -172,13 +172,16 @@ impl IndexedPopulation {
                 &mut self.nodes.parents,
                 &mut self.nodes.children,
             );
-            //println!(
-            //    "after: {} -> {:?}, {:?}, {:?}",
-            //    node.index,
-            //    self.nodes.ancestry[node.index],
-            //    self.nodes.children[node.index],
-            //    self.nodes.parents[node.index]
-            //);
+            if node.index == 38 {
+                println!(
+                    "after: {} ==> {} -> anc: {:?}, children: {:?}, parents: {:?}",
+                    current_time_point,
+                    node.index,
+                    self.nodes.ancestry[node.index],
+                    self.nodes.children[node.index],
+                    self.nodes.parents[node.index]
+                );
+            }
             // TODO: is this the right criterion?
             // TODO: is this the right place to do this?
             //if !self.nodes.ancestry[node.index].is_empty() {
@@ -197,19 +200,22 @@ impl IndexedPopulation {
             // NOTE: this look may need revisiting.
             // It is more correct for nodes to keep their PARENTS
             // alive rather than the other way around
-            if self.nodes.flags[node.index].is_alive() {
-                self.nodes.counts[node.index] += 1;
-            }
-            for child in self.nodes.children[node.index].keys() {
-                assert!(self.nodes.parents[*child].contains(&node.index));
-                //assert!(!self.nodes.ancestry[node.index].is_empty());
-                //println!(
-                //    "incrementing counts of {} and {} <-> {:?}",
-                //    node.index, *child, self.nodes.parents[*child]
-                //);
-                self.nodes.counts[node.index] += 1;
-                //self.nodes.counts[*child] += 1;
-            }
+            //if self.nodes.flags[node.index].is_alive() {
+            //    self.nodes.counts[node.index] += 1;
+            //}
+            //for child in self.nodes.children[node.index].keys() {
+            //    if node.index == 38 {
+            //        println!("after child == {}", *child);
+            //    }
+            //    assert!(self.nodes.parents[*child].contains(&node.index));
+            //    //assert!(!self.nodes.ancestry[node.index].is_empty());
+            //    //println!(
+            //    //    "incrementing counts of {} and {} <-> {:?}",
+            //    //    node.index, *child, self.nodes.parents[*child]
+            //    //);
+            //    self.nodes.counts[node.index] += 1;
+            //    //self.nodes.counts[*child] += 1;
+            //}
             //for parent in self.nodes.parents[node.index].iter() {
             //    self.nodes.counts[*parent] += 1;
             //}
@@ -249,6 +255,27 @@ impl IndexedPopulation {
                     self.heap
                         .push_if(*parent, self.nodes.birth_time[*parent], NodeType::Parent);
                 }
+            } else {
+                if self.nodes.parents[node.index].contains(&38) {
+                    println!(
+                        "after {}: not putting parent 38 of {} into the queue",
+                        current_time_point, node.index
+                    );
+                }
+            }
+            if node.index == 38 {
+                println!(
+                    "after {} {}",
+                    current_time_point, self.nodes.counts[node.index]
+                );
+            }
+        }
+        for (i, parents) in self.nodes.parents.iter().enumerate() {
+            if self.nodes.flags[i].is_alive() {
+                self.nodes.counts[i] += 1;
+            }
+            for p in parents {
+                self.nodes.counts[*p] += 1;
             }
         }
         let mut x = vec![0; self.nodes.counts.len()];
@@ -273,11 +300,17 @@ impl IndexedPopulation {
                 }
             }
             assert_eq!(
-                x[i], self.nodes.counts[i],
-                "{} {:?}, children: {:?} <-> parents: {:?}",
-                i, self.nodes.flags[i], self.nodes.children[i], self.nodes.parents[i]
+                x[i],
+                self.nodes.counts[i],
+                "{}: {} {:?}, children: {:?} <-> parents: {:?}",
+                current_time_point,
+                i,
+                self.nodes.flags[i],
+                self.nodes.children[i],
+                self.nodes.parents[i]
             );
         }
+
         // println!("{:?}", self.nodes);
         // println!("{:?}", self.nodes.flags);
         Ok(())
@@ -516,7 +549,18 @@ impl EvolveAncestry for IndexedPopulation {
         // println!("{:?}", self.deaths);
         // println!("{:?}", self.births);
         // println!("{:?}", self.alive_nodes);
-        self.simplify(current_time_point)
+        if self.nodes.counts.len() > 38 {
+            println!(
+                "before after {}, {} {:?} {:?}",
+                current_time_point,
+                self.nodes.counts[38],
+                self.nodes.children[38],
+                self.nodes.parents[38]
+            );
+        }
+        let rv = self.simplify(current_time_point);
+        println!("after {}", current_time_point);
+        rv
     }
 
     fn finish(
