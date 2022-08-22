@@ -85,6 +85,7 @@ fn main() {
             let mut population =
                 IndexedPopulation::new(args.popsize, args.sequence_length).unwrap();
             evolve_wrapper(parameters, args, &mut population);
+            println!("num still reachable = {}", population.num_still_reachable());
         }
     }
 }

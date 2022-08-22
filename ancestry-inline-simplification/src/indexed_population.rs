@@ -116,6 +116,10 @@ impl IndexedPopulation {
         }
     }
 
+    pub fn num_still_reachable(&self) -> usize {
+        self.nodes.counts.iter().filter(|c| *c > &0).count()
+    }
+
     fn add_birth(&mut self, birth_time: LargeSignedInteger) -> Result<usize, usize> {
         match self.nodes.new_birth(birth_time, self.genome_length) {
             Ok(b) => Ok(b),
@@ -125,7 +129,7 @@ impl IndexedPopulation {
 
     fn kill(&mut self, index: usize) {
         assert!(index < self.nodes.counts.len());
-        println!("killing {}", index);
+        //println!("killing {}", index);
         self.nodes.flags[index].clear_alive();
         self.nodes.ancestry[index].retain(|a| {
             if a.left() == 0 && a.right() == self.genome_length {
@@ -147,10 +151,10 @@ impl IndexedPopulation {
         // println!("{:?}", self.heap);
         // println!("{:?}", self.nodes.flags);
         while let Some(node) = self.heap.pop() {
-            println!(
-                "Processing heap entry: {} -> {:?}",
-                current_time_point, node
-            );
+            //println!(
+            //    "Processing heap entry: {} -> {:?}",
+            //    current_time_point, node
+            //);
             if matches!(node.node_type, NodeType::Death) {
                 self.kill(node.index);
             }
@@ -174,29 +178,34 @@ impl IndexedPopulation {
             // );
             // TODO: is this the right criterion?
             // TODO: is this the right place to do this?
-            //if !self.nodes.ancestry[node.index].is_empty() {
-            //    self.nodes.counts[node.index] += 1;
-            //    for child in self.nodes.children[node.index].keys() {
-            //        self.nodes.counts[*child] += 1;
-            //    }
-            //    println!("{} {}", node.index, self.nodes.counts[node.index]);
-            //}
-            if self.nodes.flags[node.index].is_alive() {
+            if !self.nodes.ancestry[node.index].is_empty() {
                 self.nodes.counts[node.index] += 1;
+                for child in self.nodes.children[node.index].keys() {
+                    self.nodes.counts[*child] += 1;
+                }
+                // println!("{} {}", node.index, self.nodes.counts[node.index]);
             }
+            // if !self.nodes.ancestry[node.index].is_empty() {
+            //     if self.nodes.flags[node.index].is_alive() {
+            //         self.nodes.counts[node.index] += 1;
+            //     }
+            // }
 
             // NOTE: this look may need revisiting.
             // It is more correct for nodes to keep their PARENTS
             // alive rather than the other way around
-            for child in self.nodes.children[node.index].keys() {
-                assert!(self.nodes.parents[*child].contains(&node.index));
-                //assert!(!self.nodes.ancestry[node.index].is_empty());
-                //println!(
-                //    "incrementing counts of {} and {} <-> {:?}",
-                //    node.index, *child, self.nodes.parents[*child]
-                //);
-                self.nodes.counts[node.index] += 1;
-                //self.nodes.counts[*child] += 1;
+            //for child in self.nodes.children[node.index].keys() {
+            //    assert!(self.nodes.parents[*child].contains(&node.index));
+            //    //assert!(!self.nodes.ancestry[node.index].is_empty());
+            //    //println!(
+            //    //    "incrementing counts of {} and {} <-> {:?}",
+            //    //    node.index, *child, self.nodes.parents[*child]
+            //    //);
+            //    self.nodes.counts[node.index] += 1;
+            //    //self.nodes.counts[*child] += 1;
+            //}
+            for parent in self.nodes.parents[node.index].iter() {
+                self.nodes.counts[*parent] += 1;
             }
 
             // This assert is wrong, as it catches unary
@@ -246,10 +255,10 @@ impl IndexedPopulation {
             }
         }
         //println!("{} {}", x.len(), x.iter().filter(|i| **i > 0).count());
-        println!("The ancestry is:");
-        for (i, a) in self.nodes.ancestry.iter().enumerate() {
-            println!("{} -> {}, {:?}", i, x[i], *a);
-        }
+        //println!("The ancestry is:");
+        //for (i, a) in self.nodes.ancestry.iter().enumerate() {
+        //    println!("{} -> {}, {:?}", i, x[i], *a);
+        //}
         // println!("{:?}", self.nodes);
         // println!("{:?}", self.nodes.flags);
         Ok(())
@@ -259,28 +268,28 @@ impl IndexedPopulation {
         &mut self,
         current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!(
-            "1096 starting simplifying time point {}",
-            current_time_point
-        );
-        println!("births = {:?}", self.births);
-        println!("deaths = {:?}", self.deaths);
+        //println!(
+        //    "1096 starting simplifying time point {}",
+        //    current_time_point
+        //);
+        //println!("births = {:?}", self.births);
+        //println!("deaths = {:?}", self.deaths);
         //assert_eq!(self.deaths.len(), self.births.len()); // NOTE: this is wrong for growing pops, etc..
         self.heap.initialize(self.nodes.birth_time.len());
 
         for b in self.births.iter() {
             assert_eq!(self.nodes.birth_time[*b], current_time_point);
             assert!(self.nodes.flags[*b].is_alive());
-            println!("{} adding birth node {} to heap", current_time_point, *b);
+            //println!("{} adding birth node {} to heap", current_time_point, *b);
             self.heap
                 .push_if(*b, self.nodes.birth_time[*b], NodeType::Birth);
         }
 
         for d in self.deaths.iter() {
-            println!(
-                "{} adding death node {} ({}) to heap",
-                current_time_point, *d, self.alive_nodes[*d]
-            );
+            //println!(
+            //    "{} adding death node {} ({}) to heap",
+            //    current_time_point, *d, self.alive_nodes[*d]
+            //);
             self.heap.push_if(
                 self.alive_nodes[*d],
                 self.nodes.birth_time[self.alive_nodes[*d]],
@@ -300,7 +309,7 @@ impl IndexedPopulation {
             current_time_point
         );
         for (i, j) in self.deaths.iter().zip(self.births.iter()) {
-            println!("replacing {} {}", *i, *j);
+            //println!("replacing {} {}", *i, *j);
             self.alive_nodes[*i] = *j;
         }
         self.births.clear();
@@ -309,22 +318,22 @@ impl IndexedPopulation {
         // We clear the queue to avoid duplicating
         // indexes (e.g., an index previously entered
         // but did not get recycled in the last round).
-        self.nodes.queue.clear();
-        let mut reachable = 0;
-        for (i, c) in self.nodes.counts.iter().enumerate() {
-            if *c == 0 {
-                // println!("setting {} for recycling", i);
-                self.nodes.queue.push(i);
-            } else {
-                reachable += 1;
-            }
-        }
-        println!(
-            "{} {} {}",
-            current_time_point,
-            reachable,
-            self.nodes.queue.len()
-        );
+        //self.nodes.queue.clear();
+        //let mut reachable = 0;
+        //for (i, c) in self.nodes.counts.iter().enumerate() {
+        //    if *c == 0 {
+        //        // println!("setting {} for recycling", i);
+        //        self.nodes.queue.push(i);
+        //    } else {
+        //        reachable += 1;
+        //    }
+        //}
+        //println!(
+        //    "{} {} {}",
+        //    current_time_point,
+        //    reachable,
+        //    self.nodes.queue.len()
+        //);
 
         #[cfg(debug_assertions)]
         {
@@ -378,7 +387,7 @@ impl IndexedPopulation {
 
         assert!(self.heap.heap.is_empty());
 
-        println!("1096 done simplifying time point {}", current_time_point);
+        //println!("1096 done simplifying time point {}", current_time_point);
 
         Ok(())
     }
@@ -406,10 +415,10 @@ impl EvolveAncestry for IndexedPopulation {
             }
         }
 
-        println!(
-            "deaths: indexes = {:?} | {:?} <-> node ids = {:?}",
-            self.deaths, self.next_replacement, self.alive_nodes
-        );
+        //println!(
+        //    "deaths: indexes = {:?} | {:?} <-> node ids = {:?}",
+        //    self.deaths, self.next_replacement, self.alive_nodes
+        //);
 
         self.deaths.len()
     }
@@ -440,14 +449,14 @@ impl EvolveAncestry for IndexedPopulation {
                 birth_time
             );
             assert_ne!(birth_node_index, parent);
-            println!(
-                "adding parent {} (or is it {}) to {} | {:?}, {:?}",
-                b.parent,
-                self.alive_nodes[b.parent],
-                birth_node_index,
-                self.next_replacement,
-                self.alive_nodes
-            );
+            //println!(
+            //    "adding parent {} (or is it {}) to {} | {:?}, {:?}",
+            //    b.parent,
+            //    self.alive_nodes[b.parent],
+            //    birth_node_index,
+            //    self.next_replacement,
+            //    self.alive_nodes
+            //);
             self.nodes.parents[birth_node_index].insert(parent);
             self.nodes
                 .add_child_segment(b.left, b.right, parent, birth_node_index)
