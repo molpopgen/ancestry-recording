@@ -172,19 +172,22 @@ impl IndexedPopulation {
                 &mut self.nodes.parents,
                 &mut self.nodes.children,
             );
-            // println!(
-            //     "after: {} -> {:?}, {:?}",
-            //     node.index, self.nodes.ancestry[node.index], self.nodes.children[node.index],
-            // );
+            println!(
+                "after: {} -> {:?}, {:?}, {:?}",
+                node.index,
+                self.nodes.ancestry[node.index],
+                self.nodes.children[node.index],
+                self.nodes.parents[node.index]
+            );
             // TODO: is this the right criterion?
             // TODO: is this the right place to do this?
-            if !self.nodes.ancestry[node.index].is_empty() {
-                self.nodes.counts[node.index] += 1;
-                for child in self.nodes.children[node.index].keys() {
-                    self.nodes.counts[*child] += 1;
-                }
-                // println!("{} {}", node.index, self.nodes.counts[node.index]);
-            }
+            //if !self.nodes.ancestry[node.index].is_empty() {
+            //    self.nodes.counts[node.index] += 1;
+            //    for child in self.nodes.children[node.index].keys() {
+            //        self.nodes.counts[*child] += 1;
+            //    }
+            //    // println!("{} {}", node.index, self.nodes.counts[node.index]);
+            //}
             // if !self.nodes.ancestry[node.index].is_empty() {
             //     if self.nodes.flags[node.index].is_alive() {
             //         self.nodes.counts[node.index] += 1;
@@ -194,19 +197,22 @@ impl IndexedPopulation {
             // NOTE: this look may need revisiting.
             // It is more correct for nodes to keep their PARENTS
             // alive rather than the other way around
-            //for child in self.nodes.children[node.index].keys() {
-            //    assert!(self.nodes.parents[*child].contains(&node.index));
-            //    //assert!(!self.nodes.ancestry[node.index].is_empty());
-            //    //println!(
-            //    //    "incrementing counts of {} and {} <-> {:?}",
-            //    //    node.index, *child, self.nodes.parents[*child]
-            //    //);
-            //    self.nodes.counts[node.index] += 1;
-            //    //self.nodes.counts[*child] += 1;
-            //}
-            for parent in self.nodes.parents[node.index].iter() {
-                self.nodes.counts[*parent] += 1;
+            if self.nodes.flags[node.index].is_alive() {
+                self.nodes.counts[node.index] += 1;
             }
+            for child in self.nodes.children[node.index].keys() {
+                assert!(self.nodes.parents[*child].contains(&node.index));
+                //assert!(!self.nodes.ancestry[node.index].is_empty());
+                //println!(
+                //    "incrementing counts of {} and {} <-> {:?}",
+                //    node.index, *child, self.nodes.parents[*child]
+                //);
+                self.nodes.counts[node.index] += 1;
+                //self.nodes.counts[*child] += 1;
+            }
+            //for parent in self.nodes.parents[node.index].iter() {
+            //    self.nodes.counts[*parent] += 1;
+            //}
 
             // This assert is wrong, as it catches unary
             // transmissions as something we should be keeping.
