@@ -172,13 +172,13 @@ impl IndexedPopulation {
                 &mut self.nodes.parents,
                 &mut self.nodes.children,
             );
-            println!(
-                "after: {} -> {:?}, {:?}, {:?}",
-                node.index,
-                self.nodes.ancestry[node.index],
-                self.nodes.children[node.index],
-                self.nodes.parents[node.index]
-            );
+            //println!(
+            //    "after: {} -> {:?}, {:?}, {:?}",
+            //    node.index,
+            //    self.nodes.ancestry[node.index],
+            //    self.nodes.children[node.index],
+            //    self.nodes.parents[node.index]
+            //);
             // TODO: is this the right criterion?
             // TODO: is this the right place to do this?
             //if !self.nodes.ancestry[node.index].is_empty() {
@@ -261,10 +261,10 @@ impl IndexedPopulation {
             }
         }
         //println!("{} {}", x.len(), x.iter().filter(|i| **i > 0).count());
-        println!("The ancestry is:");
-        for (i, a) in self.nodes.ancestry.iter().enumerate() {
-            println!("{} -> {}|{}, {:?}", i, x[i], self.nodes.counts[i], *a);
-        }
+        //println!("The ancestry is:");
+        //for (i, a) in self.nodes.ancestry.iter().enumerate() {
+        //    println!("{} -> {}|{}, {:?}", i, x[i], self.nodes.counts[i], *a);
+        //}
         // println!("{:?}", self.nodes);
         // println!("{:?}", self.nodes.flags);
         Ok(())
