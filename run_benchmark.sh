@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-N=10000
+N=1000
 nsteps=1000
 nsteps=300
 L=10000

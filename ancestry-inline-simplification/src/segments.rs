@@ -11,7 +11,7 @@ pub(crate) trait HalfOpenInterval {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Segment {
     pub left: LargeSignedInteger,
     pub right: LargeSignedInteger,
@@ -40,7 +40,7 @@ impl Segment {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AncestrySegment {
     pub segment: Segment,
     pub child: Node,
@@ -55,7 +55,7 @@ impl AncestrySegment {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, Debug, PartialEq)]
 pub(crate) struct AncestryIntersection {
     pub ancestry_segment: AncestrySegment,
     pub mapped_node: Node,
