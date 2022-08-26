@@ -81,41 +81,61 @@ fn process_overlaps(
     input_ancestry_copy: &mut Vec<AncestrySegment>,
     node: &mut Node,
 ) -> usize {
-    let mut borrowed_node = node.borrow_mut();
     let mut input_ancestry_index = 0;
-    for (left, right, overlaps) in overlapper {
-        assert!(left < right);
-        let mut mapped_node: Node = node.clone();
-        let borrowed_overlaps = overlaps.borrow();
 
-        if borrowed_overlaps.len() == 1 {
-            mapped_node = borrowed_overlaps[0].mapped_node.clone();
-            if borrowed_node.is_alive() {
-                update_child_segments(&mut borrowed_node, &mapped_node, left, right);
-            }
-        } else {
-            debug_assert!(*node == mapped_node);
-            for overlap in borrowed_overlaps.iter() {
-                update_child_segments(&mut borrowed_node, &overlap.mapped_node, left, right);
-            }
-        }
-        if !borrowed_node.is_alive() {
-            let need_push = match output_ancestry.last_mut() {
-                Some(seg) => {
-                    if seg.right() == left && seg.child == mapped_node {
-                        seg.segment.right = right;
-                        false
-                    } else {
-                        true
-                    }
+    // This scope is only needed for the print statement at the end
+    {
+        let mut borrowed_node = node.borrow_mut();
+        for (left, right, overlaps) in overlapper {
+            assert!(left < right);
+            let mut mapped_node: Node = node.clone();
+            let borrowed_overlaps = overlaps.borrow();
+
+            if borrowed_overlaps.len() == 1 {
+                mapped_node = borrowed_overlaps[0].mapped_node.clone();
+                if borrowed_node.is_alive() {
+                    update_child_segments(&mut borrowed_node, &mapped_node, left, right);
                 }
-                None => true,
-            };
-            if need_push {
-                output_ancestry.push(AncestrySegment::new(left, right, mapped_node));
+            } else {
+                debug_assert!(*node == mapped_node);
+                for overlap in borrowed_overlaps.iter() {
+                    update_child_segments(&mut borrowed_node, &overlap.mapped_node, left, right);
+                }
+            }
+            if !borrowed_node.is_alive() {
+                let need_push = match output_ancestry.last_mut() {
+                    Some(seg) => {
+                        if seg.right() == left && seg.child == mapped_node {
+                            seg.segment.right = right;
+                            false
+                        } else {
+                            true
+                        }
+                    }
+                    None => true,
+                };
+                if need_push {
+                    output_ancestry.push(AncestrySegment::new(left, right, mapped_node.clone()));
+                }
+
+                // prototype of in-place editing
+                while input_ancestry_index < input_ancestry_copy.len()
+                    && left > input_ancestry_copy[input_ancestry_index].right()
+                {
+                    input_ancestry_index += 1;
+                }
+                if input_ancestry_index < input_ancestry_copy.len() {
+                    if left == input_ancestry_copy[input_ancestry_index].right() {
+                        input_ancestry_copy[input_ancestry_index].segment.right = left;
+                    }
+                } else {
+                    input_ancestry_copy.push(AncestrySegment::new(left, right, mapped_node));
+                }
+                println!("{}", input_ancestry_index);
             }
         }
     }
+    println!("we got {:?}", input_ancestry_copy);
     input_ancestry_index
 }
 
@@ -154,6 +174,7 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
     );
 
     if input_ancestry_index < input_ancestry_copy.len() {
+        println!("truncation!");
         input_ancestry_copy.truncate(input_ancestry_index);
     }
 
@@ -188,7 +209,9 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
         }
     };
 
-    assert_eq!(node.borrow().ancestry, input_ancestry_copy);
+    if !node.is_alive() {
+        assert_eq!(node.borrow().ancestry, input_ancestry_copy);
+    }
 
     //if ancestry_change_detected {
     //    println!("{:?} -> {:?}", output_ancestry, node.borrow().ancestry);
