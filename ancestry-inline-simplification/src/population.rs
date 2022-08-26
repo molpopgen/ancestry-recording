@@ -152,7 +152,7 @@ impl EvolveAncestry for Population {
 
         self.births.clear();
 
-        crate::propagate_ancestry_changes::propagate_ancestry_changes(
+        let _poppped = crate::propagate_ancestry_changes::propagate_ancestry_changes(
             self.genome_length,
             &mut self.node_heap,
         )?;

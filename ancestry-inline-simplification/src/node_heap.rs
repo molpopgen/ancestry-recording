@@ -10,6 +10,7 @@ enum NodeType {
     Death,
 }
 
+#[derive(Debug)]
 pub(crate) struct PrioritizedNode {
     node: Node,
     node_type: NodeType,

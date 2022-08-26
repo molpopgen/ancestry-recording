@@ -23,11 +23,10 @@ impl AncestryOverlapper {
         let n = intersections.len();
         let overlaps = vec![];
 
-        intersections.sort();
         let sorted = intersections.windows(2).all(|w| {
             w[0].left() <= w[1].left() && w[0].left() < w[0].right() && w[1].left() < w[1].right()
         });
-        assert!(sorted);
+        if !sorted { intersections.sort(); }
         // Sentinel -- FIXME: get rid of the need for the dummy Nodes
         intersections.push(AncestryIntersection::new(
             LargeSignedInteger::MAX - 1,

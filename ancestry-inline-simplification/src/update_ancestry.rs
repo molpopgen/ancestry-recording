@@ -1,3 +1,5 @@
+use std::process::Output;
+
 use crate::ancestry_overlapper::AncestryOverlapper;
 use crate::node::{Node, NodeData};
 use crate::segments::HalfOpenInterval;
@@ -75,9 +77,7 @@ fn update_child_segments(
 #[inline(never)]
 fn process_overlaps(
     overlapper: &mut AncestryOverlapper,
-    input_ancestry_len: usize,
-    output_ancestry_index: &mut usize,
-    ancestry_change_detected: &mut bool,
+    output_ancestry: &mut Vec<AncestrySegment>,
     node: &mut Node,
 ) {
     let mut borrowed_node = node.borrow_mut();
@@ -98,28 +98,20 @@ fn process_overlaps(
             }
         }
         if !borrowed_node.is_alive() {
-            if *output_ancestry_index < input_ancestry_len {
-                // SAFETY: we checked bounds in the if statement
-                let input_ancestry_seg = unsafe {
-                    borrowed_node
-                        .ancestry
-                        .get_unchecked_mut(*output_ancestry_index)
-                };
-                if input_ancestry_seg.left() != left
-                    || input_ancestry_seg.right() != right
-                    || input_ancestry_seg.child != mapped_node
-                {
-                    input_ancestry_seg.segment.left = left;
-                    input_ancestry_seg.segment.right = right;
-                    input_ancestry_seg.child = mapped_node;
-                    *ancestry_change_detected = true;
+            let need_push = match output_ancestry.last_mut() {
+                Some(seg) => {
+                    if seg.right() == left && seg.child == mapped_node {
+                        seg.segment.right = right;
+                        false
+                    } else {
+                        true
+                    }
                 }
-            } else {
-                let seg = AncestrySegment::new(left, right, mapped_node);
-                borrowed_node.ancestry.push(seg);
-                *ancestry_change_detected = true;
+                None => true,
+            };
+            if need_push {
+                output_ancestry.push(AncestrySegment::new(left, right, mapped_node));
             }
-            *output_ancestry_index += 1;
         }
     }
 }
@@ -129,13 +121,11 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
     let self_alive = node.is_alive();
 
     let mut overlapper = make_overlapper(node);
-    let input_ancestry_len: usize;
-    let mut output_ancestry_index: usize = 0;
-    let mut ancestry_change_detected = false;
+
+    let mut output_ancestry = vec![];
 
     {
         let mut borrowed_node = node.borrow_mut();
-        input_ancestry_len = borrowed_node.ancestry.len();
 
         for child in borrowed_node.children.keys() {
             let mut mut_borrowed_child = child.borrow_mut();
@@ -148,19 +138,17 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
 
     process_overlaps(
         &mut overlapper,
-        input_ancestry_len,
-        &mut output_ancestry_index,
-        &mut ancestry_change_detected,
+        &mut output_ancestry,
         node,
     );
 
-    if !self_alive {
-        // Remove trailing input ancestry
-        if output_ancestry_index < input_ancestry_len {
-            node.borrow_mut().ancestry.truncate(output_ancestry_index);
-            ancestry_change_detected = true;
-        }
-    }
+    //if !self_alive {
+    //    // Remove trailing input ancestry
+    //    if output_ancestry_index < input_ancestry_len {
+    //        node.borrow_mut().ancestry.truncate(output_ancestry_index);
+    //        ancestry_change_detected = true;
+    //    }
+    //}
 
     debug_assert!(!node.borrow().parents.contains(node));
 
@@ -169,5 +157,29 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
         assert!(child.borrow().parents.contains(node));
     }
 
+    // println!("before logic {:?} -> {:?}", output_ancestry, node.borrow().ancestry);
+
+    let ancestry_change_detected = {
+        if self_alive {
+            false
+        } else {
+            let a = &mut node.borrow_mut().ancestry;
+            std::mem::swap(a, &mut output_ancestry);
+            if *a != output_ancestry {
+                true
+            } else {
+                false
+            }
+        }
+    };
+
+    //if ancestry_change_detected {
+    //    println!("{:?} -> {:?}", output_ancestry, node.borrow().ancestry);
+    //}
+
+    // NOTE:
+    // The check on empty ancestry is challenging.
+    // I *think* that this is required for tests to pass due to deaths,
+    // in which case we need extra logic here to avoid doing extra work.
     ancestry_change_detected || node.borrow().ancestry.is_empty()
 }

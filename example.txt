@@ -1,0 +1,1 @@
+./target/debug/benchmark -N 10 -n 1000 -r 50 dynamic
