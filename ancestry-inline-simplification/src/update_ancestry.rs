@@ -119,23 +119,42 @@ fn process_overlaps(
                 }
 
                 // prototype of in-place editing
+                println!(
+                    "{} {} {}",
+                    input_ancestry_index,
+                    input_ancestry_copy.len(),
+                    left
+                );
                 while input_ancestry_index < input_ancestry_copy.len()
                     && left > input_ancestry_copy[input_ancestry_index].right()
                 {
                     input_ancestry_index += 1;
                 }
                 if input_ancestry_index < input_ancestry_copy.len() {
-                    if left == input_ancestry_copy[input_ancestry_index].right() {
+                    if left == input_ancestry_copy[input_ancestry_index].right()
+                        && mapped_node == input_ancestry_copy[input_ancestry_index].child
+                    {
+                        println!("edit");
                         input_ancestry_copy[input_ancestry_index].segment.right = left;
                     }
-                } else {
+                    else {
+                    println!("push A");
                     input_ancestry_copy.push(AncestrySegment::new(left, right, mapped_node));
+                    input_ancestry_index += 1;
+                    }
+                } else {
+                    println!("push B");
+                    input_ancestry_copy.push(AncestrySegment::new(left, right, mapped_node));
+                    input_ancestry_index += 1;
                 }
                 println!("{}", input_ancestry_index);
             }
         }
     }
-    println!("we got {:?}", input_ancestry_copy);
+    println!(
+        "we got {} -> {:?}",
+        input_ancestry_index, input_ancestry_copy
+    );
     input_ancestry_index
 }
 
