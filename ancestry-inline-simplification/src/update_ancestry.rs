@@ -80,8 +80,9 @@ fn process_overlaps(
     output_ancestry: &mut Vec<AncestrySegment>,
     input_ancestry_copy: &mut Vec<AncestrySegment>,
     node: &mut Node,
-) {
+) -> usize {
     let mut borrowed_node = node.borrow_mut();
+    let mut input_ancestry_index = 0;
     for (left, right, overlaps) in overlapper {
         assert!(left < right);
         let mut mapped_node: Node = node.clone();
@@ -115,6 +116,7 @@ fn process_overlaps(
             }
         }
     }
+    input_ancestry_index
 }
 
 #[inline(never)]
@@ -144,12 +146,16 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
         borrowed_node.children.clear();
     }
 
-    process_overlaps(
+    let input_ancestry_index = process_overlaps(
         &mut overlapper,
         &mut output_ancestry,
         &mut input_ancestry_copy,
         node,
     );
+
+    if input_ancestry_index < input_ancestry_copy.len() {
+        input_ancestry_copy.truncate(input_ancestry_index);
+    }
 
     //if !self_alive {
     //    // Remove trailing input ancestry
