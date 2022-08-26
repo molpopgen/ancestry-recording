@@ -78,6 +78,7 @@ fn update_child_segments(
 fn process_overlaps(
     overlapper: &mut AncestryOverlapper,
     output_ancestry: &mut Vec<AncestrySegment>,
+    input_ancestry_copy: &mut Vec<AncestrySegment>,
     node: &mut Node,
 ) {
     let mut borrowed_node = node.borrow_mut();
@@ -124,6 +125,8 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
 
     let mut output_ancestry = vec![];
 
+    let mut input_ancestry_copy = vec![];
+
     {
         let mut borrowed_node = node.borrow_mut();
 
@@ -133,12 +136,18 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
             mut_borrowed_child.parents.remove(node);
         }
 
+        borrowed_node
+            .ancestry
+            .iter()
+            .for_each(|a| input_ancestry_copy.push(a.clone()));
+
         borrowed_node.children.clear();
     }
 
     process_overlaps(
         &mut overlapper,
         &mut output_ancestry,
+        &mut input_ancestry_copy,
         node,
     );
 
@@ -172,6 +181,8 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
             }
         }
     };
+
+    assert_eq!(node.borrow().ancestry, input_ancestry_copy);
 
     //if ancestry_change_detected {
     //    println!("{:?} -> {:?}", output_ancestry, node.borrow().ancestry);
