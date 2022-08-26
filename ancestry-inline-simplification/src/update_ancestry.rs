@@ -136,11 +136,10 @@ fn process_overlaps(
                     {
                         println!("edit");
                         input_ancestry_copy[input_ancestry_index].segment.right = left;
-                    }
-                    else {
-                    println!("push A");
-                    input_ancestry_copy.push(AncestrySegment::new(left, right, mapped_node));
-                    input_ancestry_index += 1;
+                    } else {
+                        println!("push A");
+                        input_ancestry_copy.push(AncestrySegment::new(left, right, mapped_node));
+                        input_ancestry_index += 1;
                     }
                 } else {
                     println!("push B");
