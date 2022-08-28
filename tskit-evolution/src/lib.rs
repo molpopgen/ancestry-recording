@@ -234,6 +234,9 @@ impl EvolveAncestry for EvolvableTableCollection {
             }
             None => self.simplify_details(current_time_point, true),
         };
+        for i in self.alive_nodes.iter() {
+            self.tables.nodes().flags_array_mut()[usize::from(*i)] = tskit::NodeFlags::IS_SAMPLE;
+        }
         rv
     }
 }

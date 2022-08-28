@@ -136,11 +136,7 @@ pub(crate) fn update_ancestry(node: &mut Node) -> bool {
         borrowed_node.children.clear();
     }
 
-    process_overlaps(
-        &mut overlapper,
-        &mut output_ancestry,
-        node,
-    );
+    process_overlaps(&mut overlapper, &mut output_ancestry, node);
 
     //if !self_alive {
     //    // Remove trailing input ancestry

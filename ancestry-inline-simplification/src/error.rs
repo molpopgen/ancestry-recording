@@ -23,4 +23,6 @@ pub enum InlineAncestryError {
     DeadNode,
     #[error("unreachable child in graph")]
     UnreachableChild,
+    #[error("{0:?}")]
+    TskitError(tskit::TskitError),
 }
