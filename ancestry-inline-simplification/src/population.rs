@@ -5,6 +5,7 @@ use crate::LargeSignedInteger;
 use crate::SignedInteger;
 use hashbrown::HashSet;
 use neutral_evolution::EvolveAncestry;
+use tskit::prelude::*;
 
 pub struct Population {
     next_node_id: SignedInteger,
@@ -171,5 +172,61 @@ impl EvolveAncestry for Population {
         _current_time_point: LargeSignedInteger,
     ) -> Result<(), Box<dyn std::error::Error>> {
         Ok(())
+    }
+}
+
+impl TryFrom<Population> for tskit::TableCollection {
+    type Error = crate::InlineAncestryError;
+
+    fn try_from(value: Population) -> Result<Self, Self::Error> {
+        let mut tables = match tskit::TableCollection::new(value.genome_length() as f64) {
+            Ok(tables) => tables,
+            Err(e) => return Err(crate::InlineAncestryError::TskitError(e)),
+        };
+
+        let mut node_map = std::collections::HashMap::<_, _>::default();
+        let mut max_time: LargeSignedInteger = 0;
+
+        for i in value.all_reachable_nodes() {
+            max_time = std::cmp::max(max_time, i.borrow().birth_time);
+            node_map.insert(i.clone(), tskit::NodeId::NULL);
+        }
+
+        for (k, v) in node_map.iter_mut() {
+            let birth_time = (-1_i64 * (k.borrow().birth_time - max_time)) as f64;
+            *v = match tables.add_node(0, birth_time, -1, -1) {
+                Ok(node_id) => node_id,
+                Err(e) => return Err(crate::InlineAncestryError::TskitError(e)),
+            };
+        }
+
+        for i in value.all_reachable_nodes() {
+            let pid = node_map.get(&i).unwrap();
+            for (k, v) in i.borrow().children.iter() {
+                let cid = node_map.get(&k).unwrap();
+                for j in v {
+                    match tables.add_edge(j.left as f64, j.right as f64, *pid, *cid) {
+                        Ok(_) => (),
+                        Err(e) => return Err(crate::InlineAncestryError::TskitError(e)),
+                    }
+                }
+            }
+        }
+
+        for i in value.nodes.iter() {
+            let node = node_map.get(i).unwrap();
+            tables.nodes().flags_array_mut()[usize::from(*node)] = tskit::NodeFlags::IS_SAMPLE;
+        }
+
+        match tables.full_sort(tskit::TableSortOptions::default()) {
+            Ok(_) => (),
+            Err(e) => return Err(crate::InlineAncestryError::TskitError(e)),
+        }
+
+        match tables.build_index() {
+            Ok(_) => (),
+            Err(e) => return Err(crate::InlineAncestryError::TskitError(e)),
+        }
+        Ok(tables)
     }
 }
