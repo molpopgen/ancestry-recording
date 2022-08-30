@@ -19,8 +19,18 @@ fn intersecting_ancestry(node: &Node) -> Vec<AncestryIntersection> {
 
     for (child, segs) in &node_data.children {
         assert!(!segs.is_empty());
+
+        debug_assert!(segs.windows(2).all(|w| w[0].left() < w[1].left()));
+
+        let child_ancestry = &child.borrow().ancestry;
+
         for seg in segs.iter() {
-            for x in child.borrow().ancestry.iter() {
+            debug_assert!(child
+                .borrow()
+                .ancestry
+                .windows(2)
+                .all(|w| w[0].left() < w[1].left()));
+            for x in child_ancestry {
                 if x.overlaps(seg) {
                     rv.push(AncestryIntersection::new(
                         std::cmp::max(x.left(), seg.left()),
