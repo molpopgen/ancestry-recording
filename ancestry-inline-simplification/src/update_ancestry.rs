@@ -15,6 +15,7 @@ use crate::LargeSignedInteger;
 #[inline(never)]
 fn intersecting_ancestry(node: &Node) -> Vec<AncestryIntersection> {
     let mut rv = vec![];
+    let mut rv2 = vec![];
     let node_data = node.borrow();
 
     for (child, segs) in &node_data.children {
@@ -23,6 +24,56 @@ fn intersecting_ancestry(node: &Node) -> Vec<AncestryIntersection> {
         debug_assert!(segs.windows(2).all(|w| w[0].left() < w[1].left()));
 
         let child_ancestry = &child.borrow().ancestry;
+        debug_assert!(child_ancestry.windows(2).all(|w| w[0].left() < w[1].left()));
+        debug_assert!(!child_ancestry.windows(2).any(|w| w[0].overlaps(&w[1])));
+
+        //child_ancestry
+        //    .iter()
+        //    .flat_map(|s| {
+        //        segs.iter().filter_map(|b| {
+        //            if s.overlaps(b) {
+        //                Some((s.clone(), b.clone()))
+        //            } else {
+        //                None
+        //            }
+        //        })
+        //    })
+        //    .map(|(a, b)| {
+        //        AncestryIntersection::new(
+        //            std::cmp::max(a.left(), b.left()),
+        //            std::cmp::min(a.right(), b.right()),
+        //            child.clone(),
+        //            a.child.clone(),
+        //        )
+        //    })
+        //    .for_each(|a| rv.push(a));
+
+        let mut aindex = 0;
+        let mut cindex = 0;
+
+        while aindex < child_ancestry.len() && cindex < segs.len() {
+            let i = &child_ancestry[aindex];
+            println!("i = {:?}", i);
+            let mut count = 0;
+            for j in &segs[cindex..] {
+                println!("j = {:?}", j);
+                if i.overlaps(j) {
+                    rv.push(AncestryIntersection::new(
+                        std::cmp::max(i.left(), j.left()),
+                        std::cmp::min(i.right(), j.right()),
+                        child.clone(),
+                        i.child.clone(),
+                    ));
+                    count += 1;
+                } else {
+                    break;
+                }
+            }
+            cindex += count;
+            if count == 0 {
+                aindex += 1;
+            }
+        }
 
         for seg in segs.iter() {
             debug_assert!(child
@@ -32,7 +83,7 @@ fn intersecting_ancestry(node: &Node) -> Vec<AncestryIntersection> {
                 .all(|w| w[0].left() < w[1].left()));
             for x in child_ancestry {
                 if x.overlaps(seg) {
-                    rv.push(AncestryIntersection::new(
+                    rv2.push(AncestryIntersection::new(
                         std::cmp::max(x.left(), seg.left()),
                         std::cmp::min(x.right(), seg.right()),
                         child.clone(),
@@ -42,6 +93,7 @@ fn intersecting_ancestry(node: &Node) -> Vec<AncestryIntersection> {
             }
         }
     }
+    assert_eq!(rv, rv2);
 
     rv
 }
