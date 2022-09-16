@@ -36,7 +36,6 @@ impl AncestryOverlapper {
             // NOTE: dummy node here to avoid using Option globally for
             // child field of Overlap
             Node::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
-            Node::new_alive(SignedInteger::MAX, LargeSignedInteger::MAX),
         ));
         let right = intersections[0].left();
         Self {
@@ -160,14 +159,7 @@ mod overlapper_tests {
             match self.data.pop() {
                 Some(pos) => Some(
                     pos.into_iter()
-                        .map(|p| {
-                            AncestryIntersection::new(
-                                p.0,
-                                p.1,
-                                Node::new_alive(0, 1),
-                                Node::new_alive(0, 1),
-                            )
-                        })
+                        .map(|p| AncestryIntersection::new(p.0, p.1, Node::new_alive(0, 1)))
                         .collect::<Vec<AncestryIntersection>>(),
                 ),
                 None => None,

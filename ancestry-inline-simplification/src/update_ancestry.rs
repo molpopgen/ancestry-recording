@@ -25,7 +25,6 @@ fn intersecting_ancestry(node: &Node) -> Vec<AncestryIntersection> {
                     rv.push(AncestryIntersection::new(
                         std::cmp::max(x.left(), seg.left()),
                         std::cmp::min(x.right(), seg.right()),
-                        child.clone(),
                         x.child.clone(),
                     ));
                 }

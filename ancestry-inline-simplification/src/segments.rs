@@ -57,19 +57,14 @@ impl AncestrySegment {
 
 #[derive(Clone, Eq, Debug, PartialEq)]
 pub(crate) struct AncestryIntersection {
-    pub ancestry_segment: AncestrySegment,
+    pub ancestry_segment: Segment,
     pub mapped_node: Node,
 }
 
 impl AncestryIntersection {
-    pub fn new(
-        left: LargeSignedInteger,
-        right: LargeSignedInteger,
-        child: Node,
-        mapped_node: Node,
-    ) -> Self {
+    pub fn new(left: LargeSignedInteger, right: LargeSignedInteger, mapped_node: Node) -> Self {
         Self {
-            ancestry_segment: AncestrySegment::new(left, right, child),
+            ancestry_segment: Segment::new(left, right).unwrap(),
             mapped_node,
         }
     }
@@ -138,9 +133,9 @@ mod tests {
     #[test]
     fn test_sorting_ancestry_intersection() {
         let mut v = vec![
-            AncestryIntersection::new(3, 4, Node::new_alive(1, 1), Node::new_alive(1, 2)),
-            AncestryIntersection::new(2, 3, Node::new_alive(1, 2), Node::new_alive(1, 2)),
-            AncestryIntersection::new(1, 2, Node::new_alive(1, 3), Node::new_alive(1, 2)),
+            AncestryIntersection::new(3, 4, Node::new_alive(1, 2)),
+            AncestryIntersection::new(2, 3, Node::new_alive(1, 2)),
+            AncestryIntersection::new(1, 2, Node::new_alive(1, 2)),
         ];
         v.sort();
         assert!(v.windows(2).all(|w| w[0].left() < w[1].left()));
