@@ -12,5 +12,5 @@ tskit-evolution = { version = "~0.1.0", path = "../tskit-evolution" }
 ancestry-inline-simplification = { version = "~0.1.0", path = "../ancestry-inline-simplification" }
 neutral-evolution = { version = "~0.1.0", path = "../neutral-evolution" }
 ancestry-common = { version = "~0.1.0", path = "../ancestry-common" }
-clap = { version = "~3.2.8", features = ["derive"] }
+clap = { version = "~4.0.7", features = ["derive"] }
 tskit = "~0.9"
